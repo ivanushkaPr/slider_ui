@@ -54,24 +54,32 @@ describe('createElement', () => {
   })
 
   it('creates element', () => {
-    let element = View.createElement('div', 'someClass');
+    let element = view.createElement('div', 'someClass');
     assert.equal(element.nodeName, 'DIV');
     assert.isTrue(element.classList.contains('someClass'));
   })
 })
 
 describe('renderElement', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('renders element into dom', () => {
-    View.renderElement(View.createElement('div', 'someClass'), document.body);
+    view.renderElement(view.createElement('div', 'someClass'), document.body);
     assert.equal(document.querySelectorAll('.someClass').length, 1);
   })
 })
 
 describe('setElementCss', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('sets styles of element', () => {
-    const element = View.createElement('div', 'someClass');
+    const element = view.createElement('div', 'someClass');
     const styles = {backgroundColor: 'red', marginTop: '10px'};
-    let styledEl = View.setElementCss(element, styles);
+    let styledEl = view.setElementCss(element, styles);
 
     for(let property in styles) {
       assert.equal(styledEl.style[property], styles[property]);
@@ -80,75 +88,129 @@ describe('setElementCss', () => {
 })
 
 describe('createRange', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('creates range element', () => {
-    let range = View.createRange();
+    let range = view.createRange();
     assert.isTrue(range.classList.contains('slider__range'));
   })
   it('creates horizontal range', () => {
-    let range = View.createRange(false);
+    let range = view.createRange(false);
     assert.equal(range.className, 'slider__range slider__range--horizontal')
   })
   it('creates vertical range', () => {
-    let range = View.createRange(true);
+    let range = view.createRange(true);
     assert.equal(range.className, 'slider__range slider__range--vertical')
   })
 })
 
 describe('createRunner', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('creates runner element', () => {
-    let runner = View.createRunner();
+    let runner = view.createRunner();
     assert.isTrue(runner.classList.contains('slider__runner'));
   })
 })
 
 describe('createTooltip', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('creates tooltip element', () => {
-    let tooltip = View.createTooltip();
+    let tooltip = view.createTooltip();
     assert.isTrue(tooltip.classList.contains('slider__tooltip'));
   })
 })
 
 describe('setPosition', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('sets runner position on range', () => {
-    let runner = View.createRunner();
+    let runner = view.createRunner();
     let xOptions = {
-      runner,
-      runnerPosition: 100,
+      element: runner,
+      position: 100,
       axis: 'left',
     }
 
     let yOptions = {
-      runner,
-      runnerPosition: 100,
+      element: runner,
+      position: 100,
       axis: 'top',
     }
 
     let runnerPositioned: HTMLElement;
 
-    runnerPositioned = View.setPosition(xOptions);
-    assert.equal(runnerPositioned.style.left, `${xOptions.runnerPosition}px`);
+    runnerPositioned = view.setPosition(xOptions);
+    assert.equal(runnerPositioned.style.left, `${xOptions.position}px`);
 
-    runnerPositioned = View.setPosition(yOptions);
-    assert.equal(runnerPositioned.style.top, `${yOptions.runnerPosition}px`);
+    runnerPositioned = view.setPosition(yOptions);
+    assert.equal(runnerPositioned.style.top, `${yOptions.position}px`);
+  })
+})
+
+describe('createAndSetElementPosition', () => {
+  let view;
+  let range;
+  before(() => {
+    view = new View();
+    range = view.createRange()
+  })
+  it('creates element and sets its position', () => {
+    let cb = view.createRunner;
+
+    let element = view.createAndSetElementPosition({ position: 100, vertical: true, callback: 'createTooltip', parent: range});
+    console.log(element.outerHTML);
+  })
+})
+
+describe('positionFromEnd', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
+  it('return position of runner for vertical slider', () => {
+    assert.equal(view.positionFromEnd({size: 300, position: 60}), 240);
   })
 })
 
 describe('createSlider', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('renders range into dom', () => {
-    View.createSlider({runners: [0], vertical: false, id: '#slider'});
+    view.createSlider({runners: [0], vertical: true, id: '#slider'});
     assert.equal(document.body.querySelectorAll('.slider__range').length, 1);
   })
 })
 
 describe('createAndSetRunnerPosition', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('creates and sets runners position', () => {
-
+    let runner = view.createAndSetRunnerPosition({runnerPosition: 100, vertical: false});
+    assert.equal(runner.style.left, '100px');
   })
 })
 
 describe('createProgress', () => {
+  let view;
+  before(() => {
+    view = new View();
+  })
   it('creates progress element', () => {
-    let progress = View.createProgress(false);
+    let progress = view.createProgress(false);
     assert.equal(progress.className, 'slider__progress slider__progress--horizontal');
   })
 })

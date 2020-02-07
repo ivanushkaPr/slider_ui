@@ -1,16 +1,16 @@
 export default class View {
-  static createElement(nodeName: string, className: string) {
+  createElement(nodeName: string, className: string) {
     const element = document.createElement(nodeName);
     element.classList.add(className);
     return element as HTMLElement;
   }
 
-  static renderElement(element: HTMLElement, parentElement: HTMLElement): void {
+  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
     parentElement.appendChild(element);
     return undefined;
   }
 
-  static setElementCss(element: HTMLElement, cssRules: rules): HTMLElement {
+  setElementCss(element: HTMLElement, cssRules: rules): HTMLElement {
     const El = element;
     const Rules = Object.entries(cssRules);
 
@@ -21,8 +21,8 @@ export default class View {
     return El;
   }
 
-  static createRange(vertical: boolean = false): HTMLElement {
-    const range = View.createElement('div', 'slider__range');
+  createRange(vertical: boolean = false): HTMLElement {
+    const range = this.createElement('div', 'slider__range');
     if (vertical) {
       range.classList.add('slider__range--vertical');
     }
@@ -32,18 +32,18 @@ export default class View {
     return range;
   }
 
-  static createRunner(): HTMLElement {
-    const runner = View.createElement('div', 'slider__runner');
+  createRunner(): HTMLElement {
+    const runner = this.createElement('div', 'slider__runner');
     return runner;
   }
 
-  static createTooltip(): HTMLElement {
-    const tooltip = View.createElement('div', 'slider__tooltip');
+  createTooltip(): HTMLElement {
+    const tooltip = this.createElement('div', 'slider__tooltip');
     return tooltip;
   }
 
-  static createProgress(vertical: boolean) {
-    const progress = View.createElement('div', 'slider__progress');
+  createProgress(vertical: boolean) {
+    const progress = this.createElement('div', 'slider__progress');
     if (vertical) {
       progress.classList.add('slider__progress--vertical');
       return progress;
@@ -52,64 +52,77 @@ export default class View {
     return progress;
   }
 
-  static setPosition({ runner, runnerPosition, axis }:{ runner: HTMLElement; runnerPosition: number; axis: string; }): HTMLElement {
-    const targetRunner = runner;
-    targetRunner.style[axis] = `${runnerPosition}px`;
-    return targetRunner;
+  setPosition(obj: { element: HTMLElement; position: number; axis: string; }): HTMLElement {
+    const { element, position, axis } = obj;
+    const targetEl = element;
+    targetEl.style[axis] = `${position}px`;
+    return targetEl;
   }
 
-  static createAndSetRunnerPosition(obj: { runnerPosition: number, vertical: boolean}) {
-    let runner = View.createRunner();
+  createAndSetRunnerPosition(obj: { runnerPosition: number, vertical: boolean}) {
+    let runner = this.createRunner();
 
     const { runnerPosition, vertical } = obj;
-    runner = View.setPosition({ runner, runnerPosition, axis: vertical === false ? 'left' : 'top' });
+    runner = this.setPosition({ element: runner, position: runnerPosition, axis: vertical === false ? 'left' : 'top' });
     return runner;
   }
 
-  static createAndSetTooltipPosition(obj: { tooltipPosition: number, vertical: boolean}) {
-    let runner = View.createTooltip();
+  createAndSetTooltipPosition(obj: { tooltipPosition: number, vertical: boolean}) {
+    let runner = this.createTooltip();
 
     const { tooltipPosition, vertical } = obj;
-    runner = View.setPosition({ runner, runnerPosition: tooltipPosition, axis: vertical === false ? 'left' : 'top' });
+    runner = this.setPosition({ element: runner, position: tooltipPosition, axis: vertical === false ? 'left' : 'top' });
     return runner;
   }
 
-  static createAndSetProgressPosition() {
+  createAndSetProgressPosition() {
 
   }
 
+  positionFromEnd(obj: {size: number, position: number}) {
+    const {
+      size, position,
+    } = obj;
+    return size - position;
+  }
 
-  static createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+  createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement}): boolean {
+    const {
+      position, vertical, callback, parent,
+    } = obj;
+    const elem = this.setPosition({ element: this[callback](), position, axis: vertical === false ? 'left' : 'top' });
+    this.renderElement(elem, parent);
+    return true;
+  }
+
+  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+
+
     const { runners, vertical, id } = obj;
-    const range = View.createRange(vertical);
+    const range = this.createRange(vertical);
     if (vertical) {
       range.style.height = '300px';
     } else {
       range.style.width = '300px';
     }
 
-    View.renderElement(range, document.getElementById(id));
+    this.renderElement(range, document.getElementById(id));
+    let numHeight;
+    if (vertical) {
+      const sliderParent = document.getElementById(id);
+      const rangeInstance = sliderParent.querySelector('.slider__range') as HTMLElement;
+      const { height } = rangeInstance.style;
+      numHeight = parseInt(height, 10);
+    }
 
-
-    /*
     runners.forEach((runnerPosition: number, index) => {
-
-      const runner = View.createAndSetRunnerPosition({runnerPosition, vertical});
-      range.appendChild(runner);
-
-      const tooltip = View.createAndSetTooltipPosition({tooltipPosition: runnerPosition, vertical});
-      range.appendChild(tooltip);
-
+      this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createRunner', parent: range });
+      this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createTooltip', parent: range });
       if (index % 2 === 0) {
-        let progress = View.createProgress(vertical);
-        progress = View.setPosition({ runner: progress, runnerPosition, axis: vertical === false ? 'left' : 'top' });
-        range.appendChild(progress);
+        this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createProgress', parent: range });
       }
     });
-  
-    */
   }
-
 }
 
 type rules = {

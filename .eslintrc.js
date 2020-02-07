@@ -2,7 +2,6 @@ module.exports = {
   env: {
     browser: true,
     es6: true,
-    node: true,
   },
   extends: [
     'airbnb-base',
@@ -20,6 +19,6 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
-
+    "class-methods-use-this": 0,
   },
 };
