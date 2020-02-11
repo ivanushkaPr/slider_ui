@@ -1,3 +1,5 @@
+import { Runner } from "mocha";
+
 export default class View {
   createElement(nodeName: string, className: string) {
     const element = document.createElement(nodeName);
@@ -50,6 +52,59 @@ export default class View {
     }
     progress.classList.add('slider__progress--horizontal');
     return progress;
+  }
+
+  calculateProgressSize(obj: {start: number, end: number}): number {
+    const { start, end } = obj;
+    return end - start;
+  }
+
+  createVerticalRunners() {
+
+  }
+
+  createHorizontalRunners(obj: {runners: NodeList; parent: HTMLElement; vertical: boolean}): void {
+    const {runners, parent, vertical} = obj;
+    
+
+  }
+
+  createSingleRunner(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
+    console.log('were are in single runner')
+  }
+
+  createEvenRunners(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
+    const {runners, parent, vertical} = obj;
+    console.log('were are in even runner')
+
+  }
+
+  createOddRunners(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
+    const {runners, parent, vertical} = obj;
+    console.log('were are in odd runner')
+  }
+
+  createAndSetProgress(obj: {runners: NodeList; parent: HTMLElement; vertical: boolean}): void {
+    const { runners, parent, vertical } = obj;
+
+    const axis = vertical === true ? 'height' : 'width';
+    console.log(runners.length, 'runners len');
+    if(runners.length === 1) {
+      this.createSingleRunner({ runners, parent, vertical });
+    }
+    else if(runners.length % 2 === 0) {
+      this.createEvenRunners({ runners, parent, vertical });
+    }
+    else {
+      this.createOddRunners({ runners, parent, vertical });
+    }
+  }
+
+
+  setCss(obj: {element: HTMLElement; property: string; value: string}): void {
+    const { element, property, value } = obj;
+    element.style[property] = `${parseInt(value, 10)}px`;
+    return undefined;
   }
 
   setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }): HTMLElement {
