@@ -135,16 +135,23 @@ describe('setPosition', () => {
   })
   it('sets runner position on range', () => {
     let runner = view.createRunner();
+    let parent = view.createRange(false);
+    parent.style.width = '300px';
+
     let xOptions = {
       element: runner,
       position: 100,
       axis: 'left',
+      parent,
     }
+
+    parent.style.height = '300px';
 
     let yOptions = {
       element: runner,
       position: 100,
       axis: 'top',
+      parent,
     }
 
     let runnerPositioned: HTMLElement;
@@ -153,7 +160,7 @@ describe('setPosition', () => {
     assert.equal(runnerPositioned.style.left, `${xOptions.position}px`);
 
     runnerPositioned = view.setPosition(yOptions);
-    assert.equal(runnerPositioned.style.top, `${yOptions.position}px`);
+    assert.equal(runnerPositioned.style.top, `${parseInt(parent.style.height, 10) - xOptions.position}px`, 'height assertion doesnt work');
   })
 })
 
@@ -187,20 +194,57 @@ describe('createSlider', () => {
   before(() => {
     view = new View();
   })
-  it('renders range into dom', () => {
-    view.createSlider({runners: [0], vertical: true, id: '#slider'});
-    assert.equal(document.body.querySelectorAll('.slider__range').length, 1);
-  })
-})
+  beforeEach(() => {
 
-describe('createAndSetRunnerPosition', () => {
-  let view;
-  before(() => {
-    view = new View();
+  });
+  it('renders range into dom', () => {
+    view.createSlider({runners: [0, 10, 20, 30], vertical: true, id: '#slider'});
+    assert.equal(document.body.querySelectorAll('.slider__range').length, 1, 'range element wasnt created');
+    assert.equal(document.body.querySelectorAll('.slider__runner').length, 4, 'runner element wasnt created');
+    assert.equal(document.body.querySelectorAll('.slider__tooltip').length, 4, 'tooltip element wasnt created');
+   // assert.equal(document.body.querySelectorAll('.slider__progress').length, 1, 'progress element wasnt created');
   })
-  it('creates and sets runners position', () => {
-    let runner = view.createAndSetRunnerPosition({runnerPosition: 100, vertical: false});
-    assert.equal(runner.style.left, '100px');
+  it('sets data attr pair to each runner', () => {
+    const runners = document.querySelectorAll('.slider__runner');
+    let number = 1;
+    runners.forEach((element, index) => {
+      let runner = element as HTMLElement;
+      assert.equal(typeof runner.dataset.pair, 'string');
+      assert.equal(runner.dataset.pair, String(number));
+        if (index % 2 === 1) {
+          number += 1;
+        }
+    })
+  })
+ 
+  })
+
+  describe('setDataAttr', () => {
+    let view;
+    before(() => {
+      view = new View();
+    })
+    it('sets data attribute pair to runners', () => {
+      const runners = [];
+      for(let i = 0; i < 4; i = i + 1) {
+        runners.push(view.createRunner());
+      }
+      view.setDataAttr(runners);
+
+      let number = 1;
+      runners.forEach((runner, index) => {
+        assert.equal(typeof runner.dataset.pair, 'string');
+        assert.equal(runner.dataset.pair, String(number));
+        if (index % 2 === 1) {
+          number += 1;
+        }
+      })
+    })
+  })
+
+describe('setProgressWidth', () => {
+  it('sets progress width', () => {
+    
   })
 })
 

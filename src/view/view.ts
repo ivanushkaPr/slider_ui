@@ -52,52 +52,45 @@ export default class View {
     return progress;
   }
 
-  setPosition(obj: { element: HTMLElement; position: number; axis: string; }): HTMLElement {
-    const { element, position, axis } = obj;
+  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }): HTMLElement {
+    const {
+      element, position, axis, parent,
+    } = obj;
+
     const targetEl = element;
-    targetEl.style[axis] = `${position}px`;
+    if (axis === 'top') {
+      const parentHeight = parseInt(parent.style.height, 10);
+      const pos = this.positionFromEnd({ size: parentHeight, position });
+      targetEl.style[axis] = `${pos}px`;
+    } else {
+      targetEl.style[axis] = `${position}px`;
+    }
     return targetEl;
-  }
-
-  createAndSetRunnerPosition(obj: { runnerPosition: number, vertical: boolean}) {
-    let runner = this.createRunner();
-
-    const { runnerPosition, vertical } = obj;
-    runner = this.setPosition({ element: runner, position: runnerPosition, axis: vertical === false ? 'left' : 'top' });
-    return runner;
-  }
-
-  createAndSetTooltipPosition(obj: { tooltipPosition: number, vertical: boolean}) {
-    let runner = this.createTooltip();
-
-    const { tooltipPosition, vertical } = obj;
-    runner = this.setPosition({ element: runner, position: tooltipPosition, axis: vertical === false ? 'left' : 'top' });
-    return runner;
-  }
-
-  createAndSetProgressPosition() {
-
   }
 
   positionFromEnd(obj: {size: number, position: number}) {
     const {
       size, position,
     } = obj;
-    return size - position;
+    return (size - position);
   }
 
   createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement}): boolean {
     const {
       position, vertical, callback, parent,
     } = obj;
-    const elem = this.setPosition({ element: this[callback](), position, axis: vertical === false ? 'left' : 'top' });
+
+    const elem = this.setPosition({
+      element: this[callback](),
+      position,
+      axis: vertical === false ? 'left' : 'top',
+      parent,
+    });
     this.renderElement(elem, parent);
     return true;
   }
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-
-
     const { runners, vertical, id } = obj;
     const range = this.createRange(vertical);
     if (vertical) {
@@ -107,19 +100,36 @@ export default class View {
     }
 
     this.renderElement(range, document.getElementById(id));
-    let numHeight;
-    if (vertical) {
-      const sliderParent = document.getElementById(id);
-      const rangeInstance = sliderParent.querySelector('.slider__range') as HTMLElement;
-      const { height } = rangeInstance.style;
-      numHeight = parseInt(height, 10);
-    }
 
     runners.forEach((runnerPosition: number, index) => {
-      this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createRunner', parent: range });
-      this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createTooltip', parent: range });
-      if (index % 2 === 0) {
-        this.createAndSetElementPosition({ position: runnerPosition, vertical, callback: 'createProgress', parent: range });
+
+      this.createAndSetElementPosition({
+        position: runnerPosition,
+        vertical,
+        callback: 'createRunner',
+        parent: range,
+      });
+
+      this.createAndSetElementPosition({
+        position: runnerPosition,
+        vertical,
+        callback: 'createTooltip',
+        parent: range,
+      });
+    });
+
+    const RenderedRunners = document.querySelectorAll('.slider__runner');
+    this.setDataAttr(RenderedRunners);
+  }
+
+  setDataAttr(elements: NodeList): void {
+    const collection = elements;
+    let pair = 1;
+    collection.forEach((target, index) => {
+      const HTMLrunner = target as HTMLElement;
+      HTMLrunner.dataset.pair = String(pair);
+      if (index % 2 === 1) {
+        pair += 1;
       }
     });
   }
