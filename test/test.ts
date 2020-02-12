@@ -25,6 +25,7 @@ import View from './../src/view/view';
 
 import { JSDOM } from 'jsdom';
 import { AssertionError, equal } from "assert";
+import { isRegExp } from "util";
 let { window } = new JSDOM('<!doctype html><html><body><div id="#slider"></div></body></html>');
 
 // Save these two objects in the global space so that libraries/tests
@@ -249,7 +250,7 @@ describe('view', () => {
     })
   })
 
-  describe('setCss', () => {
+  describe('setSize', () => {
     let view;
     before(() => {
       view = new View();
@@ -257,9 +258,9 @@ describe('view', () => {
     it('its sets css rule of element to passed value', () => {
       let element = view.createRunner();
 
-      view.setCss({element, property: 'width', value: '100px'})
+      view.setSize({element, property: 'width', value: '100px'})
       assert.equal(element.style.width, '100px');
-      view.setCss({element, property: 'width', value: '100'})
+      view.setSize({element, property: 'width', value: '100'})
       console.log(element.style.width, '100px');
     })
   })
@@ -268,8 +269,156 @@ describe('view', () => {
     let view;
     before(() => {
       view = new View();
+    });
     it('calculates size of progress bar', () => {
       assert.equal(view.calculateProgressSize( {start: 100, end: 300 } ), 200)
+    })
+  });
+
+  describe('render progress', () => {
+    let view;
+    before(() => {
+      view = new View();
+    });
+    afterEach(() => {
+      document.body.outerHTML = '<div id="slider"> </div>';
+    })
+    it('renders progress for one runner', () => {
+       view.createSlider({runners: [0], vertical: false, id: '#slider'});
+      let range = document.querySelector('.slider__range');
+      let runners = document.querySelectorAll('.slider__runner');
+
+      range.getBoundingClientRect = (): any => {
+        return {width: 300, height: 50, left: 0, right: 300, top: 0, bottom: 50, }
+      };
+      
+      runners[0].getBoundingClientRect = ():any => {
+        return {width: 25, height: 25, left: 25, right: 25, top: 0, bottom: 25, }
+      }
+
+
+      view.renderProgress({runners, parent: range, vertical: false});
+
+      assert.equal(document.body.querySelectorAll('.slider__progress').length, 1);
+      let progress = document.querySelector('.slider__progress') as HTMLElement;
+
+      assert.equal(progress.style.left, '0px');
+      assert.equal(progress.style.width, '25px');
+      assert.equal(progress.dataset.pair, '1');
+    })
+
+    it('renders vertical progress for single runner', () => {
+      view.createSlider({runners: [100], vertical: true, id: '#slider'});
+      let range = document.querySelector('.slider__range');
+      let runners = document.querySelectorAll('.slider__runner');
+
+      range.getBoundingClientRect = (): any => {
+        return {width: 50, height: 300, left: 0, right: 300, top: 0, bottom: 300, }
+      };
+
+      runners[0].getBoundingClientRect = ():any => {
+        return {width: 25, height: 25, left: 0, right: 25, top: 200, bottom: 225, }
+      }
+
+
+      view.renderProgress({runners, parent: range, vertical: true});
+      assert.equal(document.querySelectorAll('.slider__progress').length, 1);
+
+      let progress: HTMLElement = document.querySelector('.slider__progress') as HTMLElement;
+      assert.equal(progress.style.height, '75px');
+      assert.equal(progress.style.top, '300px');
+      assert.equal(progress.dataset.pair, '1');
+    })
+
+    it('renders progress for two runners', () => {
+      view.createSlider({runners: [0, 50], vertical: false, id: '#slider'});
+      let range = document.querySelector('.slider__range');
+      let runners = document.querySelectorAll('.slider__runner');
+
+      range.getBoundingClientRect = (): any => {
+        return {width: 300, height: 50, left: 0, right: 300, top: 0, bottom: 50, }
+      };
+      
+      for(let i = 0; i < 2; i++) {
+        runners[i].getBoundingClientRect = ():any => {
+          return {width: 25, height: 25, left: i * 50, right: 25 + i * 50, top: 0, bottom: 25, }
+        }
+      }
+
+      view.renderProgress({runners, parent: range, vertical: false});
+      
+      let progress = document.querySelectorAll('.slider__progress');
+      assert.equal(progress.length, 1);
+      let firstProgress = progress[0] as HTMLElement;
+      
+      assert.equal(firstProgress.style.left, '25px');
+      assert.equal(firstProgress.style.width, '25px')
+      assert.equal(firstProgress.dataset.pair, '1');
+    })
+
+    it('renders progress for even runners', () => {
+      view.createSlider({runners: [0, 50, 100, 150], vertical: false, id: '#slider'});
+      let range = document.querySelector('.slider__range');
+      let runners = document.querySelectorAll('.slider__runner');
+
+      range.getBoundingClientRect = (): any => {
+        return {width: 300, height: 50, left: 0, right: 300, top: 0, bottom: 50, }
+      };
+      
+      for(let i = 0; i < 4; i++) {
+        runners[i].getBoundingClientRect = ():any => {
+          return {width: 25, height: 25, left: i * 50, right: 25 + i * 50, top: 0, bottom: 25, }
+        }
+      }
+
+      view.renderProgress({runners, parent: range, vertical: false});
+      
+      let progress = document.querySelectorAll('.slider__progress');
+      assert.equal(progress.length, 2);
+      let firstProgress = progress[0] as HTMLElement;
+      let secondProgress = progress[1] as HTMLElement;
+      
+      assert.equal(firstProgress.style.left, '25px');
+      assert.equal(firstProgress.style.width, '25px')
+      assert.equal(firstProgress.dataset.pair, '1');
+      
+      assert.equal(secondProgress.style.left, '125px');
+      assert.equal(secondProgress.style.width, '25px');
+      assert.equal(secondProgress.dataset.pair, '2');
+    })
+
+    it('renders vertical progress for even runners', () => {
+      view.createSlider({runners: [0, 50, 100, 150], vertical: true, id: '#slider'});
+      let range = document.querySelector('.slider__range');
+      let runners = document.querySelectorAll('.slider__runner');
+
+      range.getBoundingClientRect = (): any => {
+        return {width: 50, height: 300, left: 0, right:50, top: 0, bottom: 300, }
+      };
+      
+      for(let i = 0; i < 4; i++) {
+        let fromEnd = view.positionFromEnd({size: 300, position: i * 50});
+        runners[i].getBoundingClientRect = ():any => {
+          return {width: 25, height: 25, left: 0, right: 25, top: fromEnd - 25, bottom: fromEnd, }
+        }
+      }
+
+      view.renderProgress({runners, parent: range, vertical: true});
+      
+      let progress = document.querySelectorAll('.slider__progress');
+      assert.equal(progress.length, 2);
+      let firstProgress = progress[0] as HTMLElement;
+      let secondProgress = progress[1] as HTMLElement;
+      
+
+      assert.equal(firstProgress.style.height, '25px');
+      assert.equal(secondProgress.style.height, '25px');
+      
+      assert.equal(firstProgress.style.top, '275px');
+      assert.equal(secondProgress.style.top, '175px');
+
+      assert.equal(firstProgress.dataset.pair, '1');
+      assert.equal(secondProgress.dataset.pair, '2');
     })
   })
 
@@ -287,46 +436,25 @@ describe('view', () => {
     after(function() {
       sandbox.restore();
     });
-    it('calls createSingleRunner, if ammount of runners === 1', () => {
+    it('calls renderProgress, if ammount of runners === 1', () => {
       view.createSlider({runners: [0], vertical: true, id: '#slider'});
       let range = document.querySelector('.slider__range');
       let runners = document.querySelectorAll('.slider__runner');
 
-      view.createAndSetProgress({ runners, range, vartical: false });
-      assert.equal(view.createSingleRunner.calledOnce, true);
-    })    
-    it('calls createEvenRunners, if ammount of runners % 2 === 0', () => {
-      view.createSlider({runners: [0, 1], vertical: true, id: '#slider'});
-      let range = document.querySelector('.slider__range');
-      let runners = document.querySelectorAll('.slider__runner');
-
-      view.createAndSetProgress({ runners, range, vertical: false });
-      assert.equal(view.createEvenRunners.calledOnce, true);
-    })
-    it('calls createOddRunner, if ammount of runners === 1 && runners.length !== 1', () => {
-      view.createSlider({runners: [0, 1, 4], vertical: true, id: '#slider'});
-      let range = document.querySelector('.slider__range');
-      let runners = document.querySelectorAll('.slider__runner');
-
-      view.createAndSetProgress({ runners, range, vertical: false });
-      assert.equal(view.createOddRunners.calledOnce, true);
-    })    
-  
-  })
-
-  describe('create single runner', () => {
-    let view;
-    before(() => {
-      view = new View();
-    });
-    it('renders single runner and sets its width', () => {
-      let runner = view.createRunner() as NodeList;
+      range.getBoundingClientRect = (): any => {
+        return {width: 300, height: 50, left: 0, right: 300, top: 0, bottom: 50, }
+      };
       
-      
-      
+      runners[0].getBoundingClientRect = ():any => {
+        return {width: 25, height: 25, left: 25, right: 25, top: 0, bottom: 25, }
+      }
 
+      view.createAndSetProgress({ runners, parent: range, vertical: false });
+      assert.equal(view.renderProgress.calledOnce, true, 'Error in create single runner');
     })
   })
+
+
   describe('createProgress', () => {
     let view;
     before(() => {
@@ -338,12 +466,15 @@ describe('view', () => {
     })
   })
 
+  
+
   describe('createRelatedElements', () => {
     it('creates related elements', () => {
 
     })
   })
 })
+
 // Model tests
 
 describe('Model constructor', () => {
@@ -387,4 +518,3 @@ describe('checkConf', () => {
     }
   })
 })
-});

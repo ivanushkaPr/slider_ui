@@ -44,7 +44,7 @@ export default class View {
     return tooltip;
   }
 
-  createProgress(vertical: boolean) {
+  createProgress(vertical: boolean): HTMLElement {
     const progress = this.createElement('div', 'slider__progress');
     if (vertical) {
       progress.classList.add('slider__progress--vertical');
@@ -59,59 +59,98 @@ export default class View {
     return end - start;
   }
 
-  createVerticalRunners() {
+  setProgressPosition(obj: {}) {
 
   }
 
-  createHorizontalRunners(obj: {runners: NodeList; parent: HTMLElement; vertical: boolean}): void {
+  renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const {runners, parent, vertical} = obj;
-    
-
+    if (!vertical) {
+      let count = 1;
+      for (let runner = 0; runner < runners.length; runner += 1) {
+        const progress = this.createProgress(vertical);
+        let start: number;
+        let end: number;
+        let position: number;
+        if (runners.length === 1) {
+          start = parent.getBoundingClientRect().left;
+          end = runners[runner].getBoundingClientRect().left;
+          position = parent.getBoundingClientRect().left;
+        }
+        if (runners.length % 2 === 0 && runner % 2 === 0) {
+          start = runners[runner].getBoundingClientRect().right;
+          end = runners[runner + 1].getBoundingClientRect().left;
+          position = runners[runner].getBoundingClientRect().right;
+        }
+        if(runner % 2 === 0) {
+          const size = this.calculateProgressSize({ start, end });
+          this.setSize({ element: progress, property: 'width', value: `${size}` });
+          this.setPosition({
+            element: progress, position, axis: 'left', parent,
+          });
+          progress.dataset.pair = count.toString();
+          count += 1;
+          parent.appendChild(progress);
+        }
+      }
+    }
+    else {
+      let count = 1;
+      for (let runner = 0; runner < runners.length; runner += 1) {
+        const progress = this.createProgress(vertical);
+        let start: number;
+        let end: number;
+        let position: number;
+        if (runners.length === 1) {
+          end = parent.getBoundingClientRect().bottom;
+          start = runners[0].getBoundingClientRect().bottom;
+          position = parent.getBoundingClientRect().top;
+        }
+        if(runners.length % 2 === 0 && runner % 2 === 0) {
+          start = runners[runner + 1].getBoundingClientRect().bottom;
+          end = runners[runner].getBoundingClientRect().top;
+          position = parent.getBoundingClientRect().height
+            - runners[runner].getBoundingClientRect().top;
+        }
+        if(runner % 2 === 0) {
+          const size = this.calculateProgressSize({ start, end });
+          this.setSize({ element: progress, property: 'height', value: `${size}` });
+          this.setPosition({
+            element: progress, position, axis: 'top', parent,
+          });
+          progress.dataset.pair = count.toString();
+          count += 1;
+          parent.appendChild(progress);
+        }
+      }
+    }
   }
 
-  createSingleRunner(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
-    console.log('were are in single runner')
-  }
 
-  createEvenRunners(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
-    const {runners, parent, vertical} = obj;
-    console.log('were are in even runner')
-
-  }
-
-  createOddRunners(obj: {runners: NodeList, parent: HTMLElement; vertical: boolean}): void {
-    const {runners, parent, vertical} = obj;
-    console.log('were are in odd runner')
-  }
-
-  createAndSetProgress(obj: {runners: NodeList; parent: HTMLElement; vertical: boolean}): void {
+  createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
 
     const axis = vertical === true ? 'height' : 'width';
-    console.log(runners.length, 'runners len');
     if(runners.length === 1) {
-      this.createSingleRunner({ runners, parent, vertical });
-    }
-    else if(runners.length % 2 === 0) {
-      this.createEvenRunners({ runners, parent, vertical });
-    }
-    else {
-      this.createOddRunners({ runners, parent, vertical });
+      this.renderProgress({ runners, parent, vertical });
     }
   }
 
 
-  setCss(obj: {element: HTMLElement; property: string; value: string}): void {
+  // Устанавливает ширину или высоту элемента
+  setSize(obj: {element: HTMLElement; property: string; value: string}): void {
     const { element, property, value } = obj;
     element.style[property] = `${parseInt(value, 10)}px`;
     return undefined;
   }
 
+  // Устанавливает местпооложение бегунка на диапазоне
   setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }): HTMLElement {
     const {
       element, position, axis, parent,
     } = obj;
 
+    
     const targetEl = element;
     if (axis === 'top') {
       const parentHeight = parseInt(parent.style.height, 10);
@@ -123,6 +162,7 @@ export default class View {
     return targetEl;
   }
 
+  // Используется для расчета местоположения бегунка при вертикальном положение слайдера.
   positionFromEnd(obj: {size: number, position: number}) {
     const {
       size, position,

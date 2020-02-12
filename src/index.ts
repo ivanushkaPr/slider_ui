@@ -1,7 +1,8 @@
 
 import * as $ from 'jquery';
-
 const jQuery = $;
+
+
 
 /* eslint-disable */
 (function( $ ) {
