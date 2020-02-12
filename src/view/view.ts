@@ -1,6 +1,9 @@
 import { Runner } from "mocha";
 
+
 export default class View {
+  handlers = {};
+
   createElement(nodeName: string, className: string) {
     const element = document.createElement(nodeName);
     element.classList.add(className);
@@ -228,8 +231,60 @@ export default class View {
       }
     });
   }
+
+  onHandlerRegister(obj :{ bookmark: string ; element: HTMLElement;
+     eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: View}): boolean {
+    const {bookmark, element, eventName, cb, enviroment } = obj;
+
+    const functionBind = cb.bind(this);
+    this.handlers[bookmark] = {
+      element,
+      eventName,
+      functionBind,
+      enviroment,
+    };
+    return true;
+  }
+
+  onHandlerDelete(bookmark: string): boolean | Error {
+    if (bookmark in this.handlers) {
+      delete this.handlers[bookmark];
+      return true;
+    }
+    throw new Error('No such event handler was found');
+  }
+
+
+  onRunnerMouseDownHandler(event: Event | any): boolean {
+    const targetElement = event.target as HTMLElement;
+
+    targetElement.style.position = 'absolute';
+    targetElement.style.zIndex = '1000';
+
+
+
+    return true;
+  }
+
+  onRunnerMouseMoveHandler() {
+
+  }
+
+  onRunnerMouseUpHandler() {
+
+  }
+
+  onDragStartHandler() {
+
+  }
+
+  onTooltipMoveHandler() {
+
+  }
 }
 
 type rules = {
   [property: string]: string | number
 }
+
+type runnerEvents = 'mousedown' | 'mousemove' | 'mouseup' | 'click' | 'dragstart';

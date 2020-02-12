@@ -466,11 +466,81 @@ describe('view', () => {
     })
   })
 
+  describe('onHandlerRegister', () => {
+    let view;
+    before(() => {
+      view = new View();
+    })
+    it(`registering event handlers and saves their copies in handlers 
+    property and binds this`, () => {
+      let eventHandler: (event: Event) => boolean = (event: Event) => {
+        return true;
+      };
+
+      let handlerTarget: HTMLElement = document.querySelector('#slider');
+
+      let eventType = 'mouseDown';
+
+    
+      view.onHandlerRegister({this: view, bookmark: 'bookmark' ,
+      element: handlerTarget, eventName: eventType, cb: eventHandler, enviroment: view});
+
+      assert.isObject(view.handlers);
+      assert.property(view.handlers, 'bookmark');
+      assert.hasAllKeys(view.handlers.bookmark, ['element', 'eventName', 'functionBind', 'enviroment']);
+      assert.equal(view.handlers.bookmark.enviroment, view);
+
+    })
+  })
+
+  describe('onHandlerDelete', () => {
+    let view;
+    before(() => {
+      view = new View();
+    })
+    it('removes handler from view.handlers', () => {
+      view.handlers['someHandler'] = {};
+      view.onHandlerDelete('someHandler');
+      assert.equal(view.handlers['someHandler'], undefined);
+    })
+  })
   
 
-  describe('createRelatedElements', () => {
-    it('creates related elements', () => {
+  describe('onMouseDownHandler', () => {
+    let view;
+    let testHTMLElement;
+    before(() => {
+      view = new View();
+      testHTMLElement = document.createElement('div');
+      testHTMLElement.className = 'test-element';
+    })
+    it('Preparing element for transfer and installs event handlers', () => {
+  
+      document.body.appendChild(testHTMLElement);
+      console.log(document.body.outerHTML);
+      let event: any = {
+        target: document.body.querySelector('.test-element')
+      };
 
+      console.log(event.target);
+      view.onRunnerMouseDownHandler(event);
+
+      assert.equal(event.target.style.position, 'absolute');
+      assert.equal(event.target.style.zIndex, '1000');
+    })
+    it(`sets onRunnerMouseMoveHandler, 
+    onRunnerMouseUpHandler and onDragStartHandler on event.targert`, () => {
+      document.body.appendChild(testHTMLElement);
+      console.log(document.body.outerHTML);
+      let event: any = {
+        target: document.body.querySelector('.test-element')
+      };
+
+      view.onRunnerMouseDownHandler(event);
+
+      assert.property(view.handlers, 'mousemove');
+      assert.property(view.handlers, 'mouseup');
+      assert.property(view.handlers, 'dragstart');
     })
   })
 })
