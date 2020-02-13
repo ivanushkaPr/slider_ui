@@ -4,6 +4,8 @@ import { Runner } from "mocha";
 export default class View {
   handlers = {};
 
+  vertical: boolean = true;
+
   createElement(nodeName: string, className: string) {
     const element = document.createElement(nodeName);
     element.classList.add(className);
@@ -153,7 +155,6 @@ export default class View {
       element, position, axis, parent,
     } = obj;
 
-    
     const targetEl = element;
     if (axis === 'top') {
       const parentHeight = parseInt(parent.style.height, 10);
@@ -233,14 +234,15 @@ export default class View {
   }
 
   onHandlerRegister(obj :{ bookmark: string ; element: HTMLElement;
-     eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: View}): boolean {
-    const {bookmark, element, eventName, cb, enviroment } = obj;
-
-    const functionBind = cb.bind(this);
+     eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: any}): boolean {
+    const {
+      bookmark, element, eventName, cb, enviroment,
+    } = obj;
+    const bindedFunc = cb.bind(this);
     this.handlers[bookmark] = {
       element,
       eventName,
-      functionBind,
+      bindedFunc,
       enviroment,
     };
     return true;
@@ -255,27 +257,69 @@ export default class View {
   }
 
 
-  onRunnerMouseDownHandler(event: Event | any): boolean {
+  onRunnerMouseDownHandler(event: Event): boolean {
     const targetElement = event.target as HTMLElement;
 
     targetElement.style.position = 'absolute';
     targetElement.style.zIndex = '1000';
 
+    this.onHandlerRegister({
+      bookmark: 'runnerMouseMove',
+      element: event.target as HTMLElement,
+      eventName: 'mousemove',
+      cb: this.onRunnerMouseMoveHandler,
+      enviroment: this,
+    });
 
+    this.onHandlerRegister({
+      bookmark: 'runnerMouseUp',
+      element: event.target as HTMLElement,
+      eventName: 'mouseup',
+      cb: this.onRunnerMouseUpHandler,
+      enviroment: this,
+    });
+
+    this.onHandlerRegister({
+      bookmark: 'runnerDragStart',
+      element: event.target as HTMLElement,
+      eventName: 'dragstart',
+      cb: this.onDragStartHandler,
+      enviroment: this,
+    });
 
     return true;
   }
 
-  onRunnerMouseMoveHandler() {
+  onRunnerMouseMoveHandler(event: MouseEvent): boolean {
+    const { target, clientX, clientY } = event;
+    const { vertical } = this;
+    let params;
+    if (!vertical) {
+      params = { point: clientX, element: target, vertical: this.vertical };
+    }else {
+      params = { point: clientY, element: target, vertical: this.vertical };
+    }
 
+    this.onMoveElementAtPoint(params);
+    return true;
+  }
+
+  onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
+    let {point, element, vertical} = obj;
+    if(!vertical) {
+      element.style.width = `${point}px`;
+    }
+    else {
+      element.style.height = `${point}px`;
+    }
   }
 
   onRunnerMouseUpHandler() {
-
+    return true;
   }
 
   onDragStartHandler() {
-
+    return true;
   }
 
   onTooltipMoveHandler() {

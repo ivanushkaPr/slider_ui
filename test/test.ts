@@ -473,23 +473,23 @@ describe('view', () => {
     })
     it(`registering event handlers and saves their copies in handlers 
     property and binds this`, () => {
-      let eventHandler: (event: Event) => boolean = (event: Event) => {
+
+
+      let eventHandler = function(event: Event): boolean {
         return true;
-      };
+      }
 
       let handlerTarget: HTMLElement = document.querySelector('#slider');
-
       let eventType = 'mouseDown';
 
     
-      view.onHandlerRegister({this: view, bookmark: 'bookmark' ,
+      view.onHandlerRegister({bookmark: 'bookmark',
       element: handlerTarget, eventName: eventType, cb: eventHandler, enviroment: view});
 
       assert.isObject(view.handlers);
       assert.property(view.handlers, 'bookmark');
-      assert.hasAllKeys(view.handlers.bookmark, ['element', 'eventName', 'functionBind', 'enviroment']);
+      assert.hasAllKeys(view.handlers.bookmark, ['element', 'eventName', 'bindedFunc', 'enviroment']);
       assert.equal(view.handlers.bookmark.enviroment, view);
-
     })
   })
 
@@ -517,30 +517,105 @@ describe('view', () => {
     it('Preparing element for transfer and installs event handlers', () => {
   
       document.body.appendChild(testHTMLElement);
-      console.log(document.body.outerHTML);
+
       let event: any = {
         target: document.body.querySelector('.test-element')
-      };
+      } as unknown;
 
-      console.log(event.target);
+
       view.onRunnerMouseDownHandler(event);
 
       assert.equal(event.target.style.position, 'absolute');
       assert.equal(event.target.style.zIndex, '1000');
     })
+
     it(`sets onRunnerMouseMoveHandler, 
     onRunnerMouseUpHandler and onDragStartHandler on event.targert`, () => {
       document.body.appendChild(testHTMLElement);
-      console.log(document.body.outerHTML);
       let event: any = {
         target: document.body.querySelector('.test-element')
       };
 
-      view.onRunnerMouseDownHandler(event);
+      let mouseDownObj = {
+        bookmark: 'test-mousedown',
+        element: document.body.querySelector('.test-element'),
+        eventName: 'mousedown',
+        cb: view.onRunnerMouseDownHandler,
+        enviroment: view,
+      }
 
-      assert.property(view.handlers, 'mousemove');
-      assert.property(view.handlers, 'mouseup');
-      assert.property(view.handlers, 'dragstart');
+     // view.onHandlerRegister({mouseDownObj});
+      view.onRunnerMouseDownHandler.call(view, event);
+
+      assert.property(view.handlers, 'runnerMouseMove');
+      assert.deepEqual(view.handlers.runnerMouseMove.enviroment, view);
+      assert.property(view.handlers, 'runnerMouseUp');
+      assert.deepEqual(view.handlers.runnerMouseUp.enviroment, view);
+      assert.property(view.handlers, 'runnerDragStart');
+      assert.deepEqual(view.handlers.runnerDragStart.enviroment, view);
+    })
+  })
+
+  describe('onRunnerMouseMoveHandler', () => {
+    
+    let view;
+    let testHTMLElement;
+    before(() => {
+      view = new View();
+      testHTMLElement = document.createElement('div');
+      testHTMLElement.className = 'test-element';
+    })
+
+    let sandbox = sinon.createSandbox();
+    beforeEach(function() {
+      sandbox.spy(view);
+  });
+
+    afterEach(function() {
+      sandbox.restore();
+    });
+
+    it('calls onMoveElementAtPoint', () => {
+      document.body.appendChild(testHTMLElement);
+      const domElement = document.querySelector('.test-element');
+
+      let eventMock = {
+        target: domElement as HTMLElement,
+        clientX: 10,
+        clientY: 10,
+      } as unknown;
+      console.log('before onRunnerMouseMoveHandler' )
+      view.onRunnerMouseMoveHandler.call(view, eventMock);
+      console.log('after onRunnerMouseMoveHandler' )
+     
+      assert.equal(view.onMoveElementAtPoint.callCount, 1);
+      
+    })
+  })
+
+  describe('onMoveElementAtPoint', () => {
+    let view;
+    let testHTMLElement;
+    before(() => {
+      view = new View();
+      testHTMLElement = document.createElement('div');
+      testHTMLElement.className = 'test-element';
+    })
+    it('moves target element to point x or y',() => {
+      document.body.appendChild(testHTMLElement);
+      const domElement = document.querySelector('.test-element') as HTMLElement;
+      let point = [];
+      for(let i = 0; i < 300; i = i + 1) {
+        point.push(i);
+      }
+
+      for(let i = 0; i < 300; i = i + 1) {
+        console.log(point[i]);
+        view.onMoveElementAtPoint({point: point[i], element: domElement, vertical: false})
+        assert.equal(domElement.style.width, i + 'px');
+        view. onMoveElementAtPoint({point: point[i], element: domElement, vertical: true})
+        assert.equal(domElement.style.height, i + 'px');
+      }
     })
   })
 })
