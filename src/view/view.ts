@@ -2,7 +2,9 @@ import { Runner } from "mocha";
 
 
 export default class View {
-  handlers = {};
+  handlers: handlers = {
+
+  }
 
   vertical: boolean = true;
 
@@ -233,27 +235,23 @@ export default class View {
     });
   }
 
-  onHandlerRegister(obj :{ bookmark: string ; element: HTMLElement;
+  onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
      eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: any}): boolean {
     const {
       bookmark, element, eventName, cb, enviroment,
     } = obj;
     const bindedFunc = cb.bind(this);
+
     this.handlers[bookmark] = {
       element,
       eventName,
       bindedFunc,
       enviroment,
+      bookmark,
     };
+    element.addEventListener(eventName, bindedFunc);
+    element.dataset[bookmark] = 'true';
     return true;
-  }
-
-  onHandlerDelete(bookmark: string): boolean | Error {
-    if (bookmark in this.handlers) {
-      delete this.handlers[bookmark];
-      return true;
-    }
-    throw new Error('No such event handler was found');
   }
 
 
@@ -271,6 +269,8 @@ export default class View {
       enviroment: this,
     });
 
+
+
     this.onHandlerRegister({
       bookmark: 'runnerMouseUp',
       element: event.target as HTMLElement,
@@ -278,6 +278,7 @@ export default class View {
       cb: this.onRunnerMouseUpHandler,
       enviroment: this,
     });
+ 
 
     this.onHandlerRegister({
       bookmark: 'runnerDragStart',
@@ -315,15 +316,36 @@ export default class View {
   }
 
   onRunnerMouseUpHandler() {
+    const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
+    this.onHandlerDelete(mouseMoveBookmark);
+
+    const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
+    this.onHandlerDelete(mouseUpBookmark);
+
+    const { bookmark: dragStartBookmark } = this.handlers.runnerDragStart;
+    this.onHandlerDelete(dragStartBookmark);
+
     return true;
+  }
+
+  onHandlerDelete(bookmark: string) {
+    if(bookmark in this.handlers) {
+      const { element } = this.handlers[bookmark];
+      delete element.dataset[bookmark];
+      delete this.handlers[bookmark];
+    }
   }
 
   onDragStartHandler() {
-    return true;
+    return false;
   }
 
   onTooltipMoveHandler() {
+    
+  }
 
+  onTooltipCopyHandler() {
+    return false;
   }
 }
 
@@ -332,3 +354,14 @@ type rules = {
 }
 
 type runnerEvents = 'mousedown' | 'mousemove' | 'mouseup' | 'click' | 'dragstart';
+type handlerData = {
+  element: HTMLElement;
+  eventName: runnerEvents;
+  bindedFunc: any;
+  enviroment: View;
+  bookmark: string;
+}
+
+type handlers = {
+  [string: string]: handlerData;
+}

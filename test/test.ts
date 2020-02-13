@@ -479,17 +479,25 @@ describe('view', () => {
         return true;
       }
 
-      let handlerTarget: HTMLElement = document.querySelector('#slider');
+      let handlerTarget = document.getElementById('#slider');
+      console.log(document.body.outerHTML, handlerTarget)
       let eventType = 'mouseDown';
 
     
-      view.onHandlerRegister({bookmark: 'bookmark',
-      element: handlerTarget, eventName: eventType, cb: eventHandler, enviroment: view});
+      view.onHandlerRegister({
+        bookmark: 'bookmark',
+        element: handlerTarget,
+        eventName: eventType,
+        cb: eventHandler,
+        enviroment: view
+      });
 
+      console.log(handlerTarget, 'element at onhandlerregister')
       assert.isObject(view.handlers);
       assert.property(view.handlers, 'bookmark');
-      assert.hasAllKeys(view.handlers.bookmark, ['element', 'eventName', 'bindedFunc', 'enviroment']);
+      assert.hasAllKeys(view.handlers.bookmark, ['element', 'eventName', 'bindedFunc', 'enviroment', 'bookmark']);
       assert.equal(view.handlers.bookmark.enviroment, view);
+      assert.equal(handlerTarget.dataset['bookmark'], 'true');
     })
   })
 
@@ -498,12 +506,29 @@ describe('view', () => {
     before(() => {
       view = new View();
     })
-    it('removes handler from view.handlers', () => {
-      view.handlers['someHandler'] = {};
-      view.onHandlerDelete('someHandler');
-      assert.equal(view.handlers['someHandler'], undefined);
+    it('deletes handler from element', () => {
+      let eventHandler = function(event: Event): boolean {
+        return true;
+      }
+
+      let handlerTarget = document.getElementById('#slider');
+      console.log(document.body.outerHTML, handlerTarget)
+      let eventType = 'mouseDown';
+
+      view.onHandlerRegister({
+        bookmark: 'bookmark',
+        element: handlerTarget,
+        eventName: eventType,
+        cb: eventHandler,
+        enviroment: view
+      });
+
+      view.onHandlerDelete('bookmark');
+      assert.isUndefined(view.handlers.bookmark);
     })
   })
+
+
   
 
   describe('onMouseDownHandler', () => {
@@ -616,6 +641,42 @@ describe('view', () => {
         view. onMoveElementAtPoint({point: point[i], element: domElement, vertical: true})
         assert.equal(domElement.style.height, i + 'px');
       }
+    })
+  })
+
+  describe('onRunnerMouseUpHandler', () => {
+    let view;
+    let testHTMLElement;
+    before(() => {
+      view = new View();
+      testHTMLElement = document.createElement('div');
+      testHTMLElement.className = 'test-element';
+    })
+    //////////////////////////////
+    it('removes onRunnerMouseMoveHandler and onRunnerMouseUpHandler from event.target', 
+    () => {
+      
+      document.body.appendChild(testHTMLElement);
+
+      let event: any = {
+        target: document.body.querySelector('.test-element')
+      } as unknown;
+
+
+      view.onRunnerMouseDownHandler(event);
+      assert.property(view.handlers, 'runnerMouseMove', 'first');
+      assert.property(view.handlers, 'runnerMouseUp', 'second');
+      assert.property(view.handlers, 'runnerDragStart', 'last');
+      
+      view.onRunnerMouseUpHandler(event);
+
+      assert.isUndefined(view.handlers.runnerMouseMove, 'runnerMouseMove');
+      assert.isUndefined(view.handlers.runnerMouseUp, 'runnerMouseUp');
+      assert.isUndefined(view.handlers.runnerDragStart, 'runnerDragStart');
+
+      assert.isUndefined(event.target.dataset.runnerMouseMove);
+      assert.isUndefined(event.target.dataset.runnerMouseUp);
+      assert.isUndefined(event.target.dataset.runnerDragStart);
     })
   })
 })
