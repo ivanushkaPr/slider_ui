@@ -6,7 +6,13 @@ export default class View {
 
   }
 
+  controller;
+
   vertical: boolean = true;
+
+  fetchModelProperty(property) {
+    return this.controller.getModelProperty(property);
+  }
 
   createElement(nodeName: string, className: string) {
     const element = document.createElement(nodeName);
@@ -269,8 +275,6 @@ export default class View {
       enviroment: this,
     });
 
-
-
     this.onHandlerRegister({
       bookmark: 'runnerMouseUp',
       element: event.target as HTMLElement,
@@ -278,7 +282,6 @@ export default class View {
       cb: this.onRunnerMouseUpHandler,
       enviroment: this,
     });
- 
 
     this.onHandlerRegister({
       bookmark: 'runnerDragStart',

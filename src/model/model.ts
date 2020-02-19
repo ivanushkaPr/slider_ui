@@ -14,11 +14,23 @@ export class Model {
     id: undefined,
   }
 
+  controller;
+
   constructor(configuration: configuration) {
     if (Model.isConf(configuration)) {
       this.configuration = configuration;
       this.checkConf(this.configuration);
     }
+  }
+
+  changeConfState(property, value) {
+    this.configuration[property] = value;
+    return true;
+  }
+
+  getConfState(property) {
+    const targetProp = this.configuration[property];
+    return targetProp;
   }
 
   static isConf(configuration: configuration): boolean | Error {

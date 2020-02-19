@@ -34,20 +34,7 @@ let { window } = new JSDOM('<!doctype html><html><body><div id="#slider"></div><
 global.document = window.document;
 global.window = window;
 
-// Controller tests
-describe('Controller constructor', () => {
-  let model, view, controller;
-  before(() => {
-    model = new Model(uConfiguration);
-    view = new View();
-    controller = new Controller(model, view);
-  })
-  it('Saves links to model and view instances', () => {
-    assert.property(controller, 'model');
-    
-    assert.property(controller, 'view');
-  })
-})
+
 
 // View tests
 
@@ -284,7 +271,7 @@ describe('view', () => {
       document.body.outerHTML = '<div id="slider"> </div>';
     })
     it('renders progress for one runner', () => {
-       view.createSlider({runners: [0], vertical: false, id: '#slider'});
+      view.createSlider({runners: [0], vertical: false, id: '#slider'});
       let range = document.querySelector('.slider__range');
       let runners = document.querySelectorAll('.slider__runner');
 
@@ -451,6 +438,7 @@ describe('view', () => {
 
       view.createAndSetProgress({ runners, parent: range, vertical: false });
       assert.equal(view.renderProgress.calledOnce, true, 'Error in create single runner');
+      
     })
   })
 
@@ -527,9 +515,6 @@ describe('view', () => {
       assert.isUndefined(view.handlers.bookmark);
     })
   })
-
-
-  
 
   describe('onMouseDownHandler', () => {
     let view;
@@ -724,3 +709,112 @@ describe('checkConf', () => {
     }
   })
 })
+
+describe('model interface', () => {
+  it('can change properties of configuration', () => {
+
+  })
+})
+
+// Controller tests
+describe('Controller constructor', () => {
+  let sandbox, model, modelSpy, view, viewSpy, controller, controllerSpy;
+  before(() => {
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+  })
+
+  it('Saves links to model and view instances', () => {
+    assert.property(controller, 'model');
+    assert.property(controller, 'view');
+  })
+})
+
+describe('setModelProperty', () => {
+  let sandbox, model, modelSpy, view, viewSpy, controller, controllerSpy;
+  before(() => {
+    sandbox = sinon.createSandbox();
+
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+
+    sandbox.spy(controller);
+  })
+
+  after(()=> {
+    sandbox.restore();
+    model = undefined;
+    view = undefined;
+    controller = undefined;
+  })
+
+  it('can change configurations properties in model', () => {
+    controller.setModelProperty('vertical', true);
+    assert.equal(controller.model.configuration.vertical, true);
+  })
+})
+
+describe('getModelProperty', () => {
+  let sandbox, model, view, controller;
+  before(() => {
+    sandbox = sinon.createSandbox();
+
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+
+    sandbox.spy(controller);
+  })
+
+  after(()=> {
+    sandbox.restore();
+    model = undefined;
+    view = undefined;
+    controller = undefined;
+  })
+
+  it('can get any configuration property from model', () => {
+    let verticalState = controller.getModelProperty('minValue');
+    assert.equal(verticalState, false);
+  })
+})
+
+describe('fetchModelProperty', () => {
+  let sandbox, model, view, controller;
+  before(() => {
+    sandbox = sinon.createSandbox();
+
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+    sandbox.spy(controller);
+  })
+
+  after(()=> {
+    sandbox.restore();
+    model = undefined;
+    view = undefined;
+    controller = undefined;
+  })
+
+  it('returns model property', () => {
+    let minValue = view.fetchModelProperty('minValue');
+
+    let modelConfigEntries = Object.entries(model.configuration);
+    let basicConfigEntries = Object.entries(uConfiguration);
+
+    for(let i = 0; i < modelConfigEntries.length; i++) {
+      if(!(basicConfigEntries[i][0] in modelConfigEntries[i])) {
+        continue;
+      }
+      assert.equal(modelConfigEntries[i][1], basicConfigEntries[i][1])
+    }
+  })
+})
+
+describe('getViewProperty', () => {
+
+})
+
