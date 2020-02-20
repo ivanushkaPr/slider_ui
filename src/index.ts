@@ -1,12 +1,21 @@
 
 import View from './view/view';
+import { Model, uConfiguration } from './model/model';
+import Controller from './controller/controller';
+
 import * as $ from 'jquery';
 const jQuery = $;
 
 
+let model = new Model(uConfiguration);
 let view = new View();
-view.createSlider({ runners: [0, 50], vertical: false, id: '#slider'});
-console.log(view);
+let controller = new Controller(model, view);
+
+
+
+console.log(view.fetchModelProperty('minValue'));
+console.log(view.fetchModelProperty('maxValue'));
+
 
 
 /* eslint-disable */

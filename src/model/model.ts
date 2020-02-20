@@ -84,7 +84,7 @@ export const uConfiguration = {
   maxValue: 100,
   currentValue: 0,
   steps: 0,
-  runners: [0],
+  runners: [0, 50],
   stepsOn: false,
   vertical: false,
   invertRange: false,

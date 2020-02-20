@@ -6,8 +6,14 @@ export default class View {
   }
 
   controller;
+
   draggable;
-  vertical: boolean = false;
+
+  shiftX;
+
+  shiftY;
+
+
 
   fetchModelProperty(property) {
     const propState = this.controller.getModelProperty(property);
@@ -44,7 +50,8 @@ export default class View {
     return El;
   }
 
-  createRange(vertical: boolean = false): HTMLElement {
+  createRange(): HTMLElement {
+    const vertical = this. fetchModelProperty('vertical');
     const range = this.createElement('div', 'slider__range');
     if (vertical) {
       range.classList.add('slider__range--vertical');
@@ -60,13 +67,25 @@ export default class View {
     return runner;
   }
 
-  createTooltip(): HTMLElement {
+  createTooltip(position): HTMLElement {
     const tooltip = this.createElement('div', 'slider__tooltip');
+    const vertical =this.fetchModelProperty('vertical');
+    if (!vertical) {
+      tooltip.classList.add('slider__tooltip--horizontal');
+    } else {
+      tooltip.classList.add('slider__tooltip--vertical');
+    }
+    tooltip.addEventListener('dragstart', (e) => {
+      e.preventDefault();
+    });
+
+    tooltip.innerHTML = String(position);
     return tooltip;
   }
 
-  createProgress(vertical: boolean): HTMLElement {
+  createProgress(): HTMLElement {
     const progress = this.createElement('div', 'slider__progress');
+    const vertical = this.fetchModelProperty('vertical');
     if (vertical) {
       progress.classList.add('slider__progress--vertical');
       return progress;
@@ -89,7 +108,7 @@ export default class View {
     if (!vertical) {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
-        const progress = this.createProgress(vertical);
+        const progress = this.createProgress();
         let start: number;
         let end: number;
         let position: number;
@@ -118,7 +137,7 @@ export default class View {
     else {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
-        const progress = this.createProgress(vertical);
+        const progress = this.createProgress();
         let start: number;
         let end: number;
         let position: number;
@@ -207,7 +226,7 @@ export default class View {
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
-    const range = this.createRange(vertical);
+    const range = this.createRange();
     if (vertical) {
       range.style.height = '300px';
     } else {
@@ -218,23 +237,48 @@ export default class View {
 
     runners.forEach((runnerPosition: number, index) => {
 
+      const runner = this.createRunner();
+      const runnerWithPos = this.setPosition({
+        element: runner,
+        position: runnerPosition,
+        axis: vertical === false ? 'left' : 'top',
+        parent: range,
+      });
+
+      range.appendChild(runnerWithPos);
+
+      /*
       this.createAndSetElementPosition({
         position: runnerPosition,
         vertical,
         callback: 'createRunner',
         parent: range,
       });
+      */
 
+      const tooltip = this.createTooltip(runnerPosition);
+      const tooltipPositioned = this.setPosition({
+        element: tooltip,
+        position: runnerPosition,
+        axis: vertical === false ? 'left' : 'top',
+        parent: range,
+      });
+      range.appendChild(tooltipPositioned);
+
+      /*
       this.createAndSetElementPosition({
         position: runnerPosition,
         vertical,
         callback: 'createTooltip',
         parent: range,
       });
+      */
     });
 
     const RenderedRunners = document.querySelectorAll('.slider__runner');
     this.setDataAttr(RenderedRunners);
+    const RenderedTooltips = document.querySelectorAll('.slider__tooltip');
+    this.setDataAttr(RenderedTooltips);
 
     RenderedRunners.forEach((runner) => {
       this.onHandlerRegister({
@@ -251,13 +295,24 @@ export default class View {
   setDataAttr(elements: NodeList): void {
     const collection = elements;
     let pair = 1;
-    collection.forEach((target, index) => {
-      const HTMLrunner = target as HTMLElement;
-      HTMLrunner.dataset.pair = String(pair);
-      if (index % 2 === 1) {
-        pair += 1;
-      }
-    });
+
+    if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
+      console.log('slider__runner')
+      collection.forEach((target, index) => {
+        const HTMLrunner = target as HTMLElement;
+        HTMLrunner.dataset.pair = String(pair);
+        if (index % 2 === 1) {
+          pair += 1;
+        }
+        HTMLrunner.dataset.tooltipSibling = String(index);
+      });
+    }
+    else if ((elements[0] as HTMLElement).classList.contains('slider__tooltip')) {
+      collection.forEach((target, index) => {
+        const HTMLtooltip = target as HTMLElement;
+        HTMLtooltip.dataset.runnerSibling = String(index);
+      });
+    }
   }
 
   onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
@@ -280,14 +335,19 @@ export default class View {
   }
 
 
-  onRunnerMouseDownHandler(event: Event): boolean {
+  onRunnerMouseDownHandler(event: MouseEvent): boolean {
+    event.preventDefault();
     const targetElement = event.target as HTMLElement;
 
     targetElement.style.position = 'absolute';
     targetElement.style.zIndex = '1000';
     this.draggable = targetElement;
 
+    this.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
+    this.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
+
     
+
     this.onHandlerRegister({
       bookmark: 'runnerMouseMove',
       element: document.body as HTMLElement,
@@ -319,24 +379,58 @@ export default class View {
 
   onRunnerMouseMoveHandler(event: MouseEvent): boolean {
     const { clientX, clientY } = event;
-    const { vertical } = this;
+    const vertical = this.fetchModelProperty('vertical'); 
     let params;
     if (!vertical) {
-      params = { point: clientX, element: this.draggable, vertical: this.vertical };
+      params = { point: clientX, element: this.draggable, vertical };
     } else {
-      params = { point: clientY, element: this.draggable, vertical: this.vertical };
+      params = { point: clientY, element: this.draggable, vertical };
     }
 
     this.onMoveElementAtPoint(params);
     return true;
   }
 
+  onRestrictDrag(parent) {
+   
+  }
+
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     if (!vertical) {
-      element.style.left = `${point}px`;
+      const parent = element.parentNode as HTMLElement;
+      const border = parent.clientLeft;
+      const rect = parent.getBoundingClientRect();
+      const { left, right } = rect;
+
+      const offset = parent.offsetLeft;
+
+      let position = point - offset - this.shiftX;
+      if (position < left - offset) {
+        position = left - offset;
+      }
+      if(position + this.draggable.offsetWidth > right - offset) {
+        position = right - offset - border * 2 - this.draggable.offsetWidth;
+      }
+      element.style.left = `${position}px`;
+
+      const siblingNumber = element.dataset.tooltipSibling;
+      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
+      siblingTooltip.style.left = `${position}px`;
+
+      this.onRestrictDrag(parent);
+
+      
     } else {
-      element.style.top = `${point}px`;
+      const parent = element.parentNode as HTMLElement;
+      const offset = parent.offsetTop;
+      const position = `${point - offset}px`;
+      element.style.top = position;
+
+      const siblingNumber = element.dataset.tooltipSibling;
+      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
+      siblingTooltip.style.top = position;
+
     }
   }
 
@@ -371,9 +465,7 @@ export default class View {
     return false;
   }
 
-  onTooltipMoveHandler(event) {
-    
-  }
+ 
 
   onTooltipCopyHandler() {
     return false;

@@ -14,6 +14,12 @@ export default class Controller {
     this.view = view;
     this.view.controller = this;
     this.model.controller = this;
+    let initProps = {
+      runners: this.getModelProperty('runners'),
+      vertical: this.getModelProperty('vertical'),
+      id: this.getModelProperty('id'),
+    }
+    this.view.createSlider(initProps);
   }
 
   setModelProperty(property, value) {
