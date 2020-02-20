@@ -1,7 +1,12 @@
 
+import View from './view/view';
 import * as $ from 'jquery';
 const jQuery = $;
 
+
+let view = new View();
+view.createSlider({ runners: [0, 50], vertical: false, id: '#slider'});
+console.log(view);
 
 
 /* eslint-disable */
@@ -20,9 +25,4 @@ const jQuery = $;
   };
 })($);
 
-
-
-$(document.body).click(function() {
-  $(this).slider().css({border: '100px solid black'});
-})
 

@@ -1,17 +1,25 @@
 import { Runner } from "mocha";
 
-
 export default class View {
   handlers: handlers = {
 
   }
 
   controller;
-
-  vertical: boolean = true;
+  draggable;
+  vertical: boolean = false;
 
   fetchModelProperty(property) {
-    return this.controller.getModelProperty(property);
+    const propState = this.controller.getModelProperty(property);
+    if (propState !== undefined || propState !== null) {
+      return this.controller.getModelProperty(property);
+    }
+    throw new Error('no such property was found');
+  }
+
+  setModelProperty(property, value) {
+    this.controller.setModelProperty(property, value);
+    return true;
   }
 
   createElement(nodeName: string, className: string) {
@@ -119,13 +127,13 @@ export default class View {
           start = runners[0].getBoundingClientRect().bottom;
           position = parent.getBoundingClientRect().top;
         }
-        if(runners.length % 2 === 0 && runner % 2 === 0) {
+        if (runners.length % 2 === 0 && runner % 2 === 0) {
           start = runners[runner + 1].getBoundingClientRect().bottom;
           end = runners[runner].getBoundingClientRect().top;
           position = parent.getBoundingClientRect().height
             - runners[runner].getBoundingClientRect().top;
         }
-        if(runner % 2 === 0) {
+        if (runner % 2 === 0) {
           const size = this.calculateProgressSize({ start, end });
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           this.setPosition({
@@ -182,7 +190,7 @@ export default class View {
     return (size - position);
   }
 
-  createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement}): boolean {
+  createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement }): boolean {
     const {
       position, vertical, callback, parent,
     } = obj;
@@ -227,6 +235,17 @@ export default class View {
 
     const RenderedRunners = document.querySelectorAll('.slider__runner');
     this.setDataAttr(RenderedRunners);
+
+    RenderedRunners.forEach((runner) => {
+      this.onHandlerRegister({
+        bookmark: `runnerMouseDown`,
+        element: runner as HTMLElement,
+        eventName: 'mousedown',
+        cb: this.onRunnerMouseDownHandler,
+        enviroment: this,
+      });
+    })
+    return undefined;
   }
 
   setDataAttr(elements: NodeList): void {
@@ -266,22 +285,26 @@ export default class View {
 
     targetElement.style.position = 'absolute';
     targetElement.style.zIndex = '1000';
+    this.draggable = targetElement;
 
+    
     this.onHandlerRegister({
       bookmark: 'runnerMouseMove',
-      element: event.target as HTMLElement,
+      element: document.body as HTMLElement,
       eventName: 'mousemove',
       cb: this.onRunnerMouseMoveHandler,
       enviroment: this,
     });
+    
 
     this.onHandlerRegister({
       bookmark: 'runnerMouseUp',
-      element: event.target as HTMLElement,
+      element: document.body as HTMLElement,
       eventName: 'mouseup',
       cb: this.onRunnerMouseUpHandler,
       enviroment: this,
     });
+
 
     this.onHandlerRegister({
       bookmark: 'runnerDragStart',
@@ -295,13 +318,13 @@ export default class View {
   }
 
   onRunnerMouseMoveHandler(event: MouseEvent): boolean {
-    const { target, clientX, clientY } = event;
+    const { clientX, clientY } = event;
     const { vertical } = this;
     let params;
     if (!vertical) {
-      params = { point: clientX, element: target, vertical: this.vertical };
-    }else {
-      params = { point: clientY, element: target, vertical: this.vertical };
+      params = { point: clientX, element: this.draggable, vertical: this.vertical };
+    } else {
+      params = { point: clientY, element: this.draggable, vertical: this.vertical };
     }
 
     this.onMoveElementAtPoint(params);
@@ -309,21 +332,25 @@ export default class View {
   }
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
-    let {point, element, vertical} = obj;
-    if(!vertical) {
-      element.style.width = `${point}px`;
-    }
-    else {
-      element.style.height = `${point}px`;
+    const { point, element, vertical } = obj;
+    if (!vertical) {
+      element.style.left = `${point}px`;
+    } else {
+      element.style.top = `${point}px`;
     }
   }
+
+
 
   onRunnerMouseUpHandler() {
     const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
     this.onHandlerDelete(mouseMoveBookmark);
 
+
     const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
+    console.log(this.handlers.runnerMouseUp, 'runnerMouseUp');
     this.onHandlerDelete(mouseUpBookmark);
+    
 
     const { bookmark: dragStartBookmark } = this.handlers.runnerDragStart;
     this.onHandlerDelete(dragStartBookmark);
@@ -333,7 +360,8 @@ export default class View {
 
   onHandlerDelete(bookmark: string) {
     if(bookmark in this.handlers) {
-      const { element } = this.handlers[bookmark];
+      const { element, eventName, bindedFunc } = this.handlers[bookmark];
+      element.removeEventListener(eventName, bindedFunc);
       delete element.dataset[bookmark];
       delete this.handlers[bookmark];
     }
@@ -343,7 +371,7 @@ export default class View {
     return false;
   }
 
-  onTooltipMoveHandler() {
+  onTooltipMoveHandler(event) {
     
   }
 

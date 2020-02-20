@@ -1,6 +1,48 @@
 <!DOCTYPE html>
 <head> </head>
 <body>
+  <style>
+    .slider__range {
+      background-color: white;
+      border: 1px solid red;
+      border-radius: 5px;
+      position: relative;
+    }
+
+    .slider__range--horizontal {
+      height: 10px;
+    }
+
+    .slider__range--vertical {
+      width: 10px;
+    }
+
+    .slider__runner {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: blue;
+      border-radius: 1px solid black;
+    }
+
+    .slider__tooltip {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: white;
+      border: 2px solid black;
+      margin-top: 100px;
+    }
+
+    .slider__tooltip--horizontal {
+
+    }
+
+    .slider__tooltip--vertical {
+
+    }
+  </style>
   <div class='slider'> Это слайдер </div>
+  <div id='#slider'> Это слайдер </div>
 <script type="text/javascript" src="bundle.js"></script></body>
 </html>

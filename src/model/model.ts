@@ -57,16 +57,13 @@ export class Model {
     return undefined;
   }
 
-  
-
   sendUpdate() {
-    
+
   }
 
   getUpdate() {
 
   }
-
 }
 
 export type configuration = {

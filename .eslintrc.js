@@ -20,5 +20,13 @@ module.exports = {
   ],
   rules: {
     "class-methods-use-this": 0,
+    "import/no-unresolved": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "ts": "always",
+      }
+   ]
   },
 };

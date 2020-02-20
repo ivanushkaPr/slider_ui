@@ -664,6 +664,12 @@ describe('view', () => {
       assert.isUndefined(event.target.dataset.runnerDragStart);
     })
   })
+
+  describe('onTooltipMoveHandler', () => {
+    it('', () => {
+
+    })
+  })
 })
 
 // Model tests
@@ -710,9 +716,61 @@ describe('checkConf', () => {
   })
 })
 
-describe('model interface', () => {
-  it('can change properties of configuration', () => {
+describe('fetchModelProperty', () => {
+  let sandbox, model, view, controller;
+  before(() => {
+    sandbox = sinon.createSandbox();
 
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+    sandbox.spy(controller);
+  })
+
+  after(()=> {
+    sandbox.restore();
+    model = undefined;
+    view = undefined;
+    controller = undefined;
+  })
+
+  it('returns model property', () => {
+    let minValue = view.fetchModelProperty('minValue');
+
+    let modelConfigEntries = Object.entries(model.configuration);
+    let basicConfigEntries = Object.entries(uConfiguration);
+
+    for(let i = 0; i < modelConfigEntries.length; i++) {
+      if(!(basicConfigEntries[i][0] in modelConfigEntries[i])) {
+        continue;
+      }
+      assert.equal(modelConfigEntries[i][1], basicConfigEntries[i][1])
+    }
+  })
+})
+
+
+describe('setModelProperty', () => {
+  let sandbox, model, view, controller;
+  before(() => {
+    sandbox = sinon.createSandbox();
+
+    model = new Model(uConfiguration);
+    view = new View();
+    controller = new Controller(model, view);
+    sandbox.spy(controller);
+  })
+
+  after(()=> {
+    sandbox.restore();
+    model = undefined;
+    view = undefined;
+    controller = undefined;
+  })
+
+  it('calls controller method setModelProperty', () => {
+    view.setModelProperty('minValue', 50);
+    assert.equal(model.configuration['minValue'], 50);
   })
 })
 
@@ -777,40 +835,7 @@ describe('getModelProperty', () => {
 
   it('can get any configuration property from model', () => {
     let verticalState = controller.getModelProperty('minValue');
-    assert.equal(verticalState, false);
-  })
-})
-
-describe('fetchModelProperty', () => {
-  let sandbox, model, view, controller;
-  before(() => {
-    sandbox = sinon.createSandbox();
-
-    model = new Model(uConfiguration);
-    view = new View();
-    controller = new Controller(model, view);
-    sandbox.spy(controller);
-  })
-
-  after(()=> {
-    sandbox.restore();
-    model = undefined;
-    view = undefined;
-    controller = undefined;
-  })
-
-  it('returns model property', () => {
-    let minValue = view.fetchModelProperty('minValue');
-
-    let modelConfigEntries = Object.entries(model.configuration);
-    let basicConfigEntries = Object.entries(uConfiguration);
-
-    for(let i = 0; i < modelConfigEntries.length; i++) {
-      if(!(basicConfigEntries[i][0] in modelConfigEntries[i])) {
-        continue;
-      }
-      assert.equal(modelConfigEntries[i][1], basicConfigEntries[i][1])
-    }
+    assert.equal(verticalState, 50);
   })
 })
 

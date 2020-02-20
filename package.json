@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha -r ts-node/register test/test.ts",
     "build": "webpack",
-    "ts-node": "ts-node"
+    "ts-node": "ts-node",
+    "start": "webpack-dev-server --open"
   },
   "keywords": [],
   "author": "",
@@ -38,7 +39,8 @@
     "ts-node": "^8.6.2",
     "typescript": "^3.7.5",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
     "@types/node": "^13.5.0",

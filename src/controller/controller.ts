@@ -22,7 +22,7 @@ export default class Controller {
   }
 
   getModelProperty(property) {
-    let tProp = this.model.getConfState(property);
+    const tProp = this.model.getConfState(property);
     return tProp;
   }
 
