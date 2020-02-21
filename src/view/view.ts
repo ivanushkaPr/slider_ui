@@ -9,6 +9,7 @@ export default class View {
   controller;
 
   draggable;
+  collision;
 
   shiftX;
 
@@ -422,11 +423,18 @@ export default class View {
     return true;
   }
 
-  onMoveProgress(obj: {parent: HTMLElement, runner: HTMLElement}) {
-    const {parent, runner: element} = obj;
+  onMoveProgress(obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean}) {
+    const {parent, runner: element, collision} = obj;
     const { start, startAndEnd } = this.draggable.dataset;
     const siblingProgressNumber = element.dataset.pair;
     const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+    if(collision) {
+      progress.style.display = 'none';
+    }
+    if(!collision) {
+      progress.style.display = 'block';
+    }
+
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
         console.log(progress);
@@ -492,6 +500,10 @@ export default class View {
     return point;
   }
 
+  onCollision() {
+
+  }
+
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
@@ -514,16 +526,34 @@ export default class View {
       };
 
 
-      const avaiblePosition = this.onRestrictDrag(restrictedCoords);
+      let avaiblePosition = this.onRestrictDrag(restrictedCoords);
+      let collision = false;
+
+      const { pair: siblingPairNumber } = element.dataset;
+      const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
+
+      if(element.dataset.start === 'true') {
+        if(point + this.shiftX + border > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
+          avaiblePosition = siblings[1].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
+          element.style.zIndex = '9999';
+          collision = true;
+        }
+      }
+      else if (point - this.shiftX < siblings[0].getBoundingClientRect().left) {
+        avaiblePosition = siblings[0].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
+        element.style.zIndex = '9999';
+        collision = true;
+      }
+
+
       element.style.left = `${avaiblePosition}px`;
 
-
-      this.onMoveProgress({ parent, runner: element });
+      this.onMoveProgress({ parent, runner: element, collision });
 
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.left = `${position}px`;
-      siblingTooltip.innerHTML = `${position}`;
+      siblingTooltip.style.left = `${avaiblePosition}px`;
+      siblingTooltip.innerHTML = `${avaiblePosition}`;
 
 
     } else {
@@ -560,7 +590,8 @@ export default class View {
 
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.top = `${position}px`;
+      siblingTooltip.style.top = `${avaiblePosition}px`;
+      siblingTooltip.innerHTML = `${avaiblePosition}`;
     }
   }
 
