@@ -198,7 +198,7 @@ export default class View {
     if (axis === 'top') {
       const parentHeight = parseInt(parent.style.height, 10);
       const pos = this.positionFromEnd({size: parentHeight, position });
-      console.log(pos, 'position from end');
+ 
       targetEl.style[axis] = `${pos}px`;
     } else {
       targetEl.style[axis] = `${position}px`;
@@ -211,7 +211,7 @@ export default class View {
     const {
       size, position
     } = obj;
-    console.log(size, position, 'in from endianness')
+
     return ((size - position));
   }
 
@@ -437,7 +437,7 @@ export default class View {
 
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-        console.log(progress);
+
         const width = element.getBoundingClientRect().left;
         progress.style.width = `${width}px`;
 
@@ -496,7 +496,7 @@ export default class View {
     } else {
       point = position;
     }
-    console.log(point);
+
     return point;
   }
 
@@ -514,8 +514,7 @@ export default class View {
       const rect = parent.getBoundingClientRect();
       const { left, right } = rect;
 
-
-      const position = point - offset - this.shiftX;
+      const position = point - offset - border - this.shiftX;
 
       const restrictedCoords = {
         firstPointPosition: left - offset,
@@ -533,7 +532,7 @@ export default class View {
       const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
 
       if(element.dataset.start === 'true') {
-        if(point + this.shiftX + border > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
+        if(point + this.shiftX  > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
           avaiblePosition = siblings[1].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
           element.style.zIndex = '9999';
           collision = true;
@@ -575,12 +574,29 @@ export default class View {
       };
 
 
-      const avaiblePosition = this.onRestrictDrag(restrictedCoords);
+      let avaiblePosition = this.onRestrictDrag(restrictedCoords);
+      let collision = false;
+
+      const { pair: siblingPairNumber } = element.dataset;
+      const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
+
+      if (element.dataset.start === 'true') {
+        if (point - this.shiftY  < siblings[1].getBoundingClientRect().top - parent.clientTop) {
+          avaiblePosition = siblings[1].getBoundingClientRect().top - parent.offsetTop - parent.clientTop;
+          element.style.zIndex = '9999';
+          collision = true;
+        }
+      } else if (point + (element.offsetWidth - this.shiftY)> siblings[0].getBoundingClientRect().bottom) {
+        avaiblePosition = siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop - element.offsetWidth;
+        element.style.zIndex = '9999';
+        collision = true;
+      }
+
 
 
       element.style.top = `${avaiblePosition}px`;
 
-      this.onMoveProgress({parent, runner: element});
+      this.onMoveProgress({parent, runner: element, collision});
 
       const { start, startAndEnd } = this.draggable.dataset;
       const siblingProgressNumber = element.dataset.pair;
@@ -607,7 +623,7 @@ export default class View {
 
 
     const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
-    console.log(this.handlers.runnerMouseUp, 'runnerMouseUp');
+   
     this.onHandlerDelete(mouseUpBookmark);
     
 
