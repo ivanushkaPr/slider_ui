@@ -422,28 +422,12 @@ export default class View {
     return true;
   }
 
-  onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
-    const { point, element, vertical } = obj;
-    if (!vertical) {
-      const parent = element.parentNode as HTMLElement;
-      const border = parent.clientLeft;
-      const offset = parent.offsetLeft;
-      const rect = parent.getBoundingClientRect();
-      const { left, right } = rect;
-
-
-      let position = point - offset - this.shiftX;
-      if (position < left - offset) {
-        position = left - offset;
-      }
-      if (position + this.draggable.offsetWidth > right - offset) {
-        position = right - offset - border * 2 - this.draggable.offsetWidth;
-      }
-      element.style.left = `${position}px`;
-
-      const { start, startAndEnd } = this.draggable.dataset;
-      const siblingProgressNumber = element.dataset.pair;
-      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+  onMoveProgress(obj: {parent: HTMLElement, runner: HTMLElement}) {
+    const {parent, runner: element} = obj;
+    const { start, startAndEnd } = this.draggable.dataset;
+    const siblingProgressNumber = element.dataset.pair;
+    const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+    if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
         console.log(progress);
         const width = element.getBoundingClientRect().left;
@@ -466,35 +450,9 @@ export default class View {
         const width = progressEnd - progressStart;
         progress.style.width = `${width}px`;
       }
+    } else if(this.fetchModelProperty('vertical')) {
 
-      const siblingNumber = element.dataset.tooltipSibling;
-      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.left = `${position}px`;
-      siblingTooltip.innerHTML = `${position}`;
-
-
-    } else {
-      const parent = element.parentNode as HTMLElement;
-      const border = parent.clientTop;
-      const offset = parent.offsetTop;
-      const rect = parent.getBoundingClientRect();
-
-      const { top, bottom } = rect;
-
-      let position = point - offset - this.shiftY;
-
-      if (position < top - offset) {
-        position = top - offset;
-      }
-      if (position + this.draggable.offsetHeight > bottom - offset) {
-        position = bottom - offset - border * 2 - this.draggable.offsetHeight;
-      }
-
-      const { start, startAndEnd } = this.draggable.dataset;
-      const siblingProgressNumber = element.dataset.pair;
-      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
-      
-      if(startAndEnd) {
+      if (startAndEnd) {
         const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop;
         const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom;
         progress.style.top = `${top}px`;
@@ -516,13 +474,98 @@ export default class View {
         progress.style.height = `${height}px`;
         progress.style.top = `${top}px`;
       }
+    }
+  }
 
-      element.style.top = `${position}px`;
+  onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
+    const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
+    let point;
+    if (beforeFirstPoint) {
+      point = firstPointPosition;
+    } else if (afterSecondPoint) {
+      point = secondPointPosition;
+
+    } else {
+      point = position;
+    }
+    console.log(point);
+    return point;
+  }
+
+
+  onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
+    const { point, element, vertical } = obj;
+    if (!vertical) {
+      const parent = element.parentNode as HTMLElement;
+      const border = parent.clientLeft;
+      const offset = parent.offsetLeft;
+      const rect = parent.getBoundingClientRect();
+      const { left, right } = rect;
+
+
+      const position = point - offset - this.shiftX;
+
+      const restrictedCoords = {
+        firstPointPosition: left - offset,
+        secondPointPosition: right - offset - border * 2 - this.draggable.offsetWidth,
+        beforeFirstPoint: position < left - offset,
+        afterSecondPoint: position + this.draggable.offsetWidth > right - offset,
+        position,
+      };
+
+
+      const avaiblePosition = this.onRestrictDrag(restrictedCoords);
+      element.style.left = `${avaiblePosition}px`;
+
+
+      this.onMoveProgress({ parent, runner: element });
+
+      const siblingNumber = element.dataset.tooltipSibling;
+      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
+      siblingTooltip.style.left = `${position}px`;
+      siblingTooltip.innerHTML = `${position}`;
+
+
+    } else {
+      const parent = element.parentNode as HTMLElement;
+      const border = parent.clientTop;
+      const offset = parent.offsetTop;
+      const rect = parent.getBoundingClientRect();
+
+      const { top, bottom } = rect;
+
+      const position = point - offset - this.shiftY;
+
+      const restrictedCoords = {
+        firstPointPosition: top - offset,
+        secondPointPosition: bottom - offset - border * 2 - this.draggable.offsetHeight,
+        beforeFirstPoint: position < top - offset,
+        afterSecondPoint: position + this.draggable.offsetHeight > bottom - offset,
+        position,
+      };
+
+
+      const avaiblePosition = this.onRestrictDrag(restrictedCoords);
+
+
+      element.style.top = `${avaiblePosition}px`;
+
+      this.onMoveProgress({parent, runner: element});
+
+      const { start, startAndEnd } = this.draggable.dataset;
+      const siblingProgressNumber = element.dataset.pair;
+      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+
+      
 
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.top = `${position}px`;
     }
+  }
+
+  onMoveTooltip() {
+
   }
 
 
