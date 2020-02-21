@@ -314,14 +314,29 @@ export default class View {
     let pair = 1;
 
     if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
-      console.log('slider__runner')
-      collection.forEach((target, index) => {
+      
+      collection.forEach((target, index, array) => {
+
+
         const HTMLrunner = target as HTMLElement;
         HTMLrunner.dataset.pair = String(pair);
+
+        if (array.length === 1) {
+          HTMLrunner.dataset.startAndEnd = 'true';
+        } else if (index % 2 === 0) {
+          HTMLrunner.dataset.start = 'true';
+        } else {
+          HTMLrunner.dataset.start = 'false';
+        }
+
+
         if (index % 2 === 1) {
           pair += 1;
+
         }
         HTMLrunner.dataset.tooltipSibling = String(index);
+
+
       });
     }
     else if ((elements[0] as HTMLElement).classList.contains('slider__tooltip')) {
@@ -426,10 +441,38 @@ export default class View {
       }
       element.style.left = `${position}px`;
 
+      const { start, startAndEnd } = this.draggable.dataset;
+      const siblingProgressNumber = element.dataset.pair;
+      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+      if (startAndEnd) {
+        console.log(progress);
+        const width = element.getBoundingClientRect().left;
+        progress.style.width = `${width}px`;
+
+      } else if (start === 'true') {
+        const siblingRunnerNumber = element.dataset.pair;
+        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
+        const progressStart = siblings[0].getBoundingClientRect().right;
+        const progressEnd = siblings[1].getBoundingClientRect().left;
+        const width = progressEnd - progressStart;
+        const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
+        progress.style.width = `${width}px`;
+        progress.style.left = `${progressLeft}px`;
+      } else {
+        const siblingRunnerNumber = element.dataset.pair;
+        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
+        const progressStart = siblings[0].getBoundingClientRect().right;
+        const progressEnd = siblings[1].getBoundingClientRect().left;
+        const width = progressEnd - progressStart;
+        progress.style.width = `${width}px`;
+      }
+
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.left = `${position}px`;
       siblingTooltip.innerHTML = `${position}`;
+
+
     } else {
       const parent = element.parentNode as HTMLElement;
       const border = parent.clientTop;
@@ -445,6 +488,33 @@ export default class View {
       }
       if (position + this.draggable.offsetHeight > bottom - offset) {
         position = bottom - offset - border * 2 - this.draggable.offsetHeight;
+      }
+
+      const { start, startAndEnd } = this.draggable.dataset;
+      const siblingProgressNumber = element.dataset.pair;
+      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+      
+      if(startAndEnd) {
+        const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop;
+        const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom;
+        progress.style.top = `${top}px`;
+        progress.style.height = `${height}px`;
+      } else if(start === 'true') {
+        const siblingRunnerNumber = element.dataset.pair;
+        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
+        const progressStart = siblings[0].getBoundingClientRect().top;
+        const progressEnd = siblings[1].getBoundingClientRect().bottom;
+        const height = Math.ceil(progressStart - progressEnd + parent.clientTop);
+        progress.style.height = `${height}px`;
+      } else {
+        const siblingRunnerNumber = element.dataset.pair;
+        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
+        const progressStart = siblings[0].getBoundingClientRect().top;
+        const progressEnd = siblings[1].getBoundingClientRect().bottom;
+        const height = Math.ceil(progressStart - progressEnd + parent.clientTop);
+        const top = siblings[1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop * 2;
+        progress.style.height = `${height}px`;
+        progress.style.top = `${top}px`;
       }
 
       element.style.top = `${position}px`;
