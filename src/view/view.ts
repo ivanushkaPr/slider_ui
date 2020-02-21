@@ -1,4 +1,5 @@
 import { Runner } from "mocha";
+import { endianness } from "os";
 
 export default class View {
   handlers: handlers = {
@@ -107,20 +108,21 @@ export default class View {
     const {runners, parent, vertical} = obj;
     if (!vertical) {
       let count = 1;
+      const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
       for (let runner = 0; runner < runners.length; runner += 1) {
         const progress = this.createProgress();
         let start: number;
         let end: number;
         let position: number;
         if (runners.length === 1) {
-          start = parent.getBoundingClientRect().left;
+          start = parent.getBoundingClientRect().left + parent.clientLeft;
           end = runners[runner].getBoundingClientRect().left;
-          position = parent.getBoundingClientRect().left;
+          position = parent.getBoundingClientRect().left - parent.offsetLeft;
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
           start = runners[runner].getBoundingClientRect().right;
           end = runners[runner + 1].getBoundingClientRect().left;
-          position = runners[runner].getBoundingClientRect().right;
+          position = runners[runner].getBoundingClientRect().right - parentOffsetLeft;
         }
         if(runner % 2 === 0) {
           const size = this.calculateProgressSize({ start, end });
@@ -142,22 +144,27 @@ export default class View {
         let end: number;
         let position: number;
         if (runners.length === 1) {
-          end = parent.getBoundingClientRect().bottom;
+          end = parent.getBoundingClientRect().bottom - parent.clientLeft;
           start = runners[0].getBoundingClientRect().bottom;
-          position = parent.getBoundingClientRect().top;
+          position = parent.getBoundingClientRect().height;
+
+          const size = this.calculateProgressSize({ start, end });
+
+          this.setSize({ element: progress, property: 'height', value: `${size}` });
+          this.setPosition({
+            element: progress, position: size, axis: 'top', parent,
+          });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
           start = runners[runner + 1].getBoundingClientRect().bottom;
           end = runners[runner].getBoundingClientRect().top;
-          position = parent.getBoundingClientRect().height
-            - runners[runner].getBoundingClientRect().top;
-        }
-        if (runner % 2 === 0) {
+          position = runners[runner + 1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop;
+
           const size = this.calculateProgressSize({ start, end });
           this.setSize({ element: progress, property: 'height', value: `${size}` });
-          this.setPosition({
-            element: progress, position, axis: 'top', parent,
-          });
+          progress.style.top = `${position}px`;
+        }
+        if (runner % 2 === 0) {
           progress.dataset.pair = count.toString();
           count += 1;
           parent.appendChild(progress);
@@ -169,11 +176,7 @@ export default class View {
 
   createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
-
-    const axis = vertical === true ? 'height' : 'width';
-    if(runners.length === 1) {
-      this.renderProgress({ runners, parent, vertical });
-    }
+    this.renderProgress({ runners, parent, vertical });
   }
 
 
@@ -193,7 +196,8 @@ export default class View {
     const targetEl = element;
     if (axis === 'top') {
       const parentHeight = parseInt(parent.style.height, 10);
-      const pos = this.positionFromEnd({ size: parentHeight, position });
+      const pos = this.positionFromEnd({size: parentHeight, position });
+      console.log(pos, 'position from end');
       targetEl.style[axis] = `${pos}px`;
     } else {
       targetEl.style[axis] = `${position}px`;
@@ -202,11 +206,12 @@ export default class View {
   }
 
   // Используется для расчета местоположения бегунка при вертикальном положение слайдера.
-  positionFromEnd(obj: {size: number, position: number}) {
+  positionFromEnd(obj: { size: number, position: number}) {
     const {
-      size, position,
+      size, position
     } = obj;
-    return (size - position);
+    console.log(size, position, 'in from endianness')
+    return ((size - position));
   }
 
   createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement }): boolean {
@@ -280,15 +285,27 @@ export default class View {
     const RenderedTooltips = document.querySelectorAll('.slider__tooltip');
     this.setDataAttr(RenderedTooltips);
 
+    this.createAndSetProgress({
+      runners: document.getElementsByClassName('.slider__runner'),
+      parent: range,
+      vertical: this.fetchModelProperty('vertical')
+    });
+
     RenderedRunners.forEach((runner) => {
       this.onHandlerRegister({
-        bookmark: `runnerMouseDown`,
+        bookmark: 'runnerMouseDown',
         element: runner as HTMLElement,
         eventName: 'mousedown',
         cb: this.onRunnerMouseDownHandler,
         enviroment: this,
       });
     })
+
+    this.createAndSetProgress({
+      runners: document.getElementsByClassName('slider__runner'),
+      parent: range,
+      vertical: this.fetchModelProperty('vertical')
+    });
     return undefined;
   }
 
@@ -346,7 +363,6 @@ export default class View {
     this.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
     this.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
 
-    
 
     this.onHandlerRegister({
       bookmark: 'runnerMouseMove',
@@ -391,25 +407,21 @@ export default class View {
     return true;
   }
 
-  onRestrictDrag(parent) {
-   
-  }
-
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     if (!vertical) {
       const parent = element.parentNode as HTMLElement;
       const border = parent.clientLeft;
+      const offset = parent.offsetLeft;
       const rect = parent.getBoundingClientRect();
       const { left, right } = rect;
 
-      const offset = parent.offsetLeft;
 
       let position = point - offset - this.shiftX;
       if (position < left - offset) {
         position = left - offset;
       }
-      if(position + this.draggable.offsetWidth > right - offset) {
+      if (position + this.draggable.offsetWidth > right - offset) {
         position = right - offset - border * 2 - this.draggable.offsetWidth;
       }
       element.style.left = `${position}px`;
@@ -417,20 +429,29 @@ export default class View {
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.left = `${position}px`;
-
-      this.onRestrictDrag(parent);
-
-      
+      siblingTooltip.innerHTML = `${position}`;
     } else {
       const parent = element.parentNode as HTMLElement;
+      const border = parent.clientTop;
       const offset = parent.offsetTop;
-      const position = `${point - offset}px`;
-      element.style.top = position;
+      const rect = parent.getBoundingClientRect();
+
+      const { top, bottom } = rect;
+
+      let position = point - offset - this.shiftY;
+
+      if (position < top - offset) {
+        position = top - offset;
+      }
+      if (position + this.draggable.offsetHeight > bottom - offset) {
+        position = bottom - offset - border * 2 - this.draggable.offsetHeight;
+      }
+
+      element.style.top = `${position}px`;
 
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.top = position;
-
+      siblingTooltip.style.top = `${position}px`;
     }
   }
 
