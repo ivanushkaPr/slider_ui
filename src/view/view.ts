@@ -485,6 +485,8 @@ export default class View {
     }
   }
 
+
+
   onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
     const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
     let point;
@@ -500,11 +502,6 @@ export default class View {
     return point;
   }
 
-  onCollision() {
-
-  }
-
-
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     if (!vertical) {
@@ -516,20 +513,26 @@ export default class View {
 
       const position = point - offset - border - this.shiftX;
 
-      const restrictedCoords = {
-        firstPointPosition: left - offset,
-        secondPointPosition: right - offset - border * 2 - this.draggable.offsetWidth,
-        beforeFirstPoint: position < left - offset,
-        afterSecondPoint: position + this.draggable.offsetWidth > right - offset,
-        position,
-      };
 
+
+      // Написать объект
 
       let avaiblePosition = this.onRestrictDrag(restrictedCoords);
       let collision = false;
 
       const { pair: siblingPairNumber } = element.dataset;
       const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
+
+
+      const collisionData = {
+        start: element.dataset.true,
+        siblings,
+        element,
+        runnerStartCollides: point + this.shiftX > siblings[1].getBoundingClientRect().right - parent.clientLeft,
+        runnerEndCoolides: point - this.shiftX < siblings[0].getBoundingClientRect().left,
+        firstRunnerPos: siblings[1].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft,
+        secondRunnerPos: siblings[0].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft,
+      };
 
       if(element.dataset.start === 'true') {
         if(point + this.shiftX  > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
@@ -582,12 +585,14 @@ export default class View {
 
       if (element.dataset.start === 'true') {
         if (point - this.shiftY  < siblings[1].getBoundingClientRect().top - parent.clientTop) {
-          avaiblePosition = siblings[1].getBoundingClientRect().top - parent.offsetTop - parent.clientTop;
+          avaiblePosition = siblings[1].getBoundingClientRect().top
+          - parent.offsetTop - parent.clientTop;
           element.style.zIndex = '9999';
           collision = true;
         }
       } else if (point + (element.offsetWidth - this.shiftY)> siblings[0].getBoundingClientRect().bottom) {
-        avaiblePosition = siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop - element.offsetWidth;
+        avaiblePosition = siblings[0].getBoundingClientRect().bottom
+        - parent.offsetTop - parent.clientTop - element.offsetWidth;
         element.style.zIndex = '9999';
         collision = true;
       }
@@ -610,6 +615,7 @@ export default class View {
       siblingTooltip.innerHTML = `${avaiblePosition}`;
     }
   }
+
 
   onMoveTooltip() {
 
