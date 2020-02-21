@@ -512,7 +512,13 @@ export default class View {
       const { left, right } = rect;
 
       const position = point - offset - border - this.shiftX;
-
+      const restrictedCoords = {
+        firstPointPosition: left - offset,
+        secondPointPosition: right - offset - border * 2 - this.draggable.offsetWidth,
+        beforeFirstPoint: position < left - offset,
+        afterSecondPoint: position + this.draggable.offsetWidth > right - offset,
+        position,
+      };
 
 
       // Написать объект
