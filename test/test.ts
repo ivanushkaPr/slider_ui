@@ -713,6 +713,12 @@ describe('view', () => {
       }
     })
   })
+
+  describe('stepsOnHandler', () => {
+    it('moves runner then step is on', () => {
+      
+    })
+  })
 })
 
 // Model tests

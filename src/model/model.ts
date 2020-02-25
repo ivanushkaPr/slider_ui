@@ -86,7 +86,7 @@ export const uConfiguration = {
   steps: 3,
   runners: [100, 150],
   stepsOn: true,
-  vertical: false,
+  vertical: true,
   invertRange: false,
   units: '',
   id: '#slider',

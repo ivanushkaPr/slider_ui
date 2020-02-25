@@ -1,5 +1,6 @@
 import { Runner } from "mocha";
 import { endianness } from "os";
+import { close } from "inspector";
 
 export default class View {
   handlers: handlers = {
@@ -381,7 +382,7 @@ export default class View {
         if (index % 2 === 1) {
           pair += 1;
         }
-        
+
         HTMLrunner.dataset.tooltipSibling = String(index);
       });
     }
@@ -530,8 +531,6 @@ export default class View {
     }
   }
 
-
-
   onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
     const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
     let point;
@@ -658,6 +657,11 @@ export default class View {
         */
       }
 
+     // console.log(this.fetchModelProperty('stepsOn'), this);
+      if (this.fetchModelProperty('stepsOn')) {
+        avaiblePosition = this.runnerStepHandler(avaiblePosition);
+      }
+
 
       element.style.left = `${avaiblePosition}px`;
 
@@ -708,6 +712,7 @@ export default class View {
         const answer = this.onRunnersCollision(collisionData);
         avaiblePosition = answer.coords;
         collision = answer.collision;
+
         /*
         if (element.dataset.start === 'true') {
           if (point - this.shiftY  < siblings[1].getBoundingClientRect().top - parent.clientTop) {
@@ -725,11 +730,13 @@ export default class View {
         */
       }
 
-
+      if (this.fetchModelProperty('stepsOn')) {
+        avaiblePosition = this.runnerStepHandler(avaiblePosition);
+      }
 
       element.style.top = `${avaiblePosition}px`;
 
-      this.onMoveProgress({parent, runner: element, collision});
+      this.onMoveProgress({ parent, runner: element, collision });
 
       const { start, startAndEnd } = this.draggable.dataset;
       const siblingProgressNumber = element.dataset.pair;
@@ -740,6 +747,38 @@ export default class View {
       siblingTooltip.style.top = `${avaiblePosition}px`;
       siblingTooltip.innerHTML = `${avaiblePosition}`;
     }
+  }
+
+  runnerStepHandler(point) {
+    let smaller;
+    let larger;
+    let closestPoint;
+
+    for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
+      if(this.breakpoints[breakpoint] > point) {
+        larger = this.breakpoints[breakpoint];
+        smaller = this.breakpoints[breakpoint - 1];
+        break;
+      }
+    }
+
+    if (larger === undefined) {
+      closestPoint = smaller;
+    }
+    if (smaller === undefined) {
+      closestPoint = larger;
+    }
+    if(larger !== undefined && smaller !== undefined) {
+      const distanceToLeft = point - smaller;
+      const distanceToRight = larger - point;
+      if(distanceToLeft < distanceToRight) {
+        closestPoint = smaller;
+      }
+      else {
+        closestPoint = larger;
+      }
+    }
+    return closestPoint;
   }
 
 
