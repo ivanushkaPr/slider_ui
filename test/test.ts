@@ -186,9 +186,11 @@ describe('view', () => {
   })
 
   describe('createSlider', () => {
-    let view;
+    let view, model, controller;
     before(() => {
+      model = new Model(uConfiguration);
       view = new View();
+      controller = new Controller(model, view);
     })
     beforeEach(() => {
 
@@ -668,6 +670,47 @@ describe('view', () => {
   describe('onTooltipMoveHandler', () => {
     it('', () => {
 
+    })
+  })
+
+  describe('calculate breakpoints', () => {
+    let view, controller, model;
+    let conf = {steps: 10, id: '#slider'}
+    before(() => {
+      model = new Model(conf);
+      view = new View();
+      controller = new Controller(model, view);
+
+    })
+    it('calculates breakpoints on range element', () => {
+      view.calculateBreakpoints({size: 300});
+      let breakpoints = [];
+      for(var i = 0; i < 11; i += 1) {
+        breakpoints.push(i * 30);
+      }
+      assert.deepEqual(view.breakpoints, breakpoints);
+    })
+  })
+
+  describe('checkCoordsAvailability', () => {
+    let view, controller, model;
+    before(() => {
+      model = new Model(uConfiguration);
+      view = new View();
+      controller = new Controller(model, view);
+    })
+    it('moves runner to the available coordinates', () => {
+      view.calculateBreakpoints({size: 300, vertical: false, stepsOn: true});
+
+      const breakpoints = view.breakpoints;
+
+      const runners = model.configuration.runners;
+
+      for(var i = 0; i < runners.length; i += 1) {
+        const point = view.checkCoordsAvailability(runners[i]);
+        console.log(this.breakpoints, )
+        assert.equal(breakpoints.includes(point), true);
+      }
     })
   })
 })

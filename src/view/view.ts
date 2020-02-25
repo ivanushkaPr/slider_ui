@@ -12,13 +12,15 @@ export default class View {
 
   collision;
 
+  breakpoints;
+
   shiftX;
 
   shiftY;
 
 
 
-  fetchModelProperty(property) {
+  fetchModelProperty(property: string) {
     const propState = this.controller.getModelProperty(property);
     if (propState !== undefined || propState !== null) {
       return this.controller.getModelProperty(property);
@@ -29,6 +31,19 @@ export default class View {
   setModelProperty(property, value) {
     this.controller.setModelProperty(property, value);
     return true;
+  }
+
+  calculateBreakpoints(obj: {size: number, vertical: boolean}) {
+    let { size } = obj;
+    const steps = this.fetchModelProperty('steps');
+    const stepSize = size / steps;
+    const breakpoints: number[] = [];
+    breakpoints.push(0);
+    for(let i = 1; i < steps; i += 1) {
+      breakpoints.push(Math.round(i * stepSize));
+    }
+    breakpoints.push(size);
+    this.breakpoints = breakpoints;
   }
 
   createElement(nodeName: string, className: string) {
@@ -81,7 +96,7 @@ export default class View {
     tooltip.addEventListener('dragstart', (e) => {
       e.preventDefault();
     });
-
+    console.log(position, 'its tooltip position')
     tooltip.innerHTML = String(position);
     return tooltip;
   }
@@ -175,7 +190,6 @@ export default class View {
     }
   }
 
-
   createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     this.renderProgress({ runners, parent, vertical });
@@ -231,23 +245,58 @@ export default class View {
     return true;
   }
 
+  checkCoordsAvailability(position) {
+    const runnerPosition = position;
+
+    let index: number;
+    let diff: number = 10000;
+    
+    for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
+      if (this.breakpoints[breakpoint] === runnerPosition) {
+        diff = 0;
+        index = breakpoint;
+      } else {
+        const availablePosition = this.breakpoints[breakpoint];
+        const diffBetween = Math.abs(availablePosition - runnerPosition);
+        if (diff > diffBetween || diff === diffBetween) {
+          diff = diffBetween;
+          index = breakpoint;
+        }
+      }
+    }
+    return this.breakpoints[index];
+  }
+
+
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
     const range = this.createRange();
+
     if (vertical) {
       range.style.height = '300px';
     } else {
       range.style.width = '300px';
     }
 
+    this.calculateBreakpoints({size: 300, vertical: false});
+
     this.renderElement(range, document.getElementById(id));
 
     runners.forEach((runnerPosition: number, index) => {
 
+      let position;
+      if (this.fetchModelProperty('stepsOn')) {
+        position = this.checkCoordsAvailability(runnerPosition);
+      }
+      else {
+        position = runnerPosition;
+      }
+
       const runner = this.createRunner();
+
       const runnerWithPos = this.setPosition({
         element: runner,
-        position: runnerPosition,
+        position,
         axis: vertical === false ? 'left' : 'top',
         parent: range,
       });
@@ -262,11 +311,11 @@ export default class View {
         parent: range,
       });
       */
-
-      const tooltip = this.createTooltip(runnerPosition);
+    
+      const tooltip = this.createTooltip(position);
       const tooltipPositioned = this.setPosition({
         element: tooltip,
-        position: runnerPosition,
+        position,
         axis: vertical === false ? 'left' : 'top',
         parent: range,
       });
@@ -316,10 +365,7 @@ export default class View {
     let pair = 1;
 
     if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
-      
       collection.forEach((target, index, array) => {
-
-
         const HTMLrunner = target as HTMLElement;
         HTMLrunner.dataset.pair = String(pair);
 
@@ -334,8 +380,8 @@ export default class View {
 
         if (index % 2 === 1) {
           pair += 1;
-
         }
+        
         HTMLrunner.dataset.tooltipSibling = String(index);
       });
     }
@@ -521,7 +567,6 @@ export default class View {
           answer.collision = false;
         }
       } else if (point - this.shiftX < siblings[0].getBoundingClientRect().left) {
-
         answer.coords = siblings[0].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
         element.style.zIndex = '9999';
         answer.collision = true;
@@ -540,7 +585,7 @@ export default class View {
           answer.coords = avaiblePosition;
           answer.collision = false;
         }
-      } else if (point + (element.offsetWidth - this.shiftY)> siblings[0].getBoundingClientRect().bottom) {
+      } else if (point + (element.offsetWidth - this.shiftY) > siblings[0].getBoundingClientRect().bottom) {
         answer.coords = siblings[0].getBoundingClientRect().bottom
         - parent.offsetTop - parent.clientTop - element.offsetWidth;
         element.style.zIndex = '9999';
