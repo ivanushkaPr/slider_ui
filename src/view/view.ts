@@ -483,16 +483,14 @@ export default class View {
 
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-
         const width = element.getBoundingClientRect().left;
         progress.style.width = `${width}px`;
-
       } else if (start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[0].getBoundingClientRect().right;
         const progressEnd = siblings[1].getBoundingClientRect().left;
-        const width = progressEnd - progressStart;
+        const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
         progress.style.width = `${width}px`;
         progress.style.left = `${progressLeft}px`;
@@ -501,7 +499,7 @@ export default class View {
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[0].getBoundingClientRect().right;
         const progressEnd = siblings[1].getBoundingClientRect().left;
-        const width = progressEnd - progressStart;
+        const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         progress.style.width = `${width}px`;
       }
     } else if(this.fetchModelProperty('vertical')) {
@@ -516,14 +514,17 @@ export default class View {
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[0].getBoundingClientRect().top;
         const progressEnd = siblings[1].getBoundingClientRect().bottom;
-        const height = Math.ceil(progressStart - progressEnd + parent.clientTop);
+        const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
+          ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
+
         progress.style.height = `${height}px`;
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[0].getBoundingClientRect().top;
         const progressEnd = siblings[1].getBoundingClientRect().bottom;
-        const height = Math.ceil(progressStart - progressEnd + parent.clientTop);
+        const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
+          ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
         const top = siblings[1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop * 2;
         progress.style.height = `${height}px`;
         progress.style.top = `${top}px`;
@@ -660,6 +661,11 @@ export default class View {
      // console.log(this.fetchModelProperty('stepsOn'), this);
       if (this.fetchModelProperty('stepsOn')) {
         avaiblePosition = this.runnerStepHandler(avaiblePosition);
+        const len = this.breakpoints.length;
+        const lastBreakpoint = this.breakpoints[len - 1];
+        if(avaiblePosition === lastBreakpoint) {
+          avaiblePosition -= this.draggable.offsetWidth;
+        }
       }
 
 
@@ -732,6 +738,11 @@ export default class View {
 
       if (this.fetchModelProperty('stepsOn')) {
         avaiblePosition = this.runnerStepHandler(avaiblePosition);
+        const len = this.breakpoints.length;
+        const lastBreakpoint = this.breakpoints[len - 1];
+        if(avaiblePosition === lastBreakpoint) {
+          avaiblePosition -= this.draggable.offsetWidth;
+        }
       }
 
       element.style.top = `${avaiblePosition}px`;
