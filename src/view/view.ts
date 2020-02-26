@@ -268,6 +268,28 @@ export default class View {
     return this.breakpoints[index];
   }
 
+  calculateRunnerPosition(obj: {runnerPosition, parent, start}): number {
+    let { runnerPosition, parent, start } = obj;
+    const lineSize = Math.abs(this.fetchModelProperty('minValue'))
+    + Math.abs(this.fetchModelProperty('maxValue'));
+
+    console.log(runnerPosition, parent.offsetHeight, 'coooorrs');
+    let relativePosition;
+    if (!this.fetchModelProperty('vertical')) {
+      console.log('we are here')
+      const width = parent.offsetWidth - parent.clientLeft * 2;
+      const step = width / lineSize;
+      relativePosition = runnerPosition / step;
+    }
+    else {
+      const height = parent.offsetHeight - parent.clientTop * 2;
+      const step = height / lineSize;
+      relativePosition = lineSize - runnerPosition / step;
+    }
+
+    return relativePosition;
+
+  }
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
@@ -283,6 +305,7 @@ export default class View {
 
     this.renderElement(range, document.getElementById(id));
 
+    let oddOrEven: boolean;
     runners.forEach((runnerPosition: number, index) => {
 
       let position;
@@ -312,7 +335,7 @@ export default class View {
         parent: range,
       });
       */
-    
+
       const tooltip = this.createTooltip(position);
       const tooltipPositioned = this.setPosition({
         element: tooltip,
@@ -320,7 +343,35 @@ export default class View {
         axis: vertical === false ? 'left' : 'top',
         parent: range,
       });
-      range.appendChild(tooltipPositioned);
+
+
+      // let tooltipHTML = this.calculateRunnerPosition({runnerPosition, parent: range, start: });
+     // tooltip.innerHTML = String(tooltipHTML);
+      let tooltipPosition;
+      if (!this.fetchModelProperty('vertical')) {
+        if (runner.dataset.start === 'true') {
+          tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: position, parent: range, start: false }));
+        }
+        else {
+          tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: position, parent: range, start: true }));
+        }
+      }
+      else if (this.fetchModelProperty('vertical')) {
+        if(runner.dataset.start === 'true') {
+          console.log(runner, 'first');
+          tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: parseInt(runner.style.top, 10), parent: range, start: true }));
+          // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
+        }
+        else {
+          console.log(runner, 'first')
+          tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: parseInt(runner.style.top, 10), parent: range, start: false }));
+         // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
+
+        };
+      }
+
+      tooltip.innerHTML = tooltipPosition;
+     range.appendChild(tooltipPositioned);
 
       /*
       this.createAndSetElementPosition({
@@ -637,7 +688,6 @@ export default class View {
       }
 
       if(siblings.length > 1) {
-        
         const answer = this.onRunnersCollision(collisionData);
         avaiblePosition = answer.coords;
         collision = answer.collision;
@@ -673,12 +723,13 @@ export default class View {
 
       this.onMoveProgress({ parent, runner: element, collision });
 
+      
       let tooltipPosition;
-      if(this.draggable.dataset.start === 'true') {
-        tooltipPosition = avaiblePosition;
+      if (this.draggable.dataset.start === 'true') {
+        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: true }));
       }
       else {
-        tooltipPosition = avaiblePosition + this.draggable.offsetWidth;
+        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition + this.draggable.offsetWidth, parent, start: false }));
       }
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
@@ -764,24 +815,29 @@ export default class View {
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.top = `${avaiblePosition}px`;
 
-      const tooltipPositionHTML = this.tooltipDataCalculation({tooltip: siblingTooltip, parent, runner: this.draggable});
-
+      
       let tooltipPosition;
 
-      if(this.draggable.dataset.start === 'true') {
-        tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
+
+      /*
+      if (this.draggable.dataset.start === 'true') {
+        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: true }));
       }
       else {
-        tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
+        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: false }));
+      }
+      */
+      if(this.draggable.dataset.start === 'true') {
+        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition + this.draggable.offsetHeight, parent, start: true }));
+        console.log('with start')
+        // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
+      }
+      else {
+        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: false }));
+       // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
       }
       siblingTooltip.innerHTML = `${tooltipPosition}`;
     }
-  }
-
-  tooltipDataCalculation(obj: {tooltip, parent, runner}) {
-    let {tooltip, parent} = obj;
-
-    
   }
 
   runnerStepHandler(point) {
