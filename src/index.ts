@@ -10,7 +10,7 @@ const jQuery = $;
 let model = new Model(uConfiguration);
 let view = new View();
 let controller = new Controller(model, view);
-console.log(model.configuration);
+
 
 
 /* eslint-disable */

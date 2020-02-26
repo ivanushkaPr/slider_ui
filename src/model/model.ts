@@ -80,19 +80,18 @@ export type configuration = {
 };
 
 export const uConfiguration = {
-  minValue: 0,
-  maxValue: 100,
+  minValue: 1000,
+  maxValue: 10000,
   currentValue: 0,
   steps: 4,
-  runners: [0, 300],
-  stepsOn: true,
-  vertical: true,
+  runners: [300],
+  stepsOn: false,
+  vertical: false,
   invertRange: false,
   units: '',
   id: '#slider',
 };
 
 export const incompleteConfiguration = {
-
   id: '#slider',
 };

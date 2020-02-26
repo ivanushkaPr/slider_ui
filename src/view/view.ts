@@ -97,7 +97,6 @@ export default class View {
     tooltip.addEventListener('dragstart', (e) => {
       e.preventDefault();
     });
-    console.log(position, 'its tooltip position')
     tooltip.innerHTML = String(position);
     return tooltip;
   }
@@ -135,12 +134,12 @@ export default class View {
         if (runners.length === 1) {
           start = parent.getBoundingClientRect().left + parent.clientLeft;
           end = runners[runner].getBoundingClientRect().left;
-          position = parent.getBoundingClientRect().left - parent.offsetLeft;
+          position = parent.getBoundingClientRect().left - parent.offsetLeft + window.pageXOffset;
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
           start = runners[runner].getBoundingClientRect().right;
           end = runners[runner + 1].getBoundingClientRect().left;
-          position = runners[runner].getBoundingClientRect().right - parentOffsetLeft;
+          position = runners[runner].getBoundingClientRect().right - parentOffsetLeft + window.pageXOffset;
         }
         if(runner % 2 === 0) {
           const size = this.calculateProgressSize({ start, end });
@@ -176,7 +175,7 @@ export default class View {
         if (runners.length % 2 === 0 && runner % 2 === 0) {
           start = runners[runner + 1].getBoundingClientRect().bottom;
           end = runners[runner].getBoundingClientRect().top;
-          position = runners[runner + 1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop;
+          position = runners[runner + 1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
 
           const size = this.calculateProgressSize({ start, end });
           this.setSize({ element: progress, property: 'height', value: `${size}` });
@@ -273,10 +272,8 @@ export default class View {
     const lineSize = Math.abs(this.fetchModelProperty('minValue'))
     + Math.abs(this.fetchModelProperty('maxValue'));
 
-    console.log(runnerPosition, parent.offsetHeight, 'coooorrs');
     let relativePosition;
     if (!this.fetchModelProperty('vertical')) {
-      console.log('we are here')
       const width = parent.offsetWidth - parent.clientLeft * 2;
       const step = width / lineSize;
       relativePosition = runnerPosition / step;
@@ -366,7 +363,6 @@ export default class View {
           console.log(runner, 'first')
           tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: parseInt(runner.style.top, 10), parent: range, start: false }));
          // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
-
         };
       }
 
@@ -534,7 +530,10 @@ export default class View {
 
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-        const width = element.getBoundingClientRect().left;
+        console.log('here we are in')
+        const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left ;
+        console.log(width);
+        
         progress.style.width = `${width}px`;
       } else if (start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
@@ -544,7 +543,7 @@ export default class View {
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
         progress.style.width = `${width}px`;
-        progress.style.left = `${progressLeft}px`;
+        progress.style.left = `${progressLeft + window.pageXOffset}px`;
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
@@ -556,10 +555,11 @@ export default class View {
     } else if(this.fetchModelProperty('vertical')) {
 
       if (startAndEnd) {
-        const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop;
-        const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom;
+        const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
+        const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
+        console.log(height, 'on move progress')
       } else if(start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
@@ -578,7 +578,7 @@ export default class View {
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
         const top = siblings[1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop * 2;
         progress.style.height = `${height}px`;
-        progress.style.top = `${top}px`;
+        progress.style.top = `${top + window.pageYOffset}px`;
       }
     }
   }
@@ -652,6 +652,7 @@ export default class View {
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
+
     if (!vertical) {
       const parent = element.parentNode as HTMLElement;
       const border = parent.clientLeft;
@@ -719,7 +720,7 @@ export default class View {
       }
 
 
-      element.style.left = `${avaiblePosition}px`;
+      element.style.left = `${avaiblePosition + window.pageXOffset}px`;
 
       this.onMoveProgress({ parent, runner: element, collision });
 
@@ -733,7 +734,7 @@ export default class View {
       }
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.left = `${avaiblePosition}px`;
+      siblingTooltip.style.left = `${avaiblePosition + window.pageXOffset}px`;
       siblingTooltip.innerHTML = `${tooltipPosition}`;
 
 
@@ -803,7 +804,7 @@ export default class View {
         }
       }
 
-      element.style.top = `${avaiblePosition}px`;
+      element.style.top = `${avaiblePosition + window.pageYOffset}px`;
 
       this.onMoveProgress({ parent, runner: element, collision });
 
@@ -813,7 +814,7 @@ export default class View {
 
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.top = `${avaiblePosition}px`;
+      siblingTooltip.style.top = `${avaiblePosition + window.pageYOffset}px`;
 
       
       let tooltipPosition;
