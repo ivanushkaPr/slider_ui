@@ -70,7 +70,7 @@ export default class View {
   }
 
   createRange(): HTMLElement {
-    const vertical = this. fetchModelProperty('vertical');
+    const vertical = this.fetchModelProperty('vertical');
     const range = this.createElement('div', 'slider__range');
     if (vertical) {
       range.classList.add('slider__range--vertical');
@@ -88,7 +88,7 @@ export default class View {
 
   createTooltip(position): HTMLElement {
     const tooltip = this.createElement('div', 'slider__tooltip');
-    const vertical =this.fetchModelProperty('vertical');
+    const vertical = this.fetchModelProperty('vertical');
     if (!vertical) {
       tooltip.classList.add('slider__tooltip--horizontal');
     } else {
@@ -673,10 +673,17 @@ export default class View {
 
       this.onMoveProgress({ parent, runner: element, collision });
 
+      let tooltipPosition;
+      if(this.draggable.dataset.start === 'true') {
+        tooltipPosition = avaiblePosition;
+      }
+      else {
+        tooltipPosition = avaiblePosition + this.draggable.offsetWidth;
+      }
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.left = `${avaiblePosition}px`;
-      siblingTooltip.innerHTML = `${avaiblePosition}`;
+      siblingTooltip.innerHTML = `${tooltipPosition}`;
 
 
     } else {
@@ -756,8 +763,25 @@ export default class View {
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.top = `${avaiblePosition}px`;
-      siblingTooltip.innerHTML = `${avaiblePosition}`;
+
+      const tooltipPositionHTML = this.tooltipDataCalculation({tooltip: siblingTooltip, parent, runner: this.draggable});
+
+      let tooltipPosition;
+
+      if(this.draggable.dataset.start === 'true') {
+        tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
+      }
+      else {
+        tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
+      }
+      siblingTooltip.innerHTML = `${tooltipPosition}`;
     }
+  }
+
+  tooltipDataCalculation(obj: {tooltip, parent, runner}) {
+    let {tooltip, parent} = obj;
+
+    
   }
 
   runnerStepHandler(point) {
