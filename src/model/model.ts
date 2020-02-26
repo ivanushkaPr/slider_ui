@@ -83,7 +83,7 @@ export const uConfiguration = {
   minValue: 0,
   maxValue: 100,
   currentValue: 0,
-  steps: 3,
+  steps: 4,
   runners: [100, 200],
   stepsOn: true,
   vertical: true,
