@@ -34,13 +34,13 @@ export default class View {
     return true;
   }
 
-  calculateBreakpoints(obj: {range, vertical: boolean}) {
-    let { range, vertical } = obj;
+  calculateBreakpoints(obj: {range, vertical: boolean, rect:DOMRect}) {
+    let { range, vertical, rect } = obj;
     const steps = this.fetchModelProperty('steps');
 
     const size = !vertical ?
-      range.getBoundingClientRect().width - range.clientLeft * 2
-      : range.getBoundingClientRect().height - range.clientTop * 2;
+      range.getBoundingClientRect().width - range.clientLeft * 2 - rect.width
+      : range.getBoundingClientRect().height - range.clientTop * 2 - rect.height;
 
     const stepSize = size / steps;
     const breakpoints: number[] = [];
@@ -179,11 +179,11 @@ export default class View {
           });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          start = runners[runner + 1].getBoundingClientRect().bottom;
-          end = runners[runner].getBoundingClientRect().top;
-          position = runners[runner + 1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
+          start = runners[runner].getBoundingClientRect().bottom;
+          end = runners[runner + 1].getBoundingClientRect().top;
 
-          const size = this.calculateProgressSize({ start, end });
+          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop - window.pageYOffset;
+          const size = this.calculateProgressSize({ start, end});
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           progress.style.top = `${position}px`;
         }
@@ -236,12 +236,13 @@ export default class View {
     return ((size - position));
   }
 
-  checkCoordsAvailability(position) {
-    const runnerPosition = position;
+  checkCoordsAvailability(obj: {position, size}) {
+    const { position, size } = obj;
 
+    const absolutePosition = size / 100 * position;
+    const runnerPosition = absolutePosition;
     let index: number;
     let diff: number = 10000;
-    
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
       if (this.breakpoints[breakpoint] === runnerPosition) {
         diff = 0;
@@ -255,7 +256,9 @@ export default class View {
         }
       }
     }
-    return this.breakpoints[index];
+    const percent = size / 100;
+    const point = this.breakpoints[index] / percent;
+    return point;
   }
 
   calculateRunnerPosition(obj: {
@@ -276,9 +279,9 @@ export default class View {
     const onePercentWorkSpace = workSpace / 100;
     const currentPosition = onePercentWorkSpace * runnerPosition;
 
-    let currentLineSize = Math.round((lineSize / workSpace) * currentPosition);
+    let currentLineSize = vertical === false ? Math.round((lineSize / workSpace) * currentPosition) : lineSize - Math.round((lineSize / workSpace) * currentPosition);
     currentLineSize = minValue < 0 ? currentLineSize += minValue : currentLineSize;
-
+    
 
     return currentLineSize;
 
@@ -326,11 +329,18 @@ export default class View {
 
 
     this.renderElement(range, document.getElementById(id));
-    this.calculateBreakpoints({range, vertical});
+    const temporaryRunner = this.createRunner();
+    range.appendChild(temporaryRunner);
+    const tempRect = temporaryRunner.getBoundingClientRect();
+    range.removeChild(temporaryRunner);
+    console.log(tempRect, 'tempRect');
+    this.calculateBreakpoints({range, vertical, rect: tempRect});
+
+    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - tempRect.width : range.offsetHeight - range.clientTop * 2 - tempRect.height;
 
     let oddOrEven: boolean;
     runners.forEach((runnerPosition: number, index, array) => {
-      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability(runnerPosition) : runnerPosition;
+      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({position: runnerPosition, size}) : runnerPosition;
 
       const runner = this.createRunner();
       range.appendChild(runner);
@@ -533,31 +543,32 @@ export default class View {
       }
     } else if(this.fetchModelProperty('vertical')) {
 
+
       if (startAndEnd) {
         const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
         const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
         console.log(height, 'on move progress')
-      } else if(start === 'true') {
+      } else if(start === 'true') { 
+        console.log('in start in progress')
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[0].getBoundingClientRect().top;
-        const progressEnd = siblings[1].getBoundingClientRect().bottom;
+        const progressStart = siblings[1].getBoundingClientRect().top;
+        const progressEnd = siblings[0].getBoundingClientRect().bottom;
         const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-
+        console.log(height);
         progress.style.height = `${height}px`;
+        progress.style.top = `${siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop}px`;
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[0].getBoundingClientRect().top;
-        const progressEnd = siblings[1].getBoundingClientRect().bottom;
+        const progressStart = siblings[1].getBoundingClientRect().top;
+        const progressEnd = siblings[0].getBoundingClientRect().bottom;
         const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        const top = siblings[1].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop * 2;
         progress.style.height = `${height}px`;
-        progress.style.top = `${top + window.pageYOffset}px`;
       }
     }
   }
@@ -605,8 +616,9 @@ export default class View {
         answer.collision = false;
       }
     } else if (vertical) {
+
       if (element.dataset.start === 'true') {
-        if (point - this.shiftY < siblings[1].getBoundingClientRect().top - parent.clientTop) {
+        if (point - this.shiftY > siblings[1].getBoundingClientRect().top - parent.clientTop) {
           answer.coords = siblings[1].getBoundingClientRect().top
           - parent.offsetTop - parent.clientTop;
           element.style.zIndex = '9999';
@@ -615,7 +627,7 @@ export default class View {
           answer.coords = avaiblePosition;
           answer.collision = false;
         }
-      } else if (point + (element.offsetWidth - this.shiftY) > siblings[0].getBoundingClientRect().bottom) {
+      } else if (point + (element.offsetWidth - this.shiftY) < siblings[0].getBoundingClientRect().bottom) {
         answer.coords = siblings[0].getBoundingClientRect().bottom
         - parent.offsetTop - parent.clientTop - element.offsetWidth;
         element.style.zIndex = '9999';
@@ -693,9 +705,6 @@ export default class View {
         avaiblePosition = this.runnerStepHandler(avaiblePosition);
         const len = this.breakpoints.length;
         const lastBreakpoint = this.breakpoints[len - 1];
-        if(avaiblePosition === lastBreakpoint) {
-          avaiblePosition -= this.draggable.offsetWidth;
-        }
       }
 
 
@@ -726,6 +735,7 @@ export default class View {
 
       const position = point - offset - this.shiftY;
 
+      
       const restrictedCoords = {
         firstPointPosition: top - offset,
         secondPointPosition: bottom - offset - border * 2 - this.draggable.offsetHeight,
@@ -736,6 +746,9 @@ export default class View {
 
 
       let avaiblePosition = this.onRestrictDrag(restrictedCoords);
+
+
+
       let collision = false;
 
       const { pair: siblingPairNumber } = element.dataset;
@@ -751,69 +764,40 @@ export default class View {
       }
 
 
-      if  (siblings.length > 1) {
+      
+      if (siblings.length > 1) {
         const answer = this.onRunnersCollision(collisionData);
         avaiblePosition = answer.coords;
         collision = answer.collision;
-
-        /*
-        if (element.dataset.start === 'true') {
-          if (point - this.shiftY  < siblings[1].getBoundingClientRect().top - parent.clientTop) {
-            avaiblePosition = siblings[1].getBoundingClientRect().top
-            - parent.offsetTop - parent.clientTop;
-            element.style.zIndex = '9999';
-            collision = true;
-          }
-        } else if (point + (element.offsetWidth - this.shiftY)> siblings[0].getBoundingClientRect().bottom) {
-          avaiblePosition = siblings[0].getBoundingClientRect().bottom
-          - parent.offsetTop - parent.clientTop - element.offsetWidth;
-          element.style.zIndex = '9999';
-          collision = true;
-        }
-        */
       }
+      
+
 
       if (this.fetchModelProperty('stepsOn')) {
+
         avaiblePosition = this.runnerStepHandler(avaiblePosition);
         const len = this.breakpoints.length;
         const lastBreakpoint = this.breakpoints[len - 1];
-        if(avaiblePosition === lastBreakpoint) {
-          avaiblePosition -= this.draggable.offsetWidth;
-        }
       }
+
 
       element.style.top = `${avaiblePosition + window.pageYOffset}px`;
 
       this.onMoveProgress({ parent, runner: element, collision });
 
+      const tooltipPosition = this.calculateRunnerPosition({
+        parent,
+        runner: this.draggable,
+        vertical,
+      });
+
       const { start, startAndEnd } = this.draggable.dataset;
       const siblingProgressNumber = element.dataset.pair;
-      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
 
+      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.top = `${avaiblePosition + window.pageYOffset}px`;
-
-      
-      let tooltipPosition;
-
-
-      /*
-      if (this.draggable.dataset.start === 'true') {
-        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: true }));
-      }
-      else {
-        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: false }));
-      }
-      */
-      if(this.draggable.dataset.start === 'true') {
-   
-        // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
-      }
-      else {
-      
-       // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
-      }
       siblingTooltip.innerHTML = `${tooltipPosition}`;
     }
   }
@@ -823,6 +807,7 @@ export default class View {
     let larger;
     let closestPoint;
 
+    console.log(this.breakpoints, 'точки остановки')
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
       if(this.breakpoints[breakpoint] > point) {
         larger = this.breakpoints[breakpoint];
