@@ -80,11 +80,11 @@ export type configuration = {
 };
 
 export const uConfiguration = {
-  minValue: 1000,
-  maxValue: 10000,
+  minValue: -1000,
+  maxValue: 9000,
   currentValue: 0,
   steps: 4,
-  runners: [300],
+  runners: [0, 100],
   stepsOn: false,
   vertical: false,
   invertRange: false,

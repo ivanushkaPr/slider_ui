@@ -34,17 +34,23 @@ export default class View {
     return true;
   }
 
-  calculateBreakpoints(obj: {size: number, vertical: boolean}) {
-    let { size } = obj;
+  calculateBreakpoints(obj: {range, vertical: boolean}) {
+    let { range, vertical } = obj;
     const steps = this.fetchModelProperty('steps');
+
+    const size = !vertical ?
+      range.getBoundingClientRect().width - range.clientLeft * 2
+      : range.getBoundingClientRect().height - range.clientTop * 2;
+
     const stepSize = size / steps;
     const breakpoints: number[] = [];
     breakpoints.push(0);
-    for(let i = 1; i < steps; i += 1) {
+    for (let i = 1; i < steps; i += 1) {
       breakpoints.push(Math.round(i * stepSize));
     }
     breakpoints.push(size);
     this.breakpoints = breakpoints;
+    console.log(this.breakpoints);
   }
 
   createElement(nodeName: string, className: string) {
@@ -230,21 +236,6 @@ export default class View {
     return ((size - position));
   }
 
-  createAndSetElementPosition(obj: {position: number; vertical: boolean; callback: string, parent: HTMLElement }): boolean {
-    const {
-      position, vertical, callback, parent,
-    } = obj;
-
-    const elem = this.setPosition({
-      element: this[callback](),
-      position,
-      axis: vertical === false ? 'left' : 'top',
-      parent,
-    });
-    this.renderElement(elem, parent);
-    return true;
-  }
-
   checkCoordsAvailability(position) {
     const runnerPosition = position;
 
@@ -267,116 +258,108 @@ export default class View {
     return this.breakpoints[index];
   }
 
-  calculateRunnerPosition(obj: {runnerPosition, parent, start}): number {
-    let { runnerPosition, parent, start } = obj;
-    const lineSize = Math.abs(this.fetchModelProperty('minValue'))
-    + Math.abs(this.fetchModelProperty('maxValue'));
+  calculateRunnerPosition(obj: {
+    parent: HTMLElement,
+    runner: HTMLElement,
+    vertical: boolean,}): number {
 
-    let relativePosition;
-    if (!this.fetchModelProperty('vertical')) {
-      const width = parent.offsetWidth - parent.clientLeft * 2;
-      const step = width / lineSize;
-      relativePosition = runnerPosition / step;
-    }
-    else {
-      const height = parent.offsetHeight - parent.clientTop * 2;
-      const step = height / lineSize;
-      relativePosition = lineSize - runnerPosition / step;
-    }
+    let {parent, runner, vertical} = obj;
+    const minValue = this.fetchModelProperty('minValue');
+    const minValueAbs = Math.abs(this.fetchModelProperty('minValue'));
+    const maxValueAbs = Math.abs(this.fetchModelProperty('maxValue'));
+    const lineSize = minValueAbs + maxValueAbs;
 
-    return relativePosition;
+    const workSpace = vertical === false ? parent.offsetWidth - parent.clientLeft * 2 - runner.offsetWidth : parent.offsetHeight - parent.clientTop * 2 - runner.offsetHeight;
+    const runnerPosition = vertical === false ? parseInt(runner.style.left, 10) / (workSpace / 100) : parseInt(runner.style.top, 10) / (workSpace / 100);
+
+
+    const onePercentWorkSpace = workSpace / 100;
+    const currentPosition = onePercentWorkSpace * runnerPosition;
+
+    let currentLineSize = Math.round((lineSize / workSpace) * currentPosition);
+    currentLineSize = minValue < 0 ? currentLineSize += minValue : currentLineSize;
+
+
+    return currentLineSize;
 
   }
+
+
+  setRunnerPosition(obj:{
+      element: HTMLElement;
+      position: number;
+      axis: string;
+      parent: HTMLElement,
+      negative?: number, }):void
+  {
+
+    const {
+      element, position, axis, parent,
+    } = obj;
+
+    let { negative } = obj;
+
+    if(typeof negative !== 'number') {
+      negative = 0;
+    }
+
+    if (axis === 'left') {
+      const elementWidth = element.offsetWidth - element.clientLeft * 2;
+      const parentWidth = parent.offsetWidth - parent.clientLeft * 2 - elementWidth - negative;
+      const onePercent = parentWidth / 100;
+      const runnerLeft = onePercent * position;
+      element.style.left = `${runnerLeft}px`;
+      console.log(runnerLeft, console.log(elementWidth))
+    } else {
+      const elementHeight = element.offsetHeight - element.clientTop * 2;
+      const parentHeight = parent.offsetHeight - parent.clientTop * 2 - elementHeight - negative;
+      const onePercent = parentHeight / 100;
+      const runnerTop = onePercent * position;
+      element.style.top = `${runnerTop}px`;
+    }
+  }
+
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
     const range = this.createRange();
 
-    if (vertical) {
-      range.style.height = '300px';
-    } else {
-      range.style.width = '300px';
-    }
-
-    this.calculateBreakpoints({size: 300, vertical: false});
 
     this.renderElement(range, document.getElementById(id));
+    this.calculateBreakpoints({range, vertical});
 
     let oddOrEven: boolean;
-    runners.forEach((runnerPosition: number, index) => {
-
-      let position;
-      if (this.fetchModelProperty('stepsOn')) {
-        position = this.checkCoordsAvailability(runnerPosition);
-      }
-      else {
-        position = runnerPosition;
-      }
+    runners.forEach((runnerPosition: number, index, array) => {
+      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability(runnerPosition) : runnerPosition;
 
       const runner = this.createRunner();
-
-      const runnerWithPos = this.setPosition({
+      range.appendChild(runner);
+      this.setRunnerPosition({
         element: runner,
         position,
         axis: vertical === false ? 'left' : 'top',
         parent: range,
       });
 
-      range.appendChild(runnerWithPos);
-
-      /*
-      this.createAndSetElementPosition({
-        position: runnerPosition,
-        vertical,
-        callback: 'createRunner',
-        parent: range,
-      });
-      */
-
       const tooltip = this.createTooltip(position);
-      const tooltipPositioned = this.setPosition({
+      this.setRunnerPosition({
         element: tooltip,
         position,
         axis: vertical === false ? 'left' : 'top',
         parent: range,
+        negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
       });
 
-
-      // let tooltipHTML = this.calculateRunnerPosition({runnerPosition, parent: range, start: });
-     // tooltip.innerHTML = String(tooltipHTML);
-      let tooltipPosition;
-      if (!this.fetchModelProperty('vertical')) {
-        if (runner.dataset.start === 'true') {
-          tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: position, parent: range, start: false }));
-        }
-        else {
-          tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: position, parent: range, start: true }));
-        }
-      }
-      else if (this.fetchModelProperty('vertical')) {
-        if(runner.dataset.start === 'true') {
-          console.log(runner, 'first');
-          tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: parseInt(runner.style.top, 10), parent: range, start: true }));
-          // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
-        }
-        else {
-          console.log(runner, 'first')
-          tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: parseInt(runner.style.top, 10), parent: range, start: false }));
-         // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
-        };
-      }
-
-      tooltip.innerHTML = tooltipPosition;
-     range.appendChild(tooltipPositioned);
-
-      /*
-      this.createAndSetElementPosition({
-        position: runnerPosition,
-        vertical,
-        callback: 'createTooltip',
+      const tooltipPosition = this.calculateRunnerPosition({
         parent: range,
+        runner,
+        vertical,
       });
-      */
+
+      tooltip.innerHTML = String(tooltipPosition);
+      range.appendChild(tooltip);
+
+
     });
 
     const RenderedRunners = document.querySelectorAll('.slider__runner');
@@ -384,11 +367,7 @@ export default class View {
     const RenderedTooltips = document.querySelectorAll('.slider__tooltip');
     this.setDataAttr(RenderedTooltips);
 
-    this.createAndSetProgress({
-      runners: document.getElementsByClassName('.slider__runner'),
-      parent: range,
-      vertical: this.fetchModelProperty('vertical')
-    });
+  
 
     RenderedRunners.forEach((runner) => {
       this.onHandlerRegister({
@@ -400,7 +379,7 @@ export default class View {
       });
     })
 
-    this.createAndSetProgress({
+    this.renderProgress({
       runners: document.getElementsByClassName('slider__runner'),
       parent: range,
       vertical: this.fetchModelProperty('vertical')
@@ -724,14 +703,13 @@ export default class View {
 
       this.onMoveProgress({ parent, runner: element, collision });
 
-      
-      let tooltipPosition;
-      if (this.draggable.dataset.start === 'true') {
-        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: true }));
-      }
-      else {
-        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition + this.draggable.offsetWidth, parent, start: false }));
-      }
+
+      const tooltipPosition = this.calculateRunnerPosition({
+        parent,
+        runner: this.draggable,
+        vertical,
+      });
+
       const siblingNumber = element.dataset.tooltipSibling;
       const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
       siblingTooltip.style.left = `${avaiblePosition + window.pageXOffset}px`;
@@ -829,12 +807,11 @@ export default class View {
       }
       */
       if(this.draggable.dataset.start === 'true') {
-        tooltipPosition = Math.floor(this.calculateRunnerPosition({ runnerPosition: avaiblePosition + this.draggable.offsetHeight, parent, start: true }));
-        console.log('with start')
+   
         // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2 - this.draggable.offsetHeight;
       }
       else {
-        tooltipPosition = Math.round(this.calculateRunnerPosition({ runnerPosition: avaiblePosition, parent, start: false }));
+      
        // tooltipPosition = parent.offsetHeight - avaiblePosition - parent.clientTop * 2;
       }
       siblingTooltip.innerHTML = `${tooltipPosition}`;
