@@ -568,6 +568,9 @@ export default class View {
 
   onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
     const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
+
+    console.log(firstPointPosition, secondPointPosition, 'rescrtict');
+    console.log(beforeFirstPoint,afterSecondPoint)
     let point;
     if (beforeFirstPoint) {
       point = firstPointPosition;
@@ -620,6 +623,35 @@ export default class View {
         }
       }
     }
+    else {
+      const dataStart = targetElement.dataset.start;
+
+      if (dataStart === 'true') {
+        const brother = siblings[1] as HTMLElement;
+        const brotherTopSide = parseInt(brother.style.top, 10);
+        if (brotherTopSide <= nextPosition) { 
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherTopSide;
+          answer.collision = true;
+        } else {
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+
+      if (dataStart === 'false') {
+        const brother = siblings[0] as HTMLElement;
+        const brotherTopSide = parseInt(brother.style.top, 10);
+        if (brotherTopSide >= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherTopSide;
+          answer.collision = true;
+        } else {
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+    }
     return answer;
   }
 
@@ -651,7 +683,7 @@ export default class View {
         nextPosition: runnerPosition,
         vertical,
       });
-
+      
       const RunnerPositionValidation = this.onRestrictDrag({
         firstPointPosition: firstPoint,
         secondPointPosition: secondPoint, 
@@ -677,11 +709,64 @@ export default class View {
         vertical,
       }));
     }else {
-      console.log('vertical logic')
+      const parentOffsetTop = parent.getBoundingClientRect().top;
+
+
+      const firstPoint = 0;
+      const secondPoint = parent.getBoundingClientRect().height - parent.clientTop * 2 - element.offsetHeight;
+
+      const relativePointPosition = point - parentOffsetTop - window.pageYOffset;
+
+
+
+      const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
+        ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
+      const siblingPair = element.dataset.pair;
+
+      const siblingSelector = `.slider__runner[data-pair="${siblingPair}"]`;
 
       
+      const collisionData = this.onRunnersCollision({
+        targetElement: element,
+        selector: siblingSelector,
+        nextPosition: runnerPosition,
+        vertical,
+      });
+
+
+      console.log(firstPoint,secondPoint, collisionData.coords)
+      const RunnerPositionValidation = this.onRestrictDrag({
+        firstPointPosition: firstPoint,
+        secondPointPosition: secondPoint,
+        beforeFirstPoint: firstPoint > collisionData.coords,
+        afterSecondPoint: secondPoint < collisionData.coords,
+        position: collisionData.coords,
+      });
+  
+
+      element.style.top = `${RunnerPositionValidation}px`;
+
+
+      this.onMoveProgress({
+        parent,
+        runner: element,
+        collision: collisionData.collision,
+      });
+
+      const tooltipSibling = document.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      tooltipSibling.style.top = `${RunnerPositionValidation}px`;
+      tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
+        parent,
+        runner: element,
+        vertical,
+  
+  
+      }));
+  
     }
+    
 }
+  
 
   runnerStepHandler(point) {
     console.log(point, 'point argument in tunner step handler')
@@ -690,7 +775,6 @@ export default class View {
     let larger;
     let closestPoint;
 
-    console.log(this.breakpoints, 'точки остановки')
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
       if(this.breakpoints[breakpoint] > point) {
         
