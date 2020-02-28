@@ -182,7 +182,7 @@ export default class View {
           start = runners[runner].getBoundingClientRect().bottom;
           end = runners[runner + 1].getBoundingClientRect().top;
 
-          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop - window.pageYOffset;
+          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
           const size = this.calculateProgressSize({ start, end});
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           progress.style.top = `${position}px`;
@@ -312,7 +312,6 @@ export default class View {
       const onePercent = parentWidth / 100;
       const runnerLeft = onePercent * position;
       element.style.left = `${runnerLeft}px`;
-      console.log(runnerLeft, console.log(elementWidth))
     } else {
       const elementHeight = element.offsetHeight - element.clientTop * 2;
       const parentHeight = parent.offsetHeight - parent.clientTop * 2 - elementHeight - negative;
@@ -492,13 +491,13 @@ export default class View {
   }
 
   onRunnerMouseMoveHandler(event: MouseEvent): boolean {
-    const { clientX, clientY } = event;
+    const { pageX, pageY } = event;
     const vertical = this.fetchModelProperty('vertical'); 
     let params;
     if (!vertical) {
-      params = { point: clientX, element: this.draggable, vertical };
+      params = { point: pageX, element: this.draggable, vertical };
     } else {
-      params = { point: clientY, element: this.draggable, vertical };
+      params = { point: pageY, element: this.draggable, vertical };
     }
 
     this.onMoveElementAtPoint(params);
@@ -519,10 +518,7 @@ export default class View {
 
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-        console.log('here we are in')
         const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left ;
-        console.log(width);
-        
         progress.style.width = `${width}px`;
       } else if (start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
@@ -549,18 +545,15 @@ export default class View {
         const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
-        console.log(height, 'on move progress')
       } else if(start === 'true') { 
-        console.log('in start in progress')
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[1].getBoundingClientRect().top;
         const progressEnd = siblings[0].getBoundingClientRect().bottom;
         const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        console.log(height);
         progress.style.height = `${height}px`;
-        progress.style.top = `${siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop}px`;
+        progress.style.top = `${siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset}px`;
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
@@ -580,16 +573,18 @@ export default class View {
       point = firstPointPosition;
     } else if (afterSecondPoint) {
       point = secondPointPosition;
-
     } else {
       point = position;
     }
-
     return point;
   }
 
-  onRunnersCollision(obj: {element, siblings, parent, point, avaiblePosition, vertical}) {
-    const { element, siblings, parent, point, avaiblePosition, vertical } = obj;
+  onRunnersCollision(obj: {targetElement: HTMLElement, selector: string, nextPosition: number, vertical: boolean}) {
+    const {
+      targetElement, selector, nextPosition, vertical,
+    } = obj;
+
+    const siblings = document.querySelectorAll(selector);
 
     const answer = {
       coords: 0,
@@ -597,212 +592,100 @@ export default class View {
     };
 
     if (!vertical) {
-      if (element.dataset.start === 'true') {
-        if (point + this.shiftX > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
+      const dataStart = targetElement.dataset.start;
 
-          answer.coords = siblings[1].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
-          element.style.zIndex = '9999';
+      if (dataStart === 'true') {
+        const brother = siblings[1] as HTMLElement;
+        const brotherLeftSide = parseInt(brother.style.left, 10);
+        if (brotherLeftSide <= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherLeftSide;
           answer.collision = true;
         } else {
-          answer.coords = avaiblePosition;
+          answer.coords = nextPosition;
           answer.collision = false;
         }
-      } else if (point - this.shiftX < siblings[0].getBoundingClientRect().left) {
-        answer.coords = siblings[0].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
-        element.style.zIndex = '9999';
-        answer.collision = true;
-      } else {
-        answer.coords = avaiblePosition;
-        answer.collision = false;
       }
-    } else if (vertical) {
 
-      if (element.dataset.start === 'true') {
-        if (point - this.shiftY > siblings[1].getBoundingClientRect().top - parent.clientTop) {
-          answer.coords = siblings[1].getBoundingClientRect().top
-          - parent.offsetTop - parent.clientTop;
-          element.style.zIndex = '9999';
+      if (dataStart === 'false') {
+        const brother = siblings[0] as HTMLElement;
+        const brotherLeftSide = parseInt(brother.style.left, 10);
+        if (brotherLeftSide >= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherLeftSide;
           answer.collision = true;
         } else {
-          answer.coords = avaiblePosition;
+          answer.coords = nextPosition;
           answer.collision = false;
         }
-      } else if (point + (element.offsetWidth - this.shiftY) < siblings[0].getBoundingClientRect().bottom) {
-        answer.coords = siblings[0].getBoundingClientRect().bottom
-        - parent.offsetTop - parent.clientTop - element.offsetWidth;
-        element.style.zIndex = '9999';
-        answer.collision = true;
-      } else {
-        answer.coords = avaiblePosition;
-        answer.collision = false;
       }
     }
-
     return answer;
   }
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
+    
+    const parent = element.parentNode as HTMLElement;
 
+    let positionOfRunner;
     if (!vertical) {
-      const parent = element.parentNode as HTMLElement;
-      const border = parent.clientLeft;
-      const offset = parent.offsetLeft;
-      const rect = parent.getBoundingClientRect();
-      const { left, right } = rect;
-
-      const position = point - offset - border - this.shiftX;
-      const restrictedCoords = {
-        firstPointPosition: left - offset,
-        secondPointPosition: right - offset - border * 2 - this.draggable.offsetWidth,
-        beforeFirstPoint: position < left - offset,
-        afterSecondPoint: position + this.draggable.offsetWidth > right - offset,
-        position,
-      };
+      const parentOffsetLeft = parent.getBoundingClientRect().left;
 
 
-      // Написать объект
+      const firstPoint = 0;
+      const secondPoint = parent.getBoundingClientRect().width - parent.clientLeft * 2 - element.offsetWidth;
 
-      let avaiblePosition = this.onRestrictDrag(restrictedCoords);
-      let collision = false;
-
-      const { pair: siblingPairNumber } = element.dataset;
-      const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
+      const relativePointPosition = point - parentOffsetLeft - window.pageXOffset;
 
 
-      let collisionData = {
-        element,
-        siblings,
-        parent,
-        point,
-        avaiblePosition,
-        vertical,
-      }
+      const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
+        ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
+      const siblingPair = element.dataset.pair;
 
-      if(siblings.length > 1) {
-        const answer = this.onRunnersCollision(collisionData);
-        avaiblePosition = answer.coords;
-        collision = answer.collision;
+      const siblingSelector = `.slider__runner[data-pair="${siblingPair}"]`;
 
-        /*
-        if(element.dataset.start === 'true') {
-          if(point + this.shiftX  > siblings[1].getBoundingClientRect().right - parent.clientLeft) {
-            avaiblePosition = siblings[1].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
-            element.style.zIndex = '9999';
-            collision = true;
-          }
-        }
-        else if (point - this.shiftX < siblings[0].getBoundingClientRect().left) {
-          avaiblePosition = siblings[0].getBoundingClientRect().left - parent.offsetLeft - parent.clientLeft;
-          element.style.zIndex = '9999';
-          collision = true;
-        }
-        */
-      }
-
-     // console.log(this.fetchModelProperty('stepsOn'), this);
-      if (this.fetchModelProperty('stepsOn')) {
-        avaiblePosition = this.runnerStepHandler(avaiblePosition);
-        const len = this.breakpoints.length;
-        const lastBreakpoint = this.breakpoints[len - 1];
-      }
-
-
-      element.style.left = `${avaiblePosition + window.pageXOffset}px`;
-
-      this.onMoveProgress({ parent, runner: element, collision });
-
-
-      const tooltipPosition = this.calculateRunnerPosition({
-        parent,
-        runner: this.draggable,
+      const collisionData = this.onRunnersCollision({
+        targetElement: element,
+        selector: siblingSelector,
+        nextPosition: runnerPosition,
         vertical,
       });
 
-      const siblingNumber = element.dataset.tooltipSibling;
-      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.left = `${avaiblePosition + window.pageXOffset}px`;
-      siblingTooltip.innerHTML = `${tooltipPosition}`;
-
-
-    } else {
-      const parent = element.parentNode as HTMLElement;
-      const border = parent.clientTop;
-      const offset = parent.offsetTop;
-      const rect = parent.getBoundingClientRect();
-
-      const { top, bottom } = rect;
-
-      const position = point - offset - this.shiftY;
-
-      
-      const restrictedCoords = {
-        firstPointPosition: top - offset,
-        secondPointPosition: bottom - offset - border * 2 - this.draggable.offsetHeight,
-        beforeFirstPoint: position < top - offset,
-        afterSecondPoint: position + this.draggable.offsetHeight > bottom - offset,
-        position,
-      };
-
-
-      let avaiblePosition = this.onRestrictDrag(restrictedCoords);
-
-
-
-      let collision = false;
-
-      const { pair: siblingPairNumber } = element.dataset;
-      const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingPairNumber}"]`);
-
-      let collisionData = {
-        element,
-        siblings,
-        parent,
-        point,
-        avaiblePosition,
-        vertical,
-      }
-
-
-      
-      if (siblings.length > 1) {
-        const answer = this.onRunnersCollision(collisionData);
-        avaiblePosition = answer.coords;
-        collision = answer.collision;
-      }
-      
-
-
-      if (this.fetchModelProperty('stepsOn')) {
-
-        avaiblePosition = this.runnerStepHandler(avaiblePosition);
-        const len = this.breakpoints.length;
-        const lastBreakpoint = this.breakpoints[len - 1];
-      }
-
-
-      element.style.top = `${avaiblePosition + window.pageYOffset}px`;
-
-      this.onMoveProgress({ parent, runner: element, collision });
-
-      const tooltipPosition = this.calculateRunnerPosition({
-        parent,
-        runner: this.draggable,
-        vertical,
+      const RunnerPositionValidation = this.onRestrictDrag({
+        firstPointPosition: firstPoint,
+        secondPointPosition: secondPoint, 
+        beforeFirstPoint: firstPoint > collisionData.coords,
+        afterSecondPoint: secondPoint < collisionData.coords,
+        position: collisionData.coords,
       });
 
-      const { start, startAndEnd } = this.draggable.dataset;
-      const siblingProgressNumber = element.dataset.pair;
+      element.style.left = `${RunnerPositionValidation}px`;
 
-      const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
-      const siblingNumber = element.dataset.tooltipSibling;
-      const siblingTooltip = parent.querySelector(`[data-runner-sibling="${siblingNumber}"]`) as HTMLElement;
-      siblingTooltip.style.top = `${avaiblePosition + window.pageYOffset}px`;
-      siblingTooltip.innerHTML = `${tooltipPosition}`;
+
+      this.onMoveProgress({
+        parent,
+        runner: element,
+        collision: collisionData.collision,
+      });
+
+      const tooltipSibling = document.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      tooltipSibling.style.left = `${RunnerPositionValidation}px`;
+      tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
+        parent,
+        runner: element,
+        vertical,
+      }));
+    }else {
+      console.log('vertical logic')
+
+      
     }
-  }
+}
 
   runnerStepHandler(point) {
+    console.log(point, 'point argument in tunner step handler')
+
     let smaller;
     let larger;
     let closestPoint;
@@ -810,6 +693,7 @@ export default class View {
     console.log(this.breakpoints, 'точки остановки')
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
       if(this.breakpoints[breakpoint] > point) {
+        
         larger = this.breakpoints[breakpoint];
         smaller = this.breakpoints[breakpoint - 1];
         break;
@@ -822,7 +706,7 @@ export default class View {
     if (smaller === undefined) {
       closestPoint = larger;
     }
-    if(larger !== undefined && smaller !== undefined) {
+    if (larger !== undefined && smaller !== undefined) {
       const distanceToLeft = point - smaller;
       const distanceToRight = larger - point;
       if(distanceToLeft < distanceToRight) {
