@@ -80,15 +80,15 @@ export type configuration = {
 };
 
 export const uConfiguration = {
-  minValue: -1000,
-  maxValue: 9000,
+  minValue: 0,
+  maxValue: 10000,
   currentValue: 0,
   steps: 4,
-  runners: [0, 100],
-  stepsOn: true,
-  vertical: true,
-  invertRange: false,
-  units: '',
+  runners: [0, 50],
+  stepsOn: false,
+  vertical: false,
+  invertRange: true,
+  units: 'px',
   id: '#slider',
 };
 
