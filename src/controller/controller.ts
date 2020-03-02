@@ -31,6 +31,7 @@ export default class Controller {
       const configurationUpdated = Object.entries(this.model.configuration);
       const form = document.createElement('form');
       form.setAttribute('name', 'panel');
+      form.classList.add('panel');
 
       form.addEventListener('change', (e) => {
         console.log(this,' this in form');
@@ -128,15 +129,14 @@ export default class Controller {
             inputCopy.setAttribute('value', `${runnerValue}`);
             label.appendChild(inputCopy);
           });
-
         }
         form.appendChild(label);
       });
-      document.body.appendChild(form);
+      document.getElementById(this.model.configuration.id).appendChild(form);
     }
   }
 
-
+  
 
   setModelProperty(property, value) {
     this.model.changeConfState(property, value);

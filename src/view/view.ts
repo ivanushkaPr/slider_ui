@@ -59,7 +59,7 @@ export default class View {
   }
 
   renderElement(element: HTMLElement, parentElement: HTMLElement): void {
-    parentElement.appendChild(element);
+    parentElement.prepend(element);
     return undefined;
   }
 
@@ -326,7 +326,8 @@ export default class View {
 
     const rangeParentNode = document.getElementById(id);
     const prevRange = rangeParentNode.querySelector('.slider__range');
-    if(prevRange) {
+    console.log(rangeParentNode, prevRange);
+    if (prevRange) {
       prevRange.remove();
     }
 
@@ -394,7 +395,7 @@ export default class View {
     })
 
     this.renderProgress({
-      runners: document.getElementsByClassName('slider__runner'),
+      runners: rangeParentNode.getElementsByClassName('slider__runner'),
       parent: range,
       vertical: this.fetchModelProperty('vertical')
     });
@@ -808,13 +809,6 @@ export default class View {
     }
     return closestPoint;
   }
-
-
-  onMoveTooltip() {
-
-  }
-
-
 
   onRunnerMouseUpHandler() {
     const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
