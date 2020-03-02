@@ -20,8 +20,6 @@ export default class View {
 
   shiftY;
 
-
-
   fetchModelProperty(property: string) {
     const propState = this.controller.getModelProperty(property);
     if (propState !== undefined || propState !== null) {
@@ -325,6 +323,13 @@ export default class View {
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
+
+    const rangeParentNode = document.getElementById(id);
+    const prevRange = rangeParentNode.querySelector('.slider__range');
+    if(prevRange) {
+      prevRange.remove();
+    }
+
     const range = this.createRange();
 
 
@@ -333,7 +338,6 @@ export default class View {
     range.appendChild(temporaryRunner);
     const tempRect = temporaryRunner.getBoundingClientRect();
     range.removeChild(temporaryRunner);
-    console.log(tempRect, 'tempRect');
     this.calculateBreakpoints({range, vertical, rect: tempRect});
 
     const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - tempRect.width : range.offsetHeight - range.clientTop * 2 - tempRect.height;
@@ -469,7 +473,6 @@ export default class View {
       cb: this.onRunnerMouseMoveHandler,
       enviroment: this,
     });
-    
 
     this.onHandlerRegister({
       bookmark: 'runnerMouseUp',
@@ -493,7 +496,9 @@ export default class View {
 
   onRunnerMouseMoveHandler(event: MouseEvent): boolean {
     const { pageX, pageY } = event;
-    const vertical = this.fetchModelProperty('vertical'); 
+
+    const vertical = this.fetchModelProperty('vertical');
+
     let params;
     if (!vertical) {
       params = { point: pageX, element: this.draggable, vertical };

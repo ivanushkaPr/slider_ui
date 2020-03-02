@@ -12,6 +12,7 @@ let view = new View();
 let controller = new Controller(model, view);
 
 
+
 /* eslint-disable */
 (function( $ ) {
   $.fn.slider = function(options) {
