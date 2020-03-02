@@ -28,8 +28,8 @@ export default class View {
     throw new Error('no such property was found');
   }
 
-  setModelProperty(property, value) {
-    this.controller.setModelProperty(property, value);
+  setModelProperty(obj: {property, value, index}) {
+    this.controller.setModelProperty(obj);
     return true;
   }
 
@@ -408,7 +408,7 @@ export default class View {
       collection.forEach((target, index, array) => {
         const HTMLrunner = target as HTMLElement;
         HTMLrunner.dataset.pair = String(pair);
-
+        HTMLrunner.dataset.number = String(index + 1);
         if (array.length === 1) {
           HTMLrunner.dataset.startAndEnd = 'true';
         } else if (index % 2 === 0) {
@@ -713,6 +713,11 @@ export default class View {
         runner: element,
         vertical,
       }));
+
+      const runnerIndex = this.draggable.dataset.number - 1;
+      const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
+      this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex + 1});
+
     } else {
       const parentOffsetTop = parent.getBoundingClientRect().top;
 

@@ -25,11 +25,13 @@ export class Model {
 
   changeConfState(obj: {property: string; value: string | number | boolean; index?: number}):boolean {
     const {property, value, index} = obj;
-    if (index) {
+    if (typeof index === 'number') {
       this.configuration[property][index] = value;
+      this.controller.changePanelProperty(obj);
     } else {
       this.configuration[property] = value;
     }
+
     return true;
   }
 

@@ -136,6 +136,18 @@ export default class Controller {
     }
   }
 
+  changePanelProperty(obj: {property: string, value: string |number | boolean; index?: number}) {
+    let { property, value, index } = obj;
+
+    const id = this.getModelProperty('id');
+    const parent = document.getElementById(id);
+    const panel = parent.querySelector('.panel');
+    if(index && typeof index === 'number') {
+      const targetInput = panel.querySelector(`#runners-${index}`) as HTMLInputElement;
+      targetInput.value = String(Math.round(Number(value)));
+    }
+  }
+
   setModelProperty(obj: {property: string; value: string | number | boolean; index: number}): boolean {
     this.model.changeConfState(obj);
     return true;
