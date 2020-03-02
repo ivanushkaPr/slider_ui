@@ -23,8 +23,13 @@ export class Model {
     }
   }
 
-  changeConfState(property, value) {
-    this.configuration[property] = value;
+  changeConfState(obj: {property: string; value: string | number | boolean; index?: number}):boolean {
+    const {property, value, index} = obj;
+    if (index) {
+      this.configuration[property][index] = value;
+    } else {
+      this.configuration[property] = value;
+    }
     return true;
   }
 
@@ -84,7 +89,7 @@ export const uConfiguration = {
   maxValue: 10000,
   currentValue: 0,
   steps: 10,
-  runners: [0, 50],
+  runners: [0, 50, 70, 80],
   stepsOn: false,
   vertical: false,
   invertRange: true,

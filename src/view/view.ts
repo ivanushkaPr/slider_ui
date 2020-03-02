@@ -377,12 +377,10 @@ export default class View {
 
     });
 
-    const RenderedRunners = document.querySelectorAll('.slider__runner');
+    const RenderedRunners = rangeParentNode.querySelectorAll('.slider__runner');
     this.setDataAttr(RenderedRunners);
-    const RenderedTooltips = document.querySelectorAll('.slider__tooltip');
+    const RenderedTooltips = rangeParentNode.querySelectorAll('.slider__tooltip');
     this.setDataAttr(RenderedTooltips);
-
-  
 
     RenderedRunners.forEach((runner) => {
       this.onHandlerRegister({
@@ -594,7 +592,7 @@ export default class View {
       targetElement, selector, nextPosition, vertical,
     } = obj;
 
-    const siblings = document.querySelectorAll(selector);
+    const siblings = targetElement.parentNode.querySelectorAll(selector);
 
     const answer = {
       coords: 0,
@@ -708,14 +706,14 @@ export default class View {
         collision: collisionData.collision,
       });
 
-      const tooltipSibling = document.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
       tooltipSibling.style.left = `${RunnerPositionValidation}px`;
       tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
         parent,
         runner: element,
         vertical,
       }));
-    }else {
+    } else {
       const parentOffsetTop = parent.getBoundingClientRect().top;
 
 
@@ -760,16 +758,15 @@ export default class View {
         collision: collisionData.collision,
       });
 
-      const tooltipSibling = document.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
       tooltipSibling.style.top = `${RunnerPositionValidation}px`;
       tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
         parent,
         runner: element,
         vertical,
-  
-  
       }));
   
+      
     }
     
 }

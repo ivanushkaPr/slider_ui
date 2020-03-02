@@ -136,10 +136,8 @@ export default class Controller {
     }
   }
 
-  
-
-  setModelProperty(property, value) {
-    this.model.changeConfState(property, value);
+  setModelProperty(obj: {property: string; value: string | number | boolean; index: number}): boolean {
+    this.model.changeConfState(obj);
     return true;
   }
 
