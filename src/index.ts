@@ -25,6 +25,11 @@ class Slider {
     this.view = new this.ViewConstructor();
     this.controller = new this.ControllerConstructor(this.model, this.view);
   }
+
+  changeState(obj: {property, value, index?}) {
+    this.controller.changeSliderState(obj);
+  }
+
 }
 
 /*
@@ -57,10 +62,12 @@ const secondConfig = {
   units: 'px',
   id: '#slider2',
 };
-
+let sliderApi;
 $(document).ready(function() {
   const slider = $().slider(uConfiguration);
-  console.log(slider);
+  sliderApi = slider;
+  slider.changeState({property: 'maxValue', value: 100})
   const slider2 = $().slider(secondConfig);
 })
+
 

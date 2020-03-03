@@ -25,54 +25,73 @@ export default class Controller {
     this.renderConfigPanel({show: true, id: this.getModelProperty('id')});
   }
 
+  changeMinValue() {
+
+  }
+
+  changeForm(e) {
+    const parentform = e.currentTarget as HTMLElement;
+    const targetNode = e.target as HTMLElement;
+    if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
+      const currentNode = targetNode.parentNode as HTMLElement;
+      const inputs = currentNode.getElementsByClassName('panel__input');
+
+      if (inputs.length === 1) {
+        const type = inputs[0].getAttribute('type');
+        const name = inputs[0].getAttribute('name');
+        // eslint-disable-next-line prefer-destructuring
+        const value = (inputs[0] as HTMLInputElement).value;
+
+        if (type === 'num') {
+          this.model.configuration[name] = Number(value);
+        } else if (type === 'checkbox') {
+          if((inputs[0]as HTMLInputElement).checked) {
+            this.model.configuration[name] = true;
+          } else {
+            this.model.configuration[name] = false;
+          }
+        } else {
+          this.model.configuration[name] = String(value);
+        }
+      } else {
+        const numberInputs = Array.from(inputs);
+        const runnersPosition: number[] = [];
+        const name = inputs[0].getAttribute('name');
+
+        numberInputs.forEach((current, index)=> {
+          const position = (current as HTMLInputElement).value;
+          runnersPosition.push(Number(position));
+        });
+        this.model.configuration[name] = runnersPosition;
+      }
+      this.view.createSlider({runners: this.model.configuration.runners, vertical: this.model.configuration.vertical, id: this.model.configuration.id});
+    }
+  }
+
+  changeSliderState(obj: {property: configurationPropertyName, value: string | number | boolean, index?: number}): void {
+    let { property, value } = obj;
+   
+    this.setModelProperty(obj);
+    this.view.createSlider({runners: this.model.configuration.runners, vertical: this.model.configuration.vertical, id: this.model.configuration.id});
+    
+    this.renderConfigPanel({show: true, id: this.model.configuration.id});
+  }
+
+
   renderConfigPanel(obj: {show: boolean, id: string}): void {
     let {show, id} = obj;
+    const parentNode = document.getElementById(id);
+    const panel = parentNode.querySelector('.panel');
+    if(panel) {
+      panel.remove();
+    }
     if (show) {
       const configurationUpdated = Object.entries(this.model.configuration);
       const form = document.createElement('form');
       form.setAttribute('name', 'panel');
       form.classList.add('panel');
 
-      form.addEventListener('change', (e) => {
-        console.log(this,' this in form');
-        const parentform = e.currentTarget as HTMLElement;
-        const targetNode = e.target as HTMLElement;
-        if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
-          const currentNode = targetNode.parentNode as HTMLElement;
-          const inputs = currentNode.getElementsByClassName('panel__input');
-
-          if (inputs.length === 1) {
-            const type = inputs[0].getAttribute('type');
-            const name = inputs[0].getAttribute('name');
-            // eslint-disable-next-line prefer-destructuring
-            const value = (inputs[0] as HTMLInputElement).value;
-
-            if (type === 'num') {
-              this.model.configuration[name] = Number(value);
-            } else if (type === 'checkbox') {
-              if((inputs[0]as HTMLInputElement).checked) {
-                this.model.configuration[name] = true;
-              } else {
-                this.model.configuration[name] = false;
-              }
-            } else {
-              this.model.configuration[name] = String(value);
-            }
-          } else {
-            const numberInputs = Array.from(inputs);
-            const runnersPosition: number[] = [];
-            const name = inputs[0].getAttribute('name');
-
-            numberInputs.forEach((current, index)=> {
-              const position = (current as HTMLInputElement).value;
-              runnersPosition.push(Number(position));
-            });
-            this.model.configuration[name] = runnersPosition;
-          }
-
-          this.view.createSlider({runners: this.model.configuration.runners, vertical: this.model.configuration.vertical, id: this.model.configuration.id});
-        }
-      });
+      form.addEventListener('change', this.changeForm.bind(this));
 
       configurationUpdated.forEach((current, index, array) => {
         const inputName = configurationUpdated[index][0];
@@ -148,7 +167,7 @@ export default class Controller {
     }
   }
 
-  setModelProperty(obj: {property: string; value: string | number | boolean; index: number}): boolean {
+  setModelProperty(obj: {property: string; value: string | number | boolean; index?: number}): boolean {
     this.model.changeConfState(obj);
     return true;
   }
@@ -166,3 +185,6 @@ export default class Controller {
 
   }
 }
+
+
+type configurationPropertyName = 'minValue'|'maxValue'|'currentValue'|'steps'|'runners'|'stepsOn'|'vertical' |'invertRange' |'units' |'id'
