@@ -118,9 +118,8 @@ export default class Controller {
           label.appendChild(input);
 
         } else if (typeof inputValue === 'boolean') {
-
           if (inputValue === true) {
-            console.log(inputValue)
+
             input.setAttribute('checked', 'true');
           }
           input.setAttribute('id', `${inputName}`);
@@ -140,7 +139,6 @@ export default class Controller {
         } else {
           // Если это массив значений для бегунков
           inputValue.forEach((runnerValue, index) => {
-
             const inputCopy = document.createElement('input');
             inputCopy.classList.add('panel__input');
             inputCopy.setAttribute('id', `${inputName}-${index + 1}`);

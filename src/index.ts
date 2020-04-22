@@ -7,6 +7,9 @@ import * as $ from 'jquery';
 import { throws } from 'assert';
 const jQuery = $;
 
+
+
+
 class Slider {
   ModelConstructor = Model;
 
@@ -63,11 +66,12 @@ const secondConfig = {
   id: '#slider2',
 };
 let sliderApi;
+
 $(document).ready(function() {
   const slider = $().slider(uConfiguration);
   sliderApi = slider;
-  slider.changeState({property: 'maxValue', value: 100})
-  const slider2 = $().slider(secondConfig);
+ // slider.changeState({property: 'maxValue', value: 100})
+ // const slider2 = $().slider(secondConfig);
 })
 
 

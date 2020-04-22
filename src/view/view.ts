@@ -574,8 +574,6 @@ export default class View {
   onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
     const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
 
-    console.log(firstPointPosition, secondPointPosition, 'rescrtict');
-    console.log(beforeFirstPoint,afterSecondPoint)
     let point;
     if (beforeFirstPoint) {
       point = firstPointPosition;
@@ -716,7 +714,9 @@ export default class View {
 
       const runnerIndex = this.draggable.dataset.number - 1;
       const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
-      this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex + 1});
+
+
+      this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex});
 
     } else {
       const parentOffsetTop = parent.getBoundingClientRect().top;
@@ -743,8 +743,6 @@ export default class View {
         vertical,
       });
 
-
-      console.log(firstPoint,secondPoint, collisionData.coords)
       const RunnerPositionValidation = this.onRestrictDrag({
         firstPointPosition: firstPoint,
         secondPointPosition: secondPoint,
@@ -752,7 +750,6 @@ export default class View {
         afterSecondPoint: secondPoint < collisionData.coords,
         position: collisionData.coords,
       });
-  
 
       element.style.top = `${RunnerPositionValidation}px`;
 
@@ -770,11 +767,13 @@ export default class View {
         runner: element,
         vertical,
       }));
-  
-      
+
+      const runnerIndex = this.draggable.dataset.number - 1;
+      const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
+      this.setModelProperty({ property: 'runners', value: absolutePosition, index: runnerIndex });
+
     }
-    
-}
+  }
   
 
   runnerStepHandler(point) {

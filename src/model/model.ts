@@ -102,3 +102,7 @@ export const uConfiguration = {
 export const incompleteConfiguration = {
   id: '#slider',
 };
+
+export interface color {
+  color: string
+}

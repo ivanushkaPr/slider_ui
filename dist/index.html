@@ -2,6 +2,15 @@
 <head> </head>
 <body>
   <style>
+    body {
+      margin-left: 100px;
+      margin-top: 100px;
+      padding-left: 100px;
+      padding-right: 100px;
+      padding-top: 100px;
+      padding-bottom: 100px;
+    }
+
     .slider__range {
       background-color: white;
       border: 1px solid red;
@@ -11,10 +20,12 @@
 
     .slider__range--horizontal {
       height: 10px;
+      width: 300px;
     }
 
     .slider__range--vertical {
       width: 10px;
+      height: 300px;
     }
 
     .slider__runner {
@@ -30,19 +41,39 @@
       width: 30px;
       height: 30px;
       background-color: white;
-      border: 2px solid black;
-      margin-top: 100px;
+      border: 2px solid 
+      black;
     }
 
     .slider__tooltip--horizontal {
-
+      margin-top: 30px;
     }
 
     .slider__tooltip--vertical {
+      margin-left: 30px;
+    }
 
+    .slider__progress {
+      position: absolute;
+      background-color: red;
+    }
+
+    .slider__progress--horizontal {
+      height: 10px;
+    }
+
+    .slider__progress--vertical {
+      width: 10px;
+    }
+
+    .slider__root {
+
+     
     }
   </style>
-  <div class='slider'> Это слайдер </div>
-  <div id='#slider'> Это слайдер </div>
+  <!--<div class='slider'> Это слайдер </div> -->
+  <div id='#slider' class='slider__root'> </div>
+
+  <div id='#slider2'> </div>
 <script type="text/javascript" src="bundle.js"></script></body>
 </html>
