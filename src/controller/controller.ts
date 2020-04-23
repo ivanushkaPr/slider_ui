@@ -59,6 +59,7 @@ export default class Controller {
         const name = inputs[0].getAttribute('name');
 
         numberInputs.forEach((current, index)=> {
+          console.log(current);
           const position = (current as HTMLInputElement).value;
           runnersPosition.push(Number(position));
         });
@@ -155,13 +156,20 @@ export default class Controller {
 
   changePanelProperty(obj: {property: string, value: string |number | boolean; index?: number}) {
     let { property, value, index } = obj;
-
     const id = this.getModelProperty('id');
     const parent = document.getElementById(id);
     const panel = parent.querySelector('.panel');
-    if(index && typeof index === 'number') {
-      const targetInput = panel.querySelector(`#runners-${index}`) as HTMLInputElement;
-      targetInput.value = String(Math.round(Number(value)));
+    
+
+    const vertical = this.getModelProperty('vertical');
+    if(index >=0 && typeof index === 'number') {
+      if(!vertical) {
+        const targetInput = panel.querySelector(`#runners-${index + 1}`) as HTMLInputElement;
+        targetInput.value = String(Math.round(Number(value)));
+      } else {
+        const targetInput = panel.querySelector(`#runners-${4 - index}`) as HTMLInputElement;
+        targetInput.value = String(100 - Math.round(Number(value)));
+      }
     }
   }
 

@@ -761,6 +761,8 @@ export default class View {
       });
 
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      console.log(RunnerPositionValidation);
+      
       tooltipSibling.style.top = `${RunnerPositionValidation}px`;
       tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
         parent,
@@ -769,7 +771,7 @@ export default class View {
       }));
 
       const runnerIndex = this.draggable.dataset.number - 1;
-      const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
+      const absolutePosition = RunnerPositionValidation / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight) / 100);
       this.setModelProperty({ property: 'runners', value: absolutePosition, index: runnerIndex });
 
     }
