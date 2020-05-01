@@ -120,14 +120,18 @@ export default class Controller {
 
         } else if (typeof inputValue === 'boolean') {
           if (inputValue === true) {
-
             input.setAttribute('checked', 'true');
           }
+
           input.setAttribute('id', `${inputName}`);
           input.setAttribute('type', 'checkbox');
           input.setAttribute('name', `${inputName}`);
           input.setAttribute('value', `${inputValue}`);
           label.appendChild(input);
+
+          const div = document.createElement('div');
+          div.classList.add('panel__fakebox');
+          label.appendChild(div);
 
         } else if (typeof inputValue === 'string') {
 

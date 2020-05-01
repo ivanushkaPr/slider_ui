@@ -356,6 +356,7 @@ export default class View {
         parent: range,
       });
 
+      
       const tooltip = this.createTooltip(position);
       this.setRunnerPosition({
         element: tooltip,
@@ -543,8 +544,6 @@ export default class View {
         progress.style.width = `${width}px`;
       }
     } else if(this.fetchModelProperty('vertical')) {
-
-
       if (startAndEnd) {
         const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
         const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
@@ -608,6 +607,7 @@ export default class View {
           answer.coords = brotherLeftSide;
           answer.collision = true;
         } else {
+          targetElement.style.zIndex = 'auto';
           answer.coords = nextPosition;
           answer.collision = false;
         }
@@ -621,6 +621,7 @@ export default class View {
           answer.coords = brotherLeftSide;
           answer.collision = true;
         } else {
+          targetElement.style.zIndex = 'auto';
           answer.coords = nextPosition;
           answer.collision = false;
         }
@@ -637,6 +638,7 @@ export default class View {
           answer.coords = brotherTopSide;
           answer.collision = true;
         } else {
+          targetElement.style.zIndex = 'auto';
           answer.coords = nextPosition;
           answer.collision = false;
         }
@@ -650,12 +652,17 @@ export default class View {
           answer.coords = brotherTopSide;
           answer.collision = true;
         } else {
+          targetElement.style.zIndex = 'auto';
           answer.coords = nextPosition;
           answer.collision = false;
         }
       }
     }
     return answer;
+  }
+
+  MoveNeighborRunner() {
+    
   }
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
@@ -705,18 +712,25 @@ export default class View {
       });
 
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
+      tooltipSibling.classList.add('slider__tooltip--show');
       tooltipSibling.style.left = `${RunnerPositionValidation}px`;
       tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
         parent,
         runner: element,
         vertical,
-      }));
+      })); 
+
+      // Переписать функцию, чтобы она не устанавливалась повторно.
+
+
 
       const runnerIndex = this.draggable.dataset.number - 1;
       const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
 
 
       this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex});
+
+      
 
     } else {
       const parentOffsetTop = parent.getBoundingClientRect().top;
@@ -761,14 +775,15 @@ export default class View {
       });
 
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
-      console.log(RunnerPositionValidation);
-      
+
+      tooltipSibling.classList.add('slider__tooltip--show');
       tooltipSibling.style.top = `${RunnerPositionValidation}px`;
       tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
         parent,
         runner: element,
         vertical,
       }));
+
 
       const runnerIndex = this.draggable.dataset.number - 1;
       const absolutePosition = RunnerPositionValidation / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight) / 100);
@@ -779,8 +794,6 @@ export default class View {
   
 
   runnerStepHandler(point) {
-    console.log(point, 'point argument in tunner step handler')
-
     let smaller;
     let larger;
     let closestPoint;
@@ -816,7 +829,6 @@ export default class View {
   onRunnerMouseUpHandler() {
     const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
     this.onHandlerDelete(mouseMoveBookmark);
-
 
     const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
     this.onHandlerDelete(mouseUpBookmark);

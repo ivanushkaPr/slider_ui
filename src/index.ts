@@ -54,8 +54,8 @@ let controller = new Controller(model, view);
 })($);
 
 const secondConfig = {
-  minValue: 0,
-  maxValue: 10000,
+  minValue: -100,
+  maxValue: 1000,
   currentValue: 0,
   steps: 10,
   runners: [0, 50],
