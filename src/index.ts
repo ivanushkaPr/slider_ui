@@ -66,7 +66,7 @@ $(document).ready(function() {
   console.log(uConfiguration)
   const slider = $().slider(uConfiguration);
   sliderApi = slider;
-  const slider2 = $().slider(secondConfig);
+//  const slider2 = $().slider(secondConfig);
 })
 
 

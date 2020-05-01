@@ -4,7 +4,6 @@ export class Model {
   basicConfiguration: configuration = {
     minValue: 0,
     maxValue: 100,
-    currentValue: 0,
     steps: 0,
     runners: [0],
     stepsOn: false,
@@ -90,7 +89,6 @@ export type configuration = {
 export const uConfiguration = {
   minValue: 0,
   maxValue: 100,
-  currentValue: 0,
   steps: 10,
   runners: [0, 30, 40, 60],
   stepsOn: false,

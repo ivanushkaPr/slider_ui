@@ -28,7 +28,7 @@ export default class Controller {
       id: this.getModelProperty('id'),
     });
 
-    if (this.getModelProperty('panel')) this.renderConfigPanel({ show: this.getModelProperty('panel'),id: this.getModelProperty('id') });
+    if (this.getModelProperty('panel')) this.renderConfigPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
   }
 
   changeMinValue() {
@@ -36,30 +36,15 @@ export default class Controller {
   }
 
   changeForm(e) {
-    const parentform = e.currentTarget as HTMLElement;
+    console.log(document.getElementById('#slider2'), 'в самом начале');
+    const parentForm = e.currentTarget as HTMLElement;
     const targetNode = e.target as HTMLElement;
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
       const currentNode = targetNode.parentNode as HTMLElement;
       const inputs = currentNode.getElementsByClassName('panel__input');
+      const input = inputs[0];
 
-      if (inputs.length === 1) {
-        const type = inputs[0].getAttribute('type');
-        const name = inputs[0].getAttribute('name');
-        // eslint-disable-next-line prefer-destructuring
-        const value = (inputs[0] as HTMLInputElement).value;
-
-        if (type === 'num') {
-          this.model.configuration[name] = Number(value);
-        } else if (type === 'checkbox') {
-          if((inputs[0]as HTMLInputElement).checked) {
-            this.model.configuration[name] = true;
-          } else {
-            this.model.configuration[name] = false;
-          }
-        } else {
-          this.model.configuration[name] = String(value);
-        }
-      } else {
+      if (input.classList.contains('panel__input--positions')) {
         const numberInputs = Array.from(inputs);
         const runnersPosition: number[] = [];
         const name = inputs[0].getAttribute('name');
@@ -69,12 +54,51 @@ export default class Controller {
           runnersPosition.push(Number(position));
         });
         this.model.configuration[name] = runnersPosition;
+      } else {
+        const INPUT = inputs[0];
+        const TYPE = INPUT.getAttribute('type');
+        const NAME = INPUT.getAttribute('name');
+        // eslint-disable-next-line prefer-destructuring
+        const VALUE = (inputs[0] as HTMLInputElement).value;
+        if (TYPE === 'number') {
+          this.setModelProperty({ property: NAME, value: Number(VALUE) });
+        } else if(INPUT.id === 'panel') {
+          const { checked } = (inputs[0]as HTMLInputElement);
+          this.setModelProperty({ property: NAME, value: checked });
+          const CURRENT_ID = this.getModelProperty('id');
+          const PARENT = document.getElementById(CURRENT_ID);
+          const PANEL = PARENT.querySelector('.panel') as HTMLElement;
+          PANEL.style.display = 'none';
+        }
+        else if (TYPE === 'checkbox') {
+          const { checked } = (inputs[0]as HTMLInputElement);
+          this.setModelProperty({ property: NAME, value: checked });
+        } else if (TYPE === 'text' && INPUT.id !== 'id') {
+          this.setModelProperty({ property: NAME, value: String(VALUE) });
+        } else if (TYPE === 'text' && INPUT.id === 'id') {
+          const CURRENT_ID = this.getModelProperty('id');
+          if (VALUE !== CURRENT_ID) {
+            const PARENT = document.getElementById(CURRENT_ID);
+            const RANGE = PARENT.querySelector('.slider__range');
+            const PANEL = PARENT.querySelector('.panel');
+            PARENT.removeChild(RANGE);
+            PARENT.removeChild(PANEL);
+            this.setModelProperty({ property: NAME, value: VALUE });
+          }
+        }
       }
+      if(this.getModelProperty('panel')) {
+        this.renderConfigPanel({show: this.getModelProperty('panel'), id: this.getModelProperty('id')});
+      }
+
+
       this.view.createSlider({
         runners: this.model.configuration.runners,
         vertical: this.model.configuration.vertical,
         id: this.model.configuration.id,
       });
+
+      
     }
   }
 
@@ -173,7 +197,7 @@ export default class Controller {
           InputAttr.type = 'number';
           InputAttr.value = `${String(position)}`;
           const CUSTOM_INPUT = this.createCustomInput(InputAttr);
-          CUSTOM_INPUT.classList.add('panel__input');
+          CUSTOM_INPUT.className = 'panel__input panel__input--positions';
           TEMPLATE.appendChild(CUSTOM_INPUT);
         });
       } else {
