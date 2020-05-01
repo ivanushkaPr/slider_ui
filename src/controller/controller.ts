@@ -2,6 +2,8 @@
 import { Model, configuration } from '../model/model';
 import View from '../view/view';
 import { disconnect } from 'cluster';
+import { format } from 'url';
+import { FORMERR } from 'dns';
 
 /* eslint-enable */
 
@@ -26,7 +28,7 @@ export default class Controller {
       id: this.getModelProperty('id'),
     });
 
-    if (this.getModelProperty('panel')) this.renderConfigPanel({ show: true, id: this.getModelProperty('id') });
+    if (this.getModelProperty('panel')) this.renderConfigPanel({ show: this.getModelProperty('panel'),id: this.getModelProperty('id') });
   }
 
   changeMinValue() {
@@ -77,94 +79,123 @@ export default class Controller {
   }
 
   changeSliderState(obj: {
-    property: configurationPropertyName,value: string | number | boolean, index?: number}):
-     void {
+    property: configurationPropertyName, value: string | number | boolean, index?: number}):void {
     this.setModelProperty(obj);
+
     this.view.createSlider({
       runners: this.model.configuration.runners,
       vertical: this.model.configuration.vertical,
       id: this.model.configuration.id,
     });
-    this.renderConfigPanel({show: true, id: this.model.configuration.id});
+    this.renderConfigPanel({ show: true, id: this.model.configuration.id });
   }
 
 
+  createInputTemplate(ruleName) {
+    const LABEL = document.createElement('label');
+    LABEL.classList.add('panel__label');
+
+    const FIELD_NAME = document.createElement('p');
+    FIELD_NAME.classList.add('panel__description');
+    FIELD_NAME.innerHTML = `${ruleName}`;
+
+    LABEL.appendChild(FIELD_NAME);
+
+    return LABEL;
+  }
+
+  createCustomInput(attributes: {ID: string, type: string, name: string, value: string | number }) {
+    const INPUT = document.createElement('input');
+    INPUT.classList.add('panel__input');
+    INPUT.setAttribute('id', attributes.ID);
+    INPUT.setAttribute('type', attributes.type);
+    INPUT.setAttribute('name', attributes.name);
+    INPUT.setAttribute('value', String(attributes.value));
+    return INPUT;
+  }
+
+  createFakeCheckbox() {
+    const div = document.createElement('div');
+    div.classList.add('panel__fakebox');
+    return div;
+  }
+
+  createForm() {
+    const form = document.createElement('form');
+    form.setAttribute('name', 'panel');
+    form.classList.add('panel');
+    form.addEventListener('change', this.changeForm.bind(this));
+    return form;
+  }
+
+  fillForm(obj: {form:HTMLFormElement,
+    settings: [string, string | number | boolean | number[]][]}) {
+
+    const { form, settings } = obj;
+    settings.forEach((current) => {
+      const RULE_NAME = current[0];
+      const RULE_VALUE = current[1];
+      const TEMPLATE = this.createInputTemplate(RULE_NAME);
+
+      type inputAttr = {
+        ID: string;
+        name: string;
+        type: string;
+        value: string;
+      }
+
+      const InputAttr: inputAttr = {
+        ID: `${RULE_NAME}`,
+        name: `${RULE_NAME}`,
+        type: '',
+        value: `${String(RULE_VALUE)}`,
+      };
+
+      if (typeof RULE_VALUE === 'number') {
+        InputAttr.type = 'number';
+        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
+        TEMPLATE.appendChild(CUSTOM_INPUT);
+      } else if (typeof RULE_VALUE === 'boolean') {
+        InputAttr.type = 'checkbox';
+        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
+        if (RULE_VALUE === true) {
+          CUSTOM_INPUT.setAttribute('checked', 'true');
+        }
+        TEMPLATE.appendChild(CUSTOM_INPUT);
+        TEMPLATE.appendChild(this.createFakeCheckbox());
+      } else if (typeof RULE_VALUE === 'string') {
+        InputAttr.type = 'text';
+        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
+        TEMPLATE.appendChild(CUSTOM_INPUT);
+      } else if (Array.isArray(RULE_VALUE)) {
+        RULE_VALUE.forEach((position, intance) => {
+          InputAttr.ID = `${RULE_NAME}-${intance + 1}`;
+          InputAttr.type = 'number';
+          InputAttr.value = `${String(position)}`;
+          const CUSTOM_INPUT = this.createCustomInput(InputAttr);
+          CUSTOM_INPUT.classList.add('panel__input');
+          TEMPLATE.appendChild(CUSTOM_INPUT);
+        });
+      } else {
+        throw new Error('Unknown value');
+      }
+      form.appendChild(TEMPLATE);
+    });
+    return form;
+  }
+
   renderConfigPanel(obj: {show: boolean, id: string}): void {
-    let {show, id} = obj;
+    const { show, id } = obj;
     const parentNode = document.getElementById(id);
-    const panel = parentNode.querySelector('.panel');
-    if (panel) {
-      panel.remove();
+    const panelNode = parentNode.querySelector('.panel');
+    if (panelNode) {
+      panelNode.remove();
     }
     if (show) {
-      const configurationUpdated = Object.entries(this.model.configuration);
-      const form = document.createElement('form');
-      form.setAttribute('name', 'panel');
-      form.classList.add('panel');
-
-      form.addEventListener('change', this.changeForm.bind(this));
-
-      configurationUpdated.forEach((current, index, array) => {
-        const inputName = configurationUpdated[index][0];
-        const inputValue = configurationUpdated[index][1];
-
-        const label = document.createElement('label');
-        label.classList.add('panel__label');
-        label.setAttribute('id', `${inputName}`);
-
-        const inputDescription = document.createElement('p');
-        inputDescription.classList.add('panel__description');
-        inputDescription.innerHTML = `${inputName}`;
-        label.appendChild(inputDescription);
-
-        const input = document.createElement('input');
-        input.classList.add('panel__input');
-
-        if (typeof inputValue === 'number') {
-
-          input.setAttribute('id', `${inputName}`);
-          input.setAttribute('type', 'num');
-          input.setAttribute('name', `${inputName}`);
-          input.setAttribute('value', `${inputValue}`);
-          label.appendChild(input);
-
-        } else if (typeof inputValue === 'boolean') {
-          if (inputValue === true) {
-            input.setAttribute('checked', 'true');
-          }
-
-          input.setAttribute('id', `${inputName}`);
-          input.setAttribute('type', 'checkbox');
-          input.setAttribute('name', `${inputName}`);
-          input.setAttribute('value', `${inputValue}`);
-          label.appendChild(input);
-
-          const div = document.createElement('div');
-          div.classList.add('panel__fakebox');
-          label.appendChild(div);
-
-        } else if (typeof inputValue === 'string') {
-
-          input.setAttribute('id', `${inputName}`);
-          input.setAttribute('type', 'text');
-          input.setAttribute('name', `${inputName}`);
-          input.setAttribute('value', `${inputValue}`);
-          label.appendChild(input);
-
-        } else {
-          // Если это массив значений для бегунков
-          inputValue.forEach((runnerValue, index) => {
-            const inputCopy = document.createElement('input');
-            inputCopy.classList.add('panel__input');
-            inputCopy.setAttribute('id', `${inputName}-${index + 1}`);
-            inputCopy.setAttribute('name', `${inputName}`);
-            inputCopy.setAttribute('value', `${runnerValue}`);
-            label.appendChild(inputCopy);
-          });
-        }
-        form.appendChild(label);
-      });
-      document.getElementById(this.model.configuration.id).appendChild(form);
+      const Configuration = Object.entries(this.model.configuration);
+      const form = this.createForm();
+      const filledForm = this.fillForm({ form, settings: Configuration });
+      document.getElementById(this.model.configuration.id).appendChild(filledForm);
     }
   }
 
@@ -173,7 +204,6 @@ export default class Controller {
     const id = this.getModelProperty('id');
     const parent = document.getElementById(id);
     const panel = parent.querySelector('.panel');
-    
 
     const vertical = this.getModelProperty('vertical');
     if (index >= 0 && typeof index === 'number') {
@@ -208,4 +238,4 @@ export default class Controller {
 }
 
 
-type configurationPropertyName = 'minValue'|'maxValue'|'currentValue'|'steps'|'runners'|'stepsOn'|'vertical' |'invertRange' |'units' |'id'
+type configurationPropertyName = 'minValue'|'maxValue'|'currentValue'|'steps'|'runners'|'stepsOn'|'vertical' |'invertRange' |'units' |'id'|'panel';
