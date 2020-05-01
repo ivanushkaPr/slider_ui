@@ -35,8 +35,7 @@ export default class Controller {
 
   }
 
-  changeForm(e) {
-    console.log(document.getElementById('#slider2'), 'в самом начале');
+  changeFormHandler(e) {
     const parentForm = e.currentTarget as HTMLElement;
     const targetNode = e.target as HTMLElement;
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
@@ -148,7 +147,7 @@ export default class Controller {
     const form = document.createElement('form');
     form.setAttribute('name', 'panel');
     form.classList.add('panel');
-    form.addEventListener('change', this.changeForm.bind(this));
+    form.addEventListener('change', this.changeFormHandler.bind(this));
     return form;
   }
 
