@@ -25,14 +25,12 @@ export class Model {
 
   changeConfState(obj: {property: string; value: string | number | boolean; index?: number}):boolean {
     const {property, value, index} = obj;
-    console.log(typeof index)
     if (typeof index === 'number') {
       this.configuration[property][index] = value;
       this.controller.changePanelProperty(obj);
     } else {
       this.configuration[property] = value;
     }
-
     return true;
   }
 
@@ -89,10 +87,10 @@ export type configuration = {
 
 export const uConfiguration = {
   minValue: 0,
-  maxValue: 10000,
+  maxValue: 100,
   currentValue: 0,
   steps: 10,
-  runners: [0, 50, 70, 80],
+  runners: [0, 30, 40, 60],
   stepsOn: false,
   vertical: false,
   invertRange: true,

@@ -59,22 +59,28 @@ export default class Controller {
         const name = inputs[0].getAttribute('name');
 
         numberInputs.forEach((current, index)=> {
-          console.log(current);
           const position = (current as HTMLInputElement).value;
           runnersPosition.push(Number(position));
         });
         this.model.configuration[name] = runnersPosition;
       }
-      this.view.createSlider({runners: this.model.configuration.runners, vertical: this.model.configuration.vertical, id: this.model.configuration.id});
+      this.view.createSlider({
+        runners: this.model.configuration.runners,
+        vertical: this.model.configuration.vertical,
+        id: this.model.configuration.id,
+      });
     }
   }
 
-  changeSliderState(obj: {property: configurationPropertyName, value: string | number | boolean, index?: number}): void {
-    let { property, value } = obj;
-   
+  changeSliderState(obj: {
+    property: configurationPropertyName,value: string | number | boolean, index?: number}):
+     void {
     this.setModelProperty(obj);
-    this.view.createSlider({runners: this.model.configuration.runners, vertical: this.model.configuration.vertical, id: this.model.configuration.id});
-    
+    this.view.createSlider({
+      runners: this.model.configuration.runners,
+      vertical: this.model.configuration.vertical,
+      id: this.model.configuration.id,
+    });
     this.renderConfigPanel({show: true, id: this.model.configuration.id});
   }
 
@@ -83,7 +89,7 @@ export default class Controller {
     let {show, id} = obj;
     const parentNode = document.getElementById(id);
     const panel = parentNode.querySelector('.panel');
-    if(panel) {
+    if (panel) {
       panel.remove();
     }
     if (show) {
@@ -166,12 +172,13 @@ export default class Controller {
     
 
     const vertical = this.getModelProperty('vertical');
-    if(index >=0 && typeof index === 'number') {
-      if(!vertical) {
+    if (index >= 0 && typeof index === 'number') {
+      if (!vertical) {
         const targetInput = panel.querySelector(`#runners-${index + 1}`) as HTMLInputElement;
         targetInput.value = String(Math.round(Number(value)));
       } else {
-        const targetInput = panel.querySelector(`#runners-${4 - index}`) as HTMLInputElement;
+        const runnersLength = this.getModelProperty('runners').length;
+        const targetInput = panel.querySelector(`#runners-${runnersLength - index}`) as HTMLInputElement;
         targetInput.value = String(100 - Math.round(Number(value)));
       }
     }

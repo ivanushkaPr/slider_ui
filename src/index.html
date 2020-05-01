@@ -8,23 +8,43 @@
 
     .slider__root {
       display: flex;
-      align-items: center;  
+      align-items: center;
+      flex-direction: column; 
       border-radius: 10px;
       margin: 50px;
     }
 
     .slider__range {
+      display: flex;
       background-color: white;
       border: 1px solid red;
       border-radius: 5px;
       position: relative;
-      margin-right: 100px;
+
 
       position: relative;
       background: #FFFFFF;
       border: 1px solid rgba(31, 32, 65, 0.25);
 
       border-radius: 3px;
+    }
+
+    .slider__scale {
+      background-color: white;
+    }
+
+    .slider__scale--horizontal {
+      width: 1px;
+      height: 10px;
+    }
+
+    .slider__scale--vertical {
+      width: 10px;
+      height: 1px;
+    }
+
+    .slider__scale--transparent {
+      background-color: transparent;
     }
 
     .slider__range--horizontal {
@@ -82,8 +102,6 @@
     .slider__tooltip--show {
       display: flex;
     }
-
-
 
     .slider__progress {
       position: absolute;
@@ -179,11 +197,11 @@
 
   </style>
   <!--<div class='slider'> Это слайдер </div> -->
-  <div id='#slider' class='slider__root'> 
+
+    <div id='#slider' class='slider__root'> </div>
+
+    <div id='#slider2' class='slider__root'> </div>
 
 
-  </div>
-
-  <div id='#slider2' class='slider__root'> </div>
 </body>
 </html>

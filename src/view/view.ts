@@ -36,20 +36,20 @@ export default class View {
   calculateBreakpoints(obj: {range, vertical: boolean, rect:DOMRect}) {
     let { range, vertical, rect } = obj;
     const steps = this.fetchModelProperty('steps');
-
-    const size = !vertical ?
+    let size = !vertical ?
       range.getBoundingClientRect().width - range.clientLeft * 2 - rect.width
       : range.getBoundingClientRect().height - range.clientTop * 2 - rect.height;
-
+    size = Math.ceil(size);
+    console.log(size, 'размер');
     const stepSize = size / steps;
     const breakpoints: number[] = [];
     breakpoints.push(0);
     for (let i = 1; i < steps; i += 1) {
-      breakpoints.push(Math.round(i * stepSize));
+      breakpoints.push(Math.ceil(i * stepSize));
     }
     breakpoints.push(size);
     this.breakpoints = breakpoints;
-    console.log(this.breakpoints);
+    console.log('called')
   }
 
   createElement(nodeName: string, className: string) {
@@ -148,7 +148,7 @@ export default class View {
         }
         if(runner % 2 === 0) {
           const size = this.calculateProgressSize({ start, end });
-          this.setSize({ element: progress, property: 'width', value: `${size}` });
+          this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
           this.setPosition({
             element: progress, position, axis: 'left', parent,
           });
@@ -326,7 +326,6 @@ export default class View {
 
     const rangeParentNode = document.getElementById(id);
     const prevRange = rangeParentNode.querySelector('.slider__range');
-    console.log(rangeParentNode, prevRange);
     if (prevRange) {
       prevRange.remove();
     }
@@ -391,15 +390,51 @@ export default class View {
         cb: this.onRunnerMouseDownHandler,
         enviroment: this,
       });
-    })
+    });
 
     this.renderProgress({
       runners: rangeParentNode.getElementsByClassName('slider__runner'),
       parent: range,
       vertical: this.fetchModelProperty('vertical')
     });
+
+    this.createScale({parentNode: rangeParentNode, runnerWidth: tempRect.width, vertical});
     return undefined;
   }
+
+  createScale(obj: {parentNode: HTMLElement, runnerWidth: number, vertical: boolean}) {
+    const { parentNode, runnerWidth, vertical } = obj;
+
+    // eslint-disable-next-line prefer-destructuring
+    const breakpoints = this.breakpoints;
+
+    const slider = parentNode.querySelector('.slider__range');
+    if (!vertical) {
+      breakpoints.forEach((breakpoint, index, array) => {
+        const div = document.createElement('div');
+        div.classList.add('slider__scale');
+        if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
+        div.classList.add('slider__scale--horizontal');
+        div.style.position = 'absolute';
+        div.style.left = `${breakpoint - 1}px`;
+        if (index > 0 && index < array.length - 1) slider.appendChild(div);
+      });
+    }
+
+    if (vertical) {
+      breakpoints.forEach((breakpoint, index, array) => {
+        const div = document.createElement('div');
+        div.classList.add('slider__scale');
+        div.classList.add('slider__scale--vertical');
+        div.style.position = 'absolute';
+        div.style.top = `${breakpoint + 1}px`;
+
+        if (index > 0 && index < array.length - 1) slider.appendChild(div);
+      });
+    }
+  }
+
+
 
   setDataAttr(elements: NodeList): void {
     const collection = elements;
@@ -417,8 +452,6 @@ export default class View {
         } else {
           HTMLrunner.dataset.start = 'false';
         }
-
-
         if (index % 2 === 1) {
           pair += 1;
         }
@@ -533,8 +566,9 @@ export default class View {
         const progressEnd = siblings[1].getBoundingClientRect().left;
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
-        progress.style.width = `${width}px`;
+        progress.style.width = `${width + parent.clientLeft}px`;
         progress.style.left = `${progressLeft + window.pageXOffset}px`;
+
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
@@ -565,7 +599,7 @@ export default class View {
         const progressEnd = siblings[0].getBoundingClientRect().bottom;
         const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        progress.style.height = `${height}px`;
+        progress.style.height = `${height - parent.clientTop}px`;
       }
     }
   }
