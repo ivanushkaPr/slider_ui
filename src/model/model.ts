@@ -12,6 +12,7 @@ export class Model {
     invertRange: false,
     units: '',
     id: undefined,
+    panel: false,
   }
 
   controller;
@@ -83,6 +84,7 @@ export type configuration = {
   invertRange?: boolean
   units?: string
   id: string | undefined
+  panel?: boolean
 };
 
 export const uConfiguration = {
@@ -96,6 +98,7 @@ export const uConfiguration = {
   invertRange: true,
   units: 'px',
   id: '#slider',
+  panel: true,
 };
 
 export const incompleteConfiguration = {

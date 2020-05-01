@@ -12,17 +12,21 @@ export default class Controller {
 
 
   constructor(model: Model, view: View) {
+    const controller = this;
+
     this.model = model;
     this.view = view;
-    this.view.controller = this;
-    this.model.controller = this;
-    let initProps = {
+
+    this.view.controller = controller;
+    this.model.controller = controller;
+
+    this.view.createSlider({
       runners: this.getModelProperty('runners'),
       vertical: this.getModelProperty('vertical'),
       id: this.getModelProperty('id'),
-    }
-    this.view.createSlider(initProps);
-    this.renderConfigPanel({show: true, id: this.getModelProperty('id')});
+    });
+
+    if (this.getModelProperty('panel')) this.renderConfigPanel({ show: true, id: this.getModelProperty('id') });
   }
 
   changeMinValue() {
