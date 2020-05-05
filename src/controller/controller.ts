@@ -10,7 +10,6 @@ export default class Controller {
 
   view: View
 
-
   constructor(model: Model, view: View) {
     const controller = this;
 
@@ -33,11 +32,25 @@ export default class Controller {
     const { input: INPUT } = obj;
     const VALUE = +INPUT.value;
     const INDEX = +(INPUT.id.slice(-1) - 1);
-    this.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
+    const VALUE_IS_VALID = this.validateRunnersProperty({ index: INDEX, value: VALUE });
+    if (VALUE_IS_VALID) {
+      this.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
+    }
+  }
+
+  validateRunnersProperty(obj: {index, value}) {
+    const { index, value } = obj;
+    const runners = this.getModelProperty('runners');
+    const prevRunnerposition = runners[index - 1];
+    const nextRunnerPosition = runners[index + 1];
+    if (prevRunnerposition > value || nextRunnerPosition < value) {
+      return false;
+    }
+    return true;
   }
 
   changeCheckboxProperty(obj: {input}) {
-    const { input} = obj;
+    const { input } = obj;
     const { checked } = (input as HTMLInputElement);
     const INPUT_NAME = input.getAttribute('name');
     this.setModelProperty({ property: INPUT_NAME, value: checked });
@@ -45,7 +58,22 @@ export default class Controller {
 
   changeNumberProperty(obj: {input}) {
     const { input } = obj;
-    this.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
+
+    if (input.id === 'minValue') {
+      if (this.getModelProperty('maxValue') > input.value) {
+        this.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
+      }
+    } else if (input.id === 'maxValue') {
+      if (this.getModelProperty('minValue') < input.value) {
+        this.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
+      }
+    } else if (input.id === 'steps') {
+      if (input.value <= 20) {
+        this.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
+      }
+    } else {
+      throw new Error('Unexpected input');
+    }
   }
 
   changeUnitsProperty(obj: {input}) {
@@ -60,8 +88,8 @@ export default class Controller {
     const INPUT_VALUE = (input as HTMLInputElement).value;
     const INPUT_NAME = input.getAttribute('name');
     const CURRENT_ID = this.getModelProperty('id');
-    if (INPUT_VALUE !== CURRENT_ID) {
-      const PARENT = document.getElementById(CURRENT_ID);
+    const PARENT = document.getElementById(INPUT_VALUE);
+    if (INPUT_VALUE !== CURRENT_ID && PARENT) {
       const RANGE = PARENT.querySelector('.slider__range');
       const PANEL = PARENT.querySelector('.panel');
       PARENT.removeChild(RANGE);
@@ -69,6 +97,7 @@ export default class Controller {
       this.setModelProperty({ property: INPUT_NAME, value: INPUT_VALUE });
     }
   }
+
 
   changePanelVisibility(obj: {input}) {
     const { input } = obj;
@@ -80,8 +109,6 @@ export default class Controller {
     const INPUT_NAME = input.getAttribute('name');
     this.setModelProperty({ property: INPUT_NAME, value: checked });
   }
-
-
 
   changeFormHandler(e) {
     const targetNode = e.target;
@@ -170,7 +197,6 @@ export default class Controller {
 
   fillForm(obj: {form:HTMLFormElement,
     settings: [string, string | number | boolean | number[]][]}) {
-
     const { form, settings } = obj;
     settings.forEach((current) => {
       const RULE_NAME = current[0];
@@ -239,7 +265,8 @@ export default class Controller {
     }
   }
 
-  setModelProperty(obj: {property: string; value: string | number | boolean; index?: number}): boolean {
+  setModelProperty(obj: {
+    property: string; value: string | number | boolean; index?: number}): boolean {
     this.model.changeConfState(obj);
     return true;
   }
@@ -247,14 +274,6 @@ export default class Controller {
   getModelProperty(property) {
     const tProp = this.model.getConfState(property);
     return tProp;
-  }
-
-  setViewProperty(property, value) {
-    
-  }
-
-  getViewProperty() {
-
   }
 }
 

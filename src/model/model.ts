@@ -11,7 +11,7 @@ export class Model {
     vertical: false,
     panel: false,
     id: undefined,
-    
+
   }
 
   controller;
@@ -23,8 +23,9 @@ export class Model {
     }
   }
 
-  changeConfState(obj: {property: string; value: string | number | boolean; index?: number}):boolean {
-    const {property, value, index} = obj;
+  changeConfState(obj: {property: string; value: string | number | boolean; index?: number})
+  :boolean {
+    const { property, value, index } = obj;
     if (typeof index === 'number') {
       this.configuration[property][index] = value;
     } else {
@@ -85,7 +86,7 @@ export type configuration = {
 };
 
 export const uConfiguration = {
-  minValue: 0,
+  minValue: -100,
   maxValue: 100,
   steps: 10,
   units: 'px',
@@ -93,7 +94,6 @@ export const uConfiguration = {
   stepsOn: false,
   vertical: false,
   panel: true,
-  
   id: '#slider',
 };
 
