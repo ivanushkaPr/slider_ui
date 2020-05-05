@@ -1,9 +1,7 @@
 /* eslint-disable */
 import { Model, configuration } from '../model/model';
 import View from '../view/view';
-import { disconnect } from 'cluster';
-import { format } from 'url';
-import { FORMERR } from 'dns';
+
 
 /* eslint-enable */
 
@@ -31,81 +29,93 @@ export default class Controller {
     if (this.getModelProperty('panel')) this.renderConfigPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
   }
 
-  changeMinValue() {
-
+  changeRunnersProperty(obj: {input}):void {
+    const { input: INPUT } = obj;
+    const VALUE = +INPUT.value;
+    const INDEX = +(INPUT.id.slice(-1) - 1);
+    this.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
   }
+
+  changeCheckboxProperty(obj: {input}) {
+    const { input} = obj;
+    const { checked } = (input as HTMLInputElement);
+    const INPUT_NAME = input.getAttribute('name');
+    this.setModelProperty({ property: INPUT_NAME, value: checked });
+  }
+
+  changeNumberProperty(obj: {input}) {
+    const { input } = obj;
+    this.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
+  }
+
+  changeUnitsProperty(obj: {input}) {
+    const { input } = obj;
+    const INPUT_NAME = input.getAttribute('name');
+    const INPUT_VALUE = (input as HTMLInputElement).value;
+    this.setModelProperty({ property: INPUT_NAME, value: String(INPUT_VALUE) });
+  }
+
+  changeIDProperty(obj: {input}) {
+    const { input } = obj;
+    const INPUT_VALUE = (input as HTMLInputElement).value;
+    const INPUT_NAME = input.getAttribute('name');
+    const CURRENT_ID = this.getModelProperty('id');
+    if (INPUT_VALUE !== CURRENT_ID) {
+      const PARENT = document.getElementById(CURRENT_ID);
+      const RANGE = PARENT.querySelector('.slider__range');
+      const PANEL = PARENT.querySelector('.panel');
+      PARENT.removeChild(RANGE);
+      PARENT.removeChild(PANEL);
+      this.setModelProperty({ property: INPUT_NAME, value: INPUT_VALUE });
+    }
+  }
+
+  changePanelVisibility(obj: {input}) {
+    const { input } = obj;
+    const { checked } = (input as HTMLInputElement);
+    const CURRENT_ID = this.getModelProperty('id');
+    const PARENT = document.getElementById(CURRENT_ID);
+    const PANEL = PARENT.querySelector('.panel') as HTMLElement;
+    PANEL.style.display = 'none';
+    const INPUT_NAME = input.getAttribute('name');
+    this.setModelProperty({ property: INPUT_NAME, value: checked });
+  }
+
+
 
   changeFormHandler(e) {
     const targetNode = e.target;
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
-      const currentNode = targetNode.parentNode as HTMLElement;
-      const inputs = currentNode.getElementsByClassName('panel__input');
-      const input = inputs[0];
-
-      if (input.classList.contains('panel__input--positions')) {
-        const VALUE = +targetNode.value;
-        const INDEX = +(targetNode.id.slice(-1) - 1);
-        
-        this.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
-        console.log(this.model.configuration);
-
-        /*
-        const numberInputs = Array.from(inputs);
-        const runnersPosition: number[] = [];
-        const name = inputs[0].getAttribute('name');
-
-        numberInputs.forEach((current)=> {
-          const position = (current as HTMLInputElement).value;
-          runnersPosition.push(Number(position));
-        });
-        this.model.configuration[name] = runnersPosition;
-        */
+      const INPUT_TYPE = targetNode.getAttribute('type');
+      if (targetNode.classList.contains('panel__input--positions')) {
+        this.changeRunnersProperty({ input: targetNode });
+      } else if (INPUT_TYPE === 'number') {
+        this.changeNumberProperty({ input: targetNode });
+      } else if (targetNode.id === 'panel') {
+        this.changePanelVisibility({ input: targetNode });
+      } else if (INPUT_TYPE === 'checkbox') {
+        this.changeCheckboxProperty({ input: targetNode });
+      } else if (INPUT_TYPE === 'text' && targetNode.id !== 'id') {
+        this.changeUnitsProperty({ input: targetNode });
+      } else if (INPUT_TYPE === 'text' && targetNode.id === 'id') {
+        this.changeIDProperty({ input: targetNode });
       } else {
-        const INPUT = inputs[0];
-        const TYPE = INPUT.getAttribute('type');
-        const NAME = INPUT.getAttribute('name');
-        // eslint-disable-next-line prefer-destructuring
-        const VALUE = (inputs[0] as HTMLInputElement).value;
-        if (TYPE === 'number') {
-          this.setModelProperty({ property: NAME, value: Number(VALUE) });
-        } else if(INPUT.id === 'panel') {
-          const { checked } = (inputs[0]as HTMLInputElement);
-          this.setModelProperty({ property: NAME, value: checked });
-          const CURRENT_ID = this.getModelProperty('id');
-          const PARENT = document.getElementById(CURRENT_ID);
-          const PANEL = PARENT.querySelector('.panel') as HTMLElement;
-          PANEL.style.display = 'none';
-        }
-        else if (TYPE === 'checkbox') {
-          const { checked } = (inputs[0]as HTMLInputElement);
-          this.setModelProperty({ property: NAME, value: checked });
-        } else if (TYPE === 'text' && INPUT.id !== 'id') {
-          this.setModelProperty({ property: NAME, value: String(VALUE) });
-        } else if (TYPE === 'text' && INPUT.id === 'id') {
-          const CURRENT_ID = this.getModelProperty('id');
-          if (VALUE !== CURRENT_ID) {
-            const PARENT = document.getElementById(CURRENT_ID);
-            const RANGE = PARENT.querySelector('.slider__range');
-            const PANEL = PARENT.querySelector('.panel');
-            PARENT.removeChild(RANGE);
-            PARENT.removeChild(PANEL);
-            this.setModelProperty({ property: NAME, value: VALUE });
-          }
-        }
+        throw new Error('No such input was expected');
       }
-      if(this.getModelProperty('panel')) {
-        this.renderConfigPanel({show: this.getModelProperty('panel'), id: this.getModelProperty('id')});
-      }
-
-
-      this.view.createSlider({
-        runners: this.model.configuration.runners,
-        vertical: this.model.configuration.vertical,
-        id: this.model.configuration.id,
-      });
-
-      
+      this.rerenderSlider();
     }
+  }
+
+  rerenderSlider() {
+    if (this.getModelProperty('panel')) {
+      this.renderConfigPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
+    }
+
+    this.view.createSlider({
+      runners: this.model.configuration.runners,
+      vertical: this.model.configuration.vertical,
+      id: this.model.configuration.id,
+    });
   }
 
   changeSliderState(obj: {
