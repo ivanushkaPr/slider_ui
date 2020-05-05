@@ -56,7 +56,6 @@ const secondConfig = {
   runners: [0, 50],
   stepsOn: false,
   vertical: false,
-  invertRange: true,
   units: 'px',
   id: '#slider2',
 };

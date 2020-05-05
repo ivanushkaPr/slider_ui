@@ -36,23 +36,30 @@ export default class Controller {
   }
 
   changeFormHandler(e) {
-    const parentForm = e.currentTarget as HTMLElement;
-    const targetNode = e.target as HTMLElement;
+    const targetNode = e.target;
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
       const currentNode = targetNode.parentNode as HTMLElement;
       const inputs = currentNode.getElementsByClassName('panel__input');
       const input = inputs[0];
 
       if (input.classList.contains('panel__input--positions')) {
+        const VALUE = +targetNode.value;
+        const INDEX = +(targetNode.id.slice(-1) - 1);
+        
+        this.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
+        console.log(this.model.configuration);
+
+        /*
         const numberInputs = Array.from(inputs);
         const runnersPosition: number[] = [];
         const name = inputs[0].getAttribute('name');
 
-        numberInputs.forEach((current, index)=> {
+        numberInputs.forEach((current)=> {
           const position = (current as HTMLInputElement).value;
           runnersPosition.push(Number(position));
         });
         this.model.configuration[name] = runnersPosition;
+        */
       } else {
         const INPUT = inputs[0];
         const TYPE = INPUT.getAttribute('type');
@@ -219,25 +226,6 @@ export default class Controller {
       const form = this.createForm();
       const filledForm = this.fillForm({ form, settings: Configuration });
       document.getElementById(this.model.configuration.id).appendChild(filledForm);
-    }
-  }
-
-  changePanelProperty(obj: {property: string, value: string |number | boolean; index?: number}) {
-    let { property, value, index } = obj;
-    const id = this.getModelProperty('id');
-    const parent = document.getElementById(id);
-    const panel = parent.querySelector('.panel');
-
-    const vertical = this.getModelProperty('vertical');
-    if (index >= 0 && typeof index === 'number') {
-      if (!vertical) {
-        const targetInput = panel.querySelector(`#runners-${index + 1}`) as HTMLInputElement;
-        targetInput.value = String(Math.round(Number(value)));
-      } else {
-        const runnersLength = this.getModelProperty('runners').length;
-        const targetInput = panel.querySelector(`#runners-${runnersLength - index}`) as HTMLInputElement;
-        targetInput.value = String(100 - Math.round(Number(value)));
-      }
     }
   }
 

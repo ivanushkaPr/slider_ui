@@ -5,13 +5,13 @@ export class Model {
     minValue: 0,
     maxValue: 100,
     steps: 0,
+    units: '',
     runners: [0],
     stepsOn: false,
     vertical: false,
-    invertRange: false,
-    units: '',
-    id: undefined,
     panel: false,
+    id: undefined,
+    
   }
 
   controller;
@@ -27,7 +27,6 @@ export class Model {
     const {property, value, index} = obj;
     if (typeof index === 'number') {
       this.configuration[property][index] = value;
-      this.controller.changePanelProperty(obj);
     } else {
       this.configuration[property] = value;
     }
@@ -80,7 +79,6 @@ export type configuration = {
   runners?: number[]
   stepsOn?: boolean
   vertical?: boolean
-  invertRange?: boolean
   units?: string
   id: string | undefined
   panel?: boolean
@@ -90,13 +88,13 @@ export const uConfiguration = {
   minValue: 0,
   maxValue: 100,
   steps: 10,
+  units: 'px',
   runners: [0, 30, 40, 60],
   stepsOn: false,
   vertical: false,
-  invertRange: true,
-  units: 'px',
-  id: '#slider',
   panel: true,
+  
+  id: '#slider',
 };
 
 export const incompleteConfiguration = {
