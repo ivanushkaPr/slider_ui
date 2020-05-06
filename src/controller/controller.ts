@@ -31,7 +31,7 @@ class PanelChangeHandler {
       } else {
         throw new Error('No such input was expected');
       }
-      this.controller.rerenderSlider();
+      this.controller.update();
     }
   }
 
@@ -124,14 +124,14 @@ class PanelChangeHandler {
 class CreateForm {
   handler: PanelChangeHandler
 
-  model: Model
+  controller: Controller
 
-  constructor(PanelEventHandler, model) {
+  constructor(PanelEventHandler,  controller) {
     this.handler = PanelEventHandler;
-    this.model = model;
+    this.controller = controller;
   }
 
-  renderConfigPanel(obj: {show: boolean, id: string}): void {
+  configPanel(obj: {show: boolean, id: string}): void {
     const { show, id } = obj;
     const parentNode = document.getElementById(id);
     const panelNode = parentNode.querySelector('.panel');
@@ -139,10 +139,10 @@ class CreateForm {
       panelNode.remove();
     }
     if (show) {
-      const Configuration = Object.entries(this.model.configuration);
+      const Configuration = Object.entries(this.controller.getFullConfiguration());
       const form = this.createForm();
       const filledForm = this.fillForm({ form, settings: Configuration });
-      document.getElementById(this.model.configuration.id).appendChild(filledForm);
+      document.getElementById(this.controller.getModelProperty('id')).appendChild(filledForm);
     }
   }
 
@@ -217,7 +217,7 @@ class CreateForm {
     return CUSTOM_INPUT;
   }
 
-  setAttributesForCheckboxInput(attributesTemplate: {id: string, name: string, type: string, 
+  setAttributesForCheckboxInput(attributesTemplate: {id: string, name: string, type: string,
     value: string}, isChecked: boolean) {
     const attributes = { ...attributesTemplate };
     attributes.type = 'checkbox';
@@ -228,7 +228,7 @@ class CreateForm {
     return CUSTOM_INPUT;
   }
 
-  setAttributesForTextInput(attributesTemplate: {id: string, name: string, type: string, 
+  setAttributesForTextInput(attributesTemplate: {id: string, name: string, type: string,
     value: string}) {
     const attributes = { ...attributesTemplate };
     attributes.type = 'text';
@@ -262,7 +262,6 @@ class CreateForm {
     });
     return INPUT;
   }
-
 }
 
 export default class Controller {
@@ -282,7 +281,7 @@ export default class Controller {
     this.view.controller = controller;
     this.model.controller = controller;
 
-    this.render = new CreateForm(this.handler, this.model);
+    this.render = new CreateForm(this.handler, this);
 
     this.view.createSlider({
       runners: this.getModelProperty('runners'),
@@ -290,12 +289,12 @@ export default class Controller {
       id: this.getModelProperty('id'),
     });
 
-    if (this.getModelProperty('panel')) this.render.renderConfigPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
+    if (this.getModelProperty('panel')) this.render.configPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
   }
 
-  rerenderSlider() {
+  update() {
     if (this.getModelProperty('panel')) {
-      this.render.renderConfigPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
+      this.render.configPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
     }
 
     this.view.createSlider({
@@ -315,8 +314,11 @@ export default class Controller {
     const tProp = this.model.getConfState(property);
     return tProp;
   }
+
+  getFullConfiguration() {
+    const CONFIGURATION_COPY = { ...this.model.configuration };
+    return CONFIGURATION_COPY;
+  }
 }
-
-
 
 type configurationPropertyName = 'minValue'|'maxValue'|'currentValue'|'steps'|'runners'|'stepsOn'|'vertical' |'invertRange' |'units' |'id'|'panel';
