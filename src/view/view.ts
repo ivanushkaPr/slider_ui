@@ -16,35 +16,53 @@ export default class View {
   shiftY;
 
   fetchModelProperty(property: string) {
-    const propState = this.controller.getModelProperty(property);
-    if (propState !== undefined || propState !== null) {
-      return this.controller.getModelProperty(property);
+    const propertyValue = this.controller.getModelProperty(property);
+    if (propertyValue !== undefined || propertyValue !== null) {
+      return propertyValue;
     }
     throw new Error('no such property was found');
   }
 
-  setModelProperty(obj: {property, value, index}) {
+  setModelProperty(obj: {property: string, value: number, index: number}) {
     this.controller.setModelProperty(obj);
     return true;
   }
 
-  calculateBreakpoints(obj: {range, vertical: boolean, rect:DOMRect}) {
-    const { range, vertical, rect } = obj;
-    const steps = this.fetchModelProperty('steps');
-    let size = !vertical ? range.getBoundingClientRect().width - range.clientLeft * 2 - rect.width
-      : range.getBoundingClientRect().height - range.clientTop * 2 - rect.height;
-    size = Math.ceil(size);
-    const stepSize = size / steps;
-    const breakpoints: number[] = [];
-    breakpoints.push(0);
-    for (let i = 1; i < steps; i += 1) {
-      breakpoints.push(Math.ceil(i * stepSize));
+
+  getRangeSize(sliderProperties: {range, vertical:boolean }) {
+    const { range, vertical } = sliderProperties;
+
+    let elementSize;
+    if (!vertical) {
+      const borderWidth = range.clientLeft;
+      const rangeWidth = range.getBoundingClientRect().width;
+      elementSize = Math.ceil(rangeWidth - borderWidth);
+    } else {
+      const borderWidth = range.clientTop * 2;
+      const rangeHeight = range.getBoundingClientRect().height;
+      elementSize = Math.ceil(rangeHeight - borderWidth);
     }
-    breakpoints.push(size);
+
+    return elementSize;
+  }
+
+  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
+    const { range, vertical } = sliderProperties;
+    const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
+    const steps = this.fetchModelProperty('steps');
+    const sizeOfStep = ELEMENT_SIZE / steps;
+    const breakpoints: number[] = [];
+    const FIRST_POINT = 0;
+    breakpoints.push(FIRST_POINT);
+    for (let multiplier = 1; multiplier < steps; multiplier += 1) {
+      breakpoints.push(Math.ceil(multiplier * sizeOfStep));
+    }
+    const LAST_POINT = ELEMENT_SIZE;
+    breakpoints.push(LAST_POINT);
     this.breakpoints = breakpoints;
   }
 
-  createElement(nodeName: string, className: string) {
+  createElement(nodeName: string, className: string): HTMLElement {
     const element = document.createElement(nodeName);
     element.classList.add(className);
     return element as HTMLElement;
@@ -60,81 +78,114 @@ export default class View {
     const Rules = Object.entries(cssRules);
 
     Rules.forEach((rule) => {
-      const [prop, value] = rule;
-      El.style[prop] = value;
+      const [propertyName, propertyValue] = rule;
+      El.style[propertyName] = propertyValue;
     });
     return El;
   }
 
   createRange(): HTMLElement {
-    const vertical = this.fetchModelProperty('vertical');
-    const range = this.createElement('div', 'slider__range');
-    if (vertical) {
-      range.classList.add('slider__range--vertical');
+    const IS_VERTICAL = this.fetchModelProperty('vertical');
+    const RANGE_ELEMENT = this.createElement('div', 'slider__range');
+    if (IS_VERTICAL) {
+      RANGE_ELEMENT.classList.add('slider__range--vertical');
     } else {
-      range.classList.add('slider__range--horizontal');
+      RANGE_ELEMENT.classList.add('slider__range--horizontal');
     }
-    return range;
+    return RANGE_ELEMENT;
   }
 
   createRunner(): HTMLElement {
-    const runner = this.createElement('div', 'slider__runner');
-    return runner;
+    const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
+    return RUNNER_ELEMENT;
   }
 
   createTooltip(position): HTMLElement {
-    const tooltip = this.createElement('div', 'slider__tooltip');
-    const vertical = this.fetchModelProperty('vertical');
-    if (!vertical) {
-      tooltip.classList.add('slider__tooltip--horizontal');
+    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
+    const SLIDER_IS_VERTICAL = this.fetchModelProperty('vertical');
+    if (!SLIDER_IS_VERTICAL) {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
     } else {
-      tooltip.classList.add('slider__tooltip--vertical');
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
     }
-    tooltip.addEventListener('dragstart', (e) => {
+    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
       e.preventDefault();
     });
-    tooltip.innerHTML = String(position);
-    return tooltip;
+    TOOLTIP_ELEMENT.innerHTML = String(position);
+    return TOOLTIP_ELEMENT;
   }
 
   createProgress(): HTMLElement {
-    const progress = this.createElement('div', 'slider__progress');
-    const vertical = this.fetchModelProperty('vertical');
-    if (vertical) {
-      progress.classList.add('slider__progress--vertical');
-      return progress;
+    const PROGRESS_ELEMENT = this.createElement('div', 'slider__progress');
+    const SLIDER_IS_VERTICAL = this.fetchModelProperty('vertical');
+    if (SLIDER_IS_VERTICAL) {
+      PROGRESS_ELEMENT.classList.add('slider__progress--vertical');
+    } else {
+      PROGRESS_ELEMENT.classList.add('slider__progress--horizontal');
     }
-    progress.classList.add('slider__progress--horizontal');
-    return progress;
+
+    return PROGRESS_ELEMENT;
   }
 
-  calculateProgressSize(obj: {start: number, end: number}): number {
-    const { start, end } = obj;
-    return end - start;
+  calculateProgressSize(obj: { progressStartPosition: number, progressEndPosition: number}):
+  number {
+    const { progressStartPosition, progressEndPosition } = obj;
+    return progressEndPosition - progressStartPosition;
+  }
+
+  renderSingleProgressBar(obj: {parent: HTMLElement, runners: HTMLCollection, pair: number}) {
+    const { parent, runners, pair} = obj;
+    const progress = this.createProgress();
+
+    const progressStartPosition: number = parent.getBoundingClientRect().left + parent.clientLeft;
+    const progressEndPosition: number = runners[0].getBoundingClientRect().left;
+    const position: number = parent.getBoundingClientRect().left - parent.offsetLeft + window.pageXOffset;
+
+    const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
+    this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
+    this.setPosition({
+      element: progress, position, axis: 'left', parent,
+    });
+    progress.dataset.pair = pair.toString();
+    parent.appendChild(progress);
+  }
+
+  renderMultipleProgressBars(obj: {parent: HTMLElement, runners: HTMLCollection, index:number, pair: number,}) {
+    const { parent, runners, index, pair } = obj;
+    const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
+    const progress = this.createProgress();
+    const progressStartPosition = runners[index].getBoundingClientRect().right;
+    const progressEndPosition = runners[index + 1].getBoundingClientRect().left;
+    const position = runners[index].getBoundingClientRect().right
+            - parentOffsetLeft + window.pageXOffset;
+
+    const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
+    this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
+    this.setPosition({
+      element: progress, position, axis: 'left', parent,
+    });
+    progress.dataset.pair = pair.toString();
+    parent.appendChild(progress);
   }
 
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     if (!vertical) {
       let count = 1;
-      const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
       for (let runner = 0; runner < runners.length; runner += 1) {
-        const progress = this.createProgress();
-        let start: number;
-        let end: number;
-        let position: number;
         if (runners.length === 1) {
-          start = parent.getBoundingClientRect().left + parent.clientLeft;
-          end = runners[runner].getBoundingClientRect().left;
-          position = parent.getBoundingClientRect().left - parent.offsetLeft + window.pageXOffset;
+          this.renderSingleProgressBar({ parent, runners, pair: count });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          start = runners[runner].getBoundingClientRect().right;
-          end = runners[runner + 1].getBoundingClientRect().left;
-          position = runners[runner].getBoundingClientRect().right - parentOffsetLeft + window.pageXOffset;
-        }
-        if(runner % 2 === 0) {
-          const size = this.calculateProgressSize({ start, end });
+          this.renderMultipleProgressBars({ parent, runners, index: runner, pair: count });
+          count += 1;
+          /*
+          progressStartPosition = runners[runner].getBoundingClientRect().right;
+          progressEndPosition = runners[runner + 1].getBoundingClientRect().left;
+          position = runners[runner].getBoundingClientRect().right
+            - parentOffsetLeft + window.pageXOffset;
+
+          const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
           this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
           this.setPosition({
             element: progress, position, axis: 'left', parent,
@@ -142,22 +193,22 @@ export default class View {
           progress.dataset.pair = count.toString();
           count += 1;
           parent.appendChild(progress);
+          */
         }
       }
-    }
-    else {
+    } else {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
         const progress = this.createProgress();
-        let start: number;
-        let end: number;
+        let progressStartPosition: number;
+        let progressEndPosition: number;
         let position: number;
         if (runners.length === 1) {
-          end = parent.getBoundingClientRect().bottom - parent.clientLeft;
-          start = runners[0].getBoundingClientRect().bottom;
+          progressEndPosition = parent.getBoundingClientRect().bottom - parent.clientLeft;
+          progressStartPosition = runners[0].getBoundingClientRect().bottom;
           position = parent.getBoundingClientRect().height;
 
-          const size = this.calculateProgressSize({ start, end });
+          const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
 
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           this.setPosition({
@@ -165,11 +216,12 @@ export default class View {
           });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          start = runners[runner].getBoundingClientRect().bottom;
-          end = runners[runner + 1].getBoundingClientRect().top;
+          progressStartPosition = runners[runner].getBoundingClientRect().bottom;
+          progressEndPosition = runners[runner + 1].getBoundingClientRect().top;
 
-          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
-          const size = this.calculateProgressSize({ start, end});
+          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop
+            - parent.clientTop + window.pageYOffset;
+          const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           progress.style.top = `${position}px`;
         }
@@ -182,7 +234,8 @@ export default class View {
     }
   }
 
-  createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
+  createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}):
+  void {
     const { runners, parent, vertical } = obj;
     this.renderProgress({ runners, parent, vertical });
   }
@@ -196,7 +249,8 @@ export default class View {
   }
 
   // Устанавливает местпооложение бегунка на диапазоне
-  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }): HTMLElement {
+  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }):
+  HTMLElement {
     const {
       element, position, axis, parent,
     } = obj;
@@ -204,8 +258,7 @@ export default class View {
     const targetEl = element;
     if (axis === 'top') {
       const parentHeight = parseInt(parent.style.height, 10);
-      const pos = this.positionFromEnd({size: parentHeight, position });
- 
+      const pos = this.positionFromEnd({ size: parentHeight, position });
       targetEl.style[axis] = `${pos}px`;
     } else {
       targetEl.style[axis] = `${position}px`;
@@ -216,7 +269,7 @@ export default class View {
   // Используется для расчета местоположения бегунка при вертикальном положение слайдера.
   positionFromEnd(obj: { size: number, position: number}) {
     const {
-      size, position
+      size, position,
     } = obj;
 
     return ((size - position));
@@ -252,7 +305,7 @@ export default class View {
     runner: HTMLElement,
     vertical: boolean,}): number {
 
-    let {parent, runner, vertical} = obj;
+    let { parent, runner, vertical } = obj;
     const minValue = this.fetchModelProperty('minValue');
     const minValueAbs = Math.abs(this.fetchModelProperty('minValue'));
     const maxValueAbs = Math.abs(this.fetchModelProperty('maxValue'));
@@ -288,7 +341,7 @@ export default class View {
 
     let { negative } = obj;
 
-    if(typeof negative !== 'number') {
+    if (typeof negative !== 'number') {
       negative = 0;
     }
 
@@ -325,11 +378,10 @@ export default class View {
     range.appendChild(temporaryRunner);
     const tempRect = temporaryRunner.getBoundingClientRect();
     range.removeChild(temporaryRunner);
-    this.calculateBreakpoints({range, vertical, rect: tempRect});
+    this.calculateBreakpoints({ range, vertical });
 
     const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - tempRect.width : range.offsetHeight - range.clientTop * 2 - tempRect.height;
 
-    let oddOrEven: boolean;
     runners.forEach((runnerPosition: number, index, array) => {
       const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({position: runnerPosition, size}) : runnerPosition;
 
@@ -342,7 +394,6 @@ export default class View {
         parent: range,
       });
 
-      
       const tooltip = this.createTooltip(position);
       this.setRunnerPosition({
         element: tooltip,
@@ -747,8 +798,6 @@ export default class View {
 
       const runnerIndex = this.draggable.dataset.number - 1;
       const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
-
-
       this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex});
 
       
@@ -872,8 +921,6 @@ export default class View {
   onDragStartHandler() {
     return false;
   }
-
- 
 
   onTooltipCopyHandler() {
     return false;

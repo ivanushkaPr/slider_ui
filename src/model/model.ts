@@ -90,7 +90,7 @@ export const uConfiguration = {
   maxValue: 100,
   steps: 10,
   units: 'px',
-  runners: [0, 30, 40, 60],
+  runners: [30, 40, 50, 60],
   stepsOn: false,
   vertical: false,
   panel: true,
