@@ -126,7 +126,7 @@ class CreateForm {
 
   controller: Controller
 
-  constructor(PanelEventHandler,  controller) {
+  constructor(PanelEventHandler, controller) {
     this.handler = PanelEventHandler;
     this.controller = controller;
   }

@@ -134,8 +134,8 @@ export default class View {
   }
 
 
-  getProgressSize(obj: { parent: HTMLElement, firstRunner: Element, secondRunner?: Element }) {
-    const { parent, firstRunner, secondRunner } = obj;
+  getProgressSize(obj: { vertical: string, parent: HTMLElement, firstRunner: Element, secondRunner?: Element }) {
+    const { vertical, parent, firstRunner, secondRunner } = obj;
     type styles = {
       position: number;
       size: number,
@@ -147,64 +147,120 @@ export default class View {
     };
 
     const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
-    if (secondRunner === undefined) {
-      progressGeometry.position = parent.getBoundingClientRect().left
-        - parent.offsetLeft + window.pageXOffset;
+    if(!vertical) {
+      if (secondRunner === undefined) {
+        progressGeometry.position = parent.getBoundingClientRect().left
+          - parent.offsetLeft + window.pageXOffset;
+        const PROGRESS_START_POSITION = parent.getBoundingClientRect().left + parent.clientLeft;
+        const PROGESS_END_POSITION = firstRunner.getBoundingClientRect().left;
+        progressGeometry.size = this.calculateProgressSize({
+          progressStartPosition: PROGRESS_START_POSITION,
+          progressEndPosition: PROGESS_END_POSITION,
+        });
+      } else {
+        progressGeometry.position = firstRunner.getBoundingClientRect().right
+              - parentOffsetLeft + window.pageXOffset;
+        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left + parent.clientLeft;
+        progressGeometry.size = this.calculateProgressSize({
+          progressStartPosition: PROGRESS_START_POSITION,
+          progressEndPosition: PROGRESS_END_POSITION,
+        });
+      }
+    } else if (vertical) {
+      if (secondRunner === undefined) {
+        progressGeometry.position = parent.getBoundingClientRect().height - (parent.getBoundingClientRect().height - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
+        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
+        const PROGRESS_END_POSITION = parent.getBoundingClientRect().bottom;
+        progressGeometry.size = this.calculateProgressSize({
+          progressStartPosition: PROGRESS_START_POSITION,
+          progressEndPosition: PROGRESS_END_POSITION,
+        });
 
-      const PROGRESS_START_POSITION = parent.getBoundingClientRect().left + parent.clientLeft;
-      const PROGESS_END_POSITION = firstRunner.getBoundingClientRect().left;
-      progressGeometry.size = this.calculateProgressSize({
-        progressStartPosition: PROGRESS_START_POSITION,
-        progressEndPosition: PROGESS_END_POSITION,
-      });
-    } else {
-      progressGeometry.position = firstRunner.getBoundingClientRect().right
-            - parentOffsetLeft + window.pageXOffset;
-
-      const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
-      const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left + parent.clientLeft;
-      progressGeometry.size = this.calculateProgressSize({
-        progressStartPosition: PROGRESS_START_POSITION,
-        progressEndPosition: PROGRESS_END_POSITION,
-      });
+      } else {
+        progressGeometry.position = firstRunner.getBoundingClientRect().bottom - parent.offsetTop
+        - parent.clientTop + window.pageYOffset;
+        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top;
+        progressGeometry.size = this.calculateProgressSize({
+          progressStartPosition: PROGRESS_START_POSITION,
+          progressEndPosition: PROGRESS_END_POSITION,
+        });
+      }
     }
     return progressGeometry;
   }
 
-  setProgessStyles(obj: {element, property, value, position, axis, parent,}) {
+  setProgessStyles(obj: { element:HTMLElement, property: string, value: string, position: number, axis: string, parent: HTMLElement }) {
     const { element, property, value, position, axis, parent } = obj;
     this.setSize({ element, property, value });
+
     this.setPosition({
       element, position, axis, parent,
     });
     return element;
   }
 
-  renderSingleProgressBar(obj: {parent: HTMLElement, runners: HTMLCollection, pair: number}) {
-    const { parent, runners, pair} = obj;
+  renderSingleProgressBar(obj: {vertical, parent: HTMLElement, runners: HTMLCollection, pair: number}) {
+    const { vertical, parent, runners, pair } = obj;
     const progress = this.createProgress();
-    const { position, size } = this.getProgressSize({ parent, firstRunner: runners[0] });
-
-/*
-    this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
-    this.setPosition({
-      element: progress, position, axis: 'left', parent,
-    });
-*/
-    const STYLED_PROGRESS = this.setProgessStyles({ element: progress, property: 'width', value: `${size - parent.clientLeft}`, position, axis: 'left', parent });
-    STYLED_PROGRESS.dataset.pair = pair.toString();
-    progress.dataset.pair = pair.toString();
-    parent.appendChild(progress);
+    if (!vertical) {
+      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
+      const STYLED_PROGRESS = this.setProgessStyles({
+        element: progress,
+        property: 'width',
+        value: `${size - parent.clientLeft}`,
+        position,
+        axis: 'left',
+        parent,
+      });
+      STYLED_PROGRESS.dataset.pair = pair.toString();
+      progress.dataset.pair = pair.toString();
+      parent.appendChild(progress);
+    } else {
+      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
+      const STYLED_PROGRESS = this.setProgessStyles({
+        element: progress,
+        property: 'height',
+        value: `${size - parent.clientTop}`,
+        position,
+        axis: 'top',
+        parent,
+      });
+      STYLED_PROGRESS.dataset.pair = pair.toString();
+      progress.dataset.pair = pair.toString();
+      parent.appendChild(progress);
+    }
   }
 
-  renderMultipleProgressBars(obj: {parent: HTMLElement, runners: HTMLCollection, index:number, pair: number,}) {
-    const { parent, runners, index, pair } = obj;
+  renderMultipleProgressBars(obj: {vertical, parent: HTMLElement, runners: HTMLCollection, index:number, pair: number,}) {
+    const {vertical, parent, runners, index, pair } = obj;
     const progress = this.createProgress();
-    const { position, size } = this.getProgressSize({ parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
-
-    const STYLED_PROGRESS = this.setProgessStyles({ element: progress, property: 'width', value: `${size - parent.clientLeft}`, position, axis: 'left', parent });
-    STYLED_PROGRESS.dataset.pair = pair.toString();
-    parent.appendChild(STYLED_PROGRESS);
+    if (!vertical) {
+      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
+      const STYLED_PROGRESS = this.setProgessStyles({
+        element: progress,
+        property: 'width',
+        value: `${size - parent.clientLeft}`,
+        position,
+        axis: 'left',
+        parent,
+      });
+      STYLED_PROGRESS.dataset.pair = pair.toString();
+      parent.appendChild(STYLED_PROGRESS);
+    } else {
+      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
+      const STYLED_PROGRESS = this.setProgessStyles({
+        element: progress,
+        property: 'height',
+        value: `${size - parent.clientLeft}`,
+        position,
+        axis: 'top',
+        parent,
+      });
+      STYLED_PROGRESS.dataset.pair = pair.toString();
+      parent.appendChild(STYLED_PROGRESS);
+    }
   }
 
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
@@ -213,46 +269,38 @@ export default class View {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
         if (runners.length === 1) {
-          this.renderSingleProgressBar({ parent, runners, pair: count });
+          this.renderSingleProgressBar({ vertical, parent, runners, pair: count });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          this.renderMultipleProgressBars({ parent, runners, index: runner, pair: count });
+          this.renderMultipleProgressBars({ vertical, parent, runners, index: runner, pair: count });
           count += 1;
         }
       }
     } else {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
-        const progress = this.createProgress();
-        let progressStartPosition: number;
-        let progressEndPosition: number;
-        let position: number;
         if (runners.length === 1) {
-          progressEndPosition = parent.getBoundingClientRect().bottom - parent.clientLeft;
-          progressStartPosition = runners[0].getBoundingClientRect().bottom;
-          position = parent.getBoundingClientRect().height;
-
-          const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
-
-          this.setSize({ element: progress, property: 'height', value: `${size}` });
-          this.setPosition({
-            element: progress, position: size, axis: 'top', parent,
-          });
+          this.renderSingleProgressBar({ vertical, parent, runners, pair: count });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          progressStartPosition = runners[runner].getBoundingClientRect().bottom;
-          progressEndPosition = runners[runner + 1].getBoundingClientRect().top;
+          
+          this.renderMultipleProgressBars({ vertical, parent, runners, index: runner, pair: count });
+          count += 1;
+          /*
+          const progress = this.createProgress();
+          const progressStartPosition = runners[runner].getBoundingClientRect().bottom;
+          const progressEndPosition = runners[runner + 1].getBoundingClientRect().top;
 
-          position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop
+          const position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop
             - parent.clientTop + window.pageYOffset;
           const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
           this.setSize({ element: progress, property: 'height', value: `${size}` });
           progress.style.top = `${position}px`;
-        }
-        if (runner % 2 === 0) {
           progress.dataset.pair = count.toString();
           count += 1;
           parent.appendChild(progress);
+          */
+          
         }
       }
     }
@@ -273,17 +321,21 @@ export default class View {
   }
 
   // Устанавливает местпооложение бегунка на диапазоне
-  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement }):
+  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement, single?: boolean }):
   HTMLElement {
     const {
-      element, position, axis, parent,
+      element, position, axis, parent, single
     } = obj;
-
+    console.log(element, position, axis, parent);
     const targetEl = element;
     if (axis === 'top') {
-      const parentHeight = parseInt(parent.style.height, 10);
-      const pos = this.positionFromEnd({ size: parentHeight, position });
-      targetEl.style[axis] = `${pos}px`;
+      if(!single) {
+        const parentHeight = parseInt(getComputedStyle(parent).height, 10);
+        const pos = this.positionFromEnd({ size: parentHeight, position });
+        targetEl.style[axis] = `${position}px`;
+      } else {
+        targetEl.style[axis] = `${position}px`;
+      }
     } else {
       targetEl.style[axis] = `${position}px`;
     }
