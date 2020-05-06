@@ -1,4 +1,8 @@
+
+
 /* eslint-disable */
+
+/*
 declare global {
   namespace NodeJS {
     interface Global {
@@ -8,7 +12,7 @@ declare global {
     } 
   }
 }
-
+/*
 import * as mocha from "mocha";
 
 import * as chai from "chai";
@@ -892,3 +896,4 @@ describe('getViewProperty', () => {
 
 })
 
+*/
