@@ -29,13 +29,11 @@ export default class View {
   }
 
   calculateBreakpoints(obj: {range, vertical: boolean, rect:DOMRect}) {
-    let { range, vertical, rect } = obj;
+    const { range, vertical, rect } = obj;
     const steps = this.fetchModelProperty('steps');
-    let size = !vertical ?
-      range.getBoundingClientRect().width - range.clientLeft * 2 - rect.width
+    let size = !vertical ? range.getBoundingClientRect().width - range.clientLeft * 2 - rect.width
       : range.getBoundingClientRect().height - range.clientTop * 2 - rect.height;
     size = Math.ceil(size);
-    console.log(size, 'размер');
     const stepSize = size / steps;
     const breakpoints: number[] = [];
     breakpoints.push(0);
@@ -44,7 +42,6 @@ export default class View {
     }
     breakpoints.push(size);
     this.breakpoints = breakpoints;
-    console.log('called')
   }
 
   createElement(nodeName: string, className: string) {
@@ -74,8 +71,7 @@ export default class View {
     const range = this.createElement('div', 'slider__range');
     if (vertical) {
       range.classList.add('slider__range--vertical');
-    }
-    else {
+    } else {
       range.classList.add('slider__range--horizontal');
     }
     return range;
@@ -117,12 +113,8 @@ export default class View {
     return end - start;
   }
 
-  setProgressPosition(obj: {}) {
-
-  }
-
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
-    const {runners, parent, vertical} = obj;
+    const { runners, parent, vertical } = obj;
     if (!vertical) {
       let count = 1;
       const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;

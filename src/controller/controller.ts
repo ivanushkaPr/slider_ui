@@ -43,7 +43,10 @@ export default class Controller {
     const runners = this.getModelProperty('runners');
     const prevRunnerposition = runners[index - 1];
     const nextRunnerPosition = runners[index + 1];
-    if (prevRunnerposition > value || nextRunnerPosition < value) {
+    const POSITION_INVALID = (prevRunnerposition === undefined && value < 0)
+    || (nextRunnerPosition === undefined && value > 100)
+    || (prevRunnerposition > value || nextRunnerPosition < value);
+    if (POSITION_INVALID) {
       return false;
     }
     return true;
@@ -145,19 +148,6 @@ export default class Controller {
     });
   }
 
-  changeSliderState(obj: {
-    property: configurationPropertyName, value: string | number | boolean, index?: number}):void {
-    this.setModelProperty(obj);
-
-    this.view.createSlider({
-      runners: this.model.configuration.runners,
-      vertical: this.model.configuration.vertical,
-      id: this.model.configuration.id,
-    });
-    this.renderConfigPanel({ show: true, id: this.model.configuration.id });
-  }
-
-
   createInputTemplate(ruleName) {
     const LABEL = document.createElement('label');
     LABEL.classList.add('panel__label');
@@ -169,16 +159,6 @@ export default class Controller {
     LABEL.appendChild(FIELD_NAME);
 
     return LABEL;
-  }
-
-  createCustomInput(attributes: {ID: string, type: string, name: string, value: string | number }) {
-    const INPUT = document.createElement('input');
-    INPUT.classList.add('panel__input');
-    INPUT.setAttribute('id', attributes.ID);
-    INPUT.setAttribute('type', attributes.type);
-    INPUT.setAttribute('name', attributes.name);
-    INPUT.setAttribute('value', String(attributes.value));
-    return INPUT;
   }
 
   createFakeCheckbox() {
@@ -195,6 +175,58 @@ export default class Controller {
     return form;
   }
 
+  createCustomInput(attributes: {id: string, type: string, name: string, value: string}) {
+    const INPUT = document.createElement('input');
+    INPUT.classList.add('panel__input');
+    Object.keys(attributes).forEach((key) => {
+      INPUT.setAttribute(key, attributes[key]);
+    });
+
+    return INPUT;
+  }
+
+
+  setAttributesForNumberInput(attributesTemplate: {id: string, name: string, type: string,
+    value: string}) {
+    const attributes = { ...attributesTemplate };
+    attributes.type = 'number';
+    const CUSTOM_INPUT = this.createCustomInput(attributes);
+    return CUSTOM_INPUT;
+  }
+
+  setAttributesForCheckboxInput(attributesTemplate: {id: string, name: string, type: string, 
+    value: string}, isChecked: boolean) {
+    const attributes = { ...attributesTemplate };
+    attributes.type = 'checkbox';
+    const CUSTOM_INPUT = this.createCustomInput(attributes);
+    if (isChecked === true) {
+      CUSTOM_INPUT.setAttribute('checked', 'true');
+    }
+    return CUSTOM_INPUT;
+  }
+
+  setAttributesForTextInput(attributesTemplate: {id: string, name: string, type: string, 
+    value: string}) {
+    const attributes = { ...attributesTemplate };
+    attributes.type = 'text';
+    const CUSTOM_INPUT = this.createCustomInput(attributes);
+    return CUSTOM_INPUT;
+  }
+
+  setAttributesForRunnersInput(attributesTemplate: {id: string, name: string, type: string,
+    value: string}, id:string, position: number) {
+    const attributes = { ...attributesTemplate };
+    attributes.id = id;
+    attributes.type = 'number';
+    attributes.value = `${String(position)}`;
+
+    const CUSTOM_INPUT = this.createCustomInput(attributes);
+    CUSTOM_INPUT.className = 'panel__input panel__input--positions';
+    return CUSTOM_INPUT;
+  }
+
+
+
   fillForm(obj: {form:HTMLFormElement,
     settings: [string, string | number | boolean | number[]][]}) {
     const { form, settings } = obj;
@@ -204,43 +236,30 @@ export default class Controller {
       const TEMPLATE = this.createInputTemplate(RULE_NAME);
 
       type inputAttr = {
-        ID: string;
+        id: string;
         name: string;
         type: string;
         value: string;
       }
 
       const InputAttr: inputAttr = {
-        ID: `${RULE_NAME}`,
+        id: `${RULE_NAME}`,
         name: `${RULE_NAME}`,
         type: '',
         value: `${String(RULE_VALUE)}`,
       };
 
       if (typeof RULE_VALUE === 'number') {
-        InputAttr.type = 'number';
-        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
-        TEMPLATE.appendChild(CUSTOM_INPUT);
+        TEMPLATE.appendChild(this.setAttributesForNumberInput(InputAttr));
       } else if (typeof RULE_VALUE === 'boolean') {
-        InputAttr.type = 'checkbox';
-        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
-        if (RULE_VALUE === true) {
-          CUSTOM_INPUT.setAttribute('checked', 'true');
-        }
-        TEMPLATE.appendChild(CUSTOM_INPUT);
+        TEMPLATE.appendChild(this.setAttributesForCheckboxInput(InputAttr, RULE_VALUE));
         TEMPLATE.appendChild(this.createFakeCheckbox());
       } else if (typeof RULE_VALUE === 'string') {
-        InputAttr.type = 'text';
-        const CUSTOM_INPUT = this.createCustomInput(InputAttr);
-        TEMPLATE.appendChild(CUSTOM_INPUT);
+        TEMPLATE.appendChild(this.setAttributesForTextInput(InputAttr));
       } else if (Array.isArray(RULE_VALUE)) {
-        RULE_VALUE.forEach((position, intance) => {
-          InputAttr.ID = `${RULE_NAME}-${intance + 1}`;
-          InputAttr.type = 'number';
-          InputAttr.value = `${String(position)}`;
-          const CUSTOM_INPUT = this.createCustomInput(InputAttr);
-          CUSTOM_INPUT.className = 'panel__input panel__input--positions';
-          TEMPLATE.appendChild(CUSTOM_INPUT);
+        RULE_VALUE.forEach((position, instance) => {
+          const RUNNER_ID = `${RULE_NAME}-${instance + 1}`;
+          TEMPLATE.appendChild(this.setAttributesForRunnersInput(InputAttr, RUNNER_ID, position));
         });
       } else {
         throw new Error('Unknown value');
