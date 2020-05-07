@@ -90,9 +90,9 @@ export const uConfiguration = {
   maxValue: 100,
   steps: 10,
   units: 'px',
-  runners: [20, 40, 60, 80],
-  stepsOn: false,
-  vertical: true,
+  runners: [40, 60],
+  stepsOn: true,
+  vertical: false,
   panel: true,
   id: '#slider',
 };

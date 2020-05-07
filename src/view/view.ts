@@ -147,7 +147,7 @@ export default class View {
     };
 
     const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
-    if(!vertical) {
+    if (!vertical) {
       if (secondRunner === undefined) {
         progressGeometry.position = parent.getBoundingClientRect().left
           - parent.offsetLeft + window.pageXOffset;
@@ -191,43 +191,41 @@ export default class View {
     return progressGeometry;
   }
 
-  setProgessStyles(obj: { element:HTMLElement, property: string, value: string, position: number, axis: string, parent: HTMLElement }) {
-    const { element, property, value, position, axis, parent } = obj;
+  setProgessStyles(obj: { element:HTMLElement, property: string, value: string, position: number, axis: string, parent: HTMLElement}):void {
+    const {
+      element, property, value, position, axis, parent,
+    } = obj;
+    
+
     this.setSize({ element, property, value });
 
     this.setPosition({
-      element, position, axis, parent,
+      element, position, axis,
     });
-    return element;
+    // element.dataset.pair = pair.toString();
+    parent.appendChild(element);
+    return undefined;
   }
 
   renderSingleProgressBar(obj: {vertical, parent: HTMLElement, runners: HTMLCollection, pair: number}) {
-    const { vertical, parent, runners, pair } = obj;
+    const {
+      vertical, parent, runners, pair,
+    } = obj;
     const progress = this.createProgress();
     if (!vertical) {
       const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
-      const STYLED_PROGRESS = this.setProgessStyles({
-        element: progress,
-        property: 'width',
-        value: `${size - parent.clientLeft}`,
-        position,
-        axis: 'left',
-        parent,
+      this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
+      this.setPosition({
+        element: progress, position, axis: 'left',
       });
-      STYLED_PROGRESS.dataset.pair = pair.toString();
       progress.dataset.pair = pair.toString();
       parent.appendChild(progress);
     } else {
       const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
-      const STYLED_PROGRESS = this.setProgessStyles({
-        element: progress,
-        property: 'height',
-        value: `${size - parent.clientTop}`,
-        position,
-        axis: 'top',
-        parent,
+      this.setSize({ element: progress, property: 'height', value: `${size - parent.clientTop}` });
+      this.setPosition({
+        element: progress, position, axis: 'top',
       });
-      STYLED_PROGRESS.dataset.pair = pair.toString();
       progress.dataset.pair = pair.toString();
       parent.appendChild(progress);
     }
@@ -238,28 +236,20 @@ export default class View {
     const progress = this.createProgress();
     if (!vertical) {
       const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
-      const STYLED_PROGRESS = this.setProgessStyles({
-        element: progress,
-        property: 'width',
-        value: `${size - parent.clientLeft}`,
-        position,
-        axis: 'left',
-        parent,
+      this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
+      this.setPosition({
+        element: progress, position, axis: 'left',
       });
-      STYLED_PROGRESS.dataset.pair = pair.toString();
-      parent.appendChild(STYLED_PROGRESS);
+      progress.dataset.pair = pair.toString();
+      parent.appendChild(progress);
     } else {
       const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
-      const STYLED_PROGRESS = this.setProgessStyles({
-        element: progress,
-        property: 'height',
-        value: `${size - parent.clientLeft}`,
-        position,
-        axis: 'top',
-        parent,
+      this.setSize({ element: progress, property: 'height', value: `${size - parent.clientTop}` });
+      this.setPosition({
+        element: progress, position, axis: 'top',
       });
-      STYLED_PROGRESS.dataset.pair = pair.toString();
-      parent.appendChild(STYLED_PROGRESS);
+      progress.dataset.pair = pair.toString();
+      parent.appendChild(progress);
     }
   }
 
@@ -269,10 +259,14 @@ export default class View {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
         if (runners.length === 1) {
-          this.renderSingleProgressBar({ vertical, parent, runners, pair: count });
+          this.renderSingleProgressBar({
+            vertical, parent, runners, pair: count,
+          });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          this.renderMultipleProgressBars({ vertical, parent, runners, index: runner, pair: count });
+          this.renderMultipleProgressBars({
+            vertical, parent, runners, index: runner, pair: count,
+          });
           count += 1;
         }
       }
@@ -280,38 +274,19 @@ export default class View {
       let count = 1;
       for (let runner = 0; runner < runners.length; runner += 1) {
         if (runners.length === 1) {
-          this.renderSingleProgressBar({ vertical, parent, runners, pair: count });
+          this.renderSingleProgressBar({
+            vertical, parent, runners, pair: count,
+          });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
-          
-          this.renderMultipleProgressBars({ vertical, parent, runners, index: runner, pair: count });
+          this.renderMultipleProgressBars({
+            vertical, parent, runners, index: runner, pair: count,
+          });
           count += 1;
-          /*
-          const progress = this.createProgress();
-          const progressStartPosition = runners[runner].getBoundingClientRect().bottom;
-          const progressEndPosition = runners[runner + 1].getBoundingClientRect().top;
-
-          const position = runners[runner].getBoundingClientRect().bottom - parent.offsetTop
-            - parent.clientTop + window.pageYOffset;
-          const size = this.calculateProgressSize({ progressStartPosition, progressEndPosition });
-          this.setSize({ element: progress, property: 'height', value: `${size}` });
-          progress.style.top = `${position}px`;
-          progress.dataset.pair = count.toString();
-          count += 1;
-          parent.appendChild(progress);
-          */
-          
         }
       }
     }
   }
-
-  createAndSetProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}):
-  void {
-    const { runners, parent, vertical } = obj;
-    this.renderProgress({ runners, parent, vertical });
-  }
-
 
   // Устанавливает ширину или высоту элемента
   setSize(obj: {element: HTMLElement; property: string; value: string}): void {
@@ -321,24 +296,13 @@ export default class View {
   }
 
   // Устанавливает местпооложение бегунка на диапазоне
-  setPosition(obj: { element: HTMLElement; position: number; axis: string; parent: HTMLElement, single?: boolean }):
+  setPosition(obj: { element: HTMLElement; position: number; axis: string;}):
   HTMLElement {
     const {
-      element, position, axis, parent, single
+      element, position, axis,
     } = obj;
-    console.log(element, position, axis, parent);
     const targetEl = element;
-    if (axis === 'top') {
-      if(!single) {
-        const parentHeight = parseInt(getComputedStyle(parent).height, 10);
-        const pos = this.positionFromEnd({ size: parentHeight, position });
-        targetEl.style[axis] = `${position}px`;
-      } else {
-        targetEl.style[axis] = `${position}px`;
-      }
-    } else {
-      targetEl.style[axis] = `${position}px`;
-    }
+    targetEl.style[axis] = `${position}px`;
     return targetEl;
   }
 
@@ -347,15 +311,15 @@ export default class View {
     const {
       size, position,
     } = obj;
-
     return ((size - position));
   }
 
-  checkCoordsAvailability(obj: {position, size}) {
-    const { position, size } = obj;
+  checkCoordsAvailability(obj: {percents, rangeSize}) {
+    const { percents, rangeSize } = obj;
+    // console.log(position, size, size/100 * position)
+    const percentToPx = (rangeSize / 100) * percents;
+    const runnerPosition = percentToPx;
 
-    const absolutePosition = size / 100 * position;
-    const runnerPosition = absolutePosition;
     let index: number;
     let diff: number = 10000;
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
@@ -364,41 +328,40 @@ export default class View {
         index = breakpoint;
       } else {
         const availablePosition = this.breakpoints[breakpoint];
-        const diffBetween = Math.abs(availablePosition - runnerPosition);
-        if (diff > diffBetween || diff === diffBetween) {
-          diff = diffBetween;
+        const substractionDiff = Math.abs(availablePosition - runnerPosition);
+        if (diff > substractionDiff || diff === substractionDiff) {
+          diff = substractionDiff;
           index = breakpoint;
         }
       }
     }
-    const percent = size / 100;
+    const percent = rangeSize / 100;
     const point = this.breakpoints[index] / percent;
     return point;
   }
 
-  calculateRunnerPosition(obj: {
-    parent: HTMLElement,
-    runner: HTMLElement,
-    vertical: boolean,}): number {
+  
 
-    let { parent, runner, vertical } = obj;
+  
+  positionToValue(obj: { parent: HTMLElement, runner: HTMLElement, vertical: boolean, }):
+    number {
+    const { parent, runner, vertical } = obj;
+
+    const WIDTH = parent.offsetWidth - parent.clientLeft * 2 - runner.offsetWidth;
+    const HEIGHT = parent.offsetHeight - parent.clientTop * 2 - runner.offsetHeight;
+    const rangeBorderBox = vertical === false ? WIDTH : HEIGHT;
+
+    const LEFT = parseInt(runner.style.left, 10);
+    const TOP = parseInt(runner.style.top, 10);
+    const POSITION = vertical === false ? LEFT : TOP;
+
+    const SUM = Math.abs(this.fetchModelProperty('minValue')) + Math.abs(this.fetchModelProperty('maxValue'));
+    let VALUE = Math.round((SUM / rangeBorderBox) * POSITION);
+
     const minValue = this.fetchModelProperty('minValue');
-    const minValueAbs = Math.abs(this.fetchModelProperty('minValue'));
-    const maxValueAbs = Math.abs(this.fetchModelProperty('maxValue'));
-    const lineSize = minValueAbs + maxValueAbs;
+    VALUE = minValue < 0 ? VALUE += minValue : VALUE;
 
-    const workSpace = vertical === false ? parent.offsetWidth - parent.clientLeft * 2 - runner.offsetWidth : parent.offsetHeight - parent.clientTop * 2 - runner.offsetHeight;
-    const runnerPosition = vertical === false ? parseInt(runner.style.left, 10) / (workSpace / 100) : parseInt(runner.style.top, 10) / (workSpace / 100);
-
-
-    const onePercentWorkSpace = workSpace / 100;
-    const currentPosition = onePercentWorkSpace * runnerPosition;
-
-    let currentLineSize = vertical === false ? Math.round((lineSize / workSpace) * currentPosition) : lineSize - Math.round((lineSize / workSpace) * currentPosition);
-    currentLineSize = minValue < 0 ? currentLineSize += minValue : currentLineSize;
-    
-
-    return currentLineSize;
+    return VALUE;
 
   }
 
@@ -459,7 +422,7 @@ export default class View {
     const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - tempRect.width : range.offsetHeight - range.clientTop * 2 - tempRect.height;
 
     runners.forEach((runnerPosition: number, index, array) => {
-      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({position: runnerPosition, size}) : runnerPosition;
+      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
 
       const runner = this.createRunner();
       range.appendChild(runner);
@@ -479,7 +442,7 @@ export default class View {
         negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
       });
 
-      const tooltipPosition = this.calculateRunnerPosition({
+      const tooltipPosition = this.positionToValue({
         parent: range,
         runner,
         vertical,
@@ -862,7 +825,7 @@ export default class View {
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
       tooltipSibling.classList.add('slider__tooltip--show');
       tooltipSibling.style.left = `${RunnerPositionValidation}px`;
-      tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
+      tooltipSibling.innerHTML = String(this.positionToValue({
         parent,
         runner: element,
         vertical,
@@ -924,7 +887,7 @@ export default class View {
 
       tooltipSibling.classList.add('slider__tooltip--show');
       tooltipSibling.style.top = `${RunnerPositionValidation}px`;
-      tooltipSibling.innerHTML = String(this.calculateRunnerPosition({
+      tooltipSibling.innerHTML = String(this.positionToValue({
         parent,
         runner: element,
         vertical,
