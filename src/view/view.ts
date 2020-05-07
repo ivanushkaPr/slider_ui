@@ -459,28 +459,16 @@ export default class View {
     });
   }
 
+  setSliderElementsDataAttributes(root) {
+    const RenderedRunners = root.querySelectorAll('.slider__runner');
+    this.setRunnersDataAttributes(RenderedRunners);
+    const RenderedTooltips = root.querySelectorAll('.slider__tooltip');
+    this.setTooltipDataAttributes(RenderedTooltips);
+    return RenderedRunners;
+  }
 
-  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-    const { runners, vertical, id } = obj;
-    const ROOT_NODE = document.getElementById(id);
-    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
-    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
-
-    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
-    
-    this.RenderSliderRunners({
-      runners,
-      slider: NEW_SLIDER,
-      size,
-      vertical,
-    });
-
-    const RenderedRunners = ROOT_NODE.querySelectorAll('.slider__runner');
-    this.setDataAttr(RenderedRunners);
-    const RenderedTooltips = ROOT_NODE.querySelectorAll('.slider__tooltip');
-    this.setDataAttr(RenderedTooltips);
-
-    RenderedRunners.forEach((runner) => {
+  registerEventHandlers(runners) {
+    runners.forEach((runner) => {
       this.onHandlerRegister({
         bookmark: 'runnerMouseDown',
         element: runner as HTMLElement,
@@ -489,6 +477,21 @@ export default class View {
         enviroment: this,
       });
     });
+  }
+
+  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+    const { runners, vertical, id } = obj;
+    const ROOT_NODE = document.getElementById(id);
+    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
+
+    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+    this.RenderSliderRunners({
+      runners, slider: NEW_SLIDER, size, vertical,
+    });
+
+    const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
+    this.registerEventHandlers(RenderedRunners);
 
     this.renderProgress({
       runners: ROOT_NODE.getElementsByClassName('slider__runner'),
@@ -496,46 +499,78 @@ export default class View {
       vertical: this.fetchModelProperty('vertical'),
     });
 
-    const RUNNER_WIDTH = (document.querySelector('.slider__runner') as HTMLElement).offsetWidth;
-    this.createScale({parentNode: ROOT_NODE, runnerWidth: RUNNER_WIDTH, vertical});
+    this.createScales({
+      parentNode: ROOT_NODE, vertical,
+    });
     return undefined;
   }
 
-  createScale(obj: {parentNode: HTMLElement, runnerWidth: number, vertical: boolean}) {
-    const { parentNode, runnerWidth, vertical } = obj;
-
-    // eslint-disable-next-line prefer-destructuring
-    const breakpoints = this.breakpoints;
-
+  createHorizontalScales(parentNode):void {
+    const breakpoints = [...this.breakpoints];
     const slider = parentNode.querySelector('.slider__range');
-    if (!vertical) {
-      breakpoints.forEach((breakpoint, index, array) => {
-        const div = document.createElement('div');
-        div.classList.add('slider__scale');
-        if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
-        div.classList.add('slider__scale--horizontal');
-        div.style.position = 'absolute';
-        div.style.left = `${breakpoint - 1}px`;
-        if (index > 0 && index < array.length - 1) slider.appendChild(div);
-      });
-    }
 
-    if (vertical) {
-      breakpoints.forEach((breakpoint, index, array) => {
-        const div = document.createElement('div');
-        div.classList.add('slider__scale');
-        div.classList.add('slider__scale--vertical');
-        div.style.position = 'absolute';
-        div.style.top = `${breakpoint + 1}px`;
+    breakpoints.forEach((breakpoint, index, array) => {
+      const div = document.createElement('div');
+      div.classList.add('slider__scale');
+      if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
+      div.classList.add('slider__scale--horizontal');
+      div.style.position = 'absolute';
+      div.style.left = `${breakpoint - 1}px`;
+      if (index > 0 && index < array.length - 1) slider.appendChild(div);
+    });
+  }
 
-        if (index > 0 && index < array.length - 1) slider.appendChild(div);
-      });
-    }
+  createVerticalScales(parentNode) {
+    const breakpoints = [...this.breakpoints];
+    const slider = parentNode.querySelector('.slider__range');
+
+    breakpoints.forEach((breakpoint, index, array) => {
+      const div = document.createElement('div');
+      div.classList.add('slider__scale');
+      if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
+      div.classList.add('slider__scale--vertical');
+      div.style.position = 'absolute';
+      div.style.top = `${breakpoint + 1}px`;
+
+      if (index > 0 && index < array.length - 1) slider.appendChild(div);
+    });
   }
 
 
+  createScale(obj: {index, array, vertical}) {
+    const {index, array, vertical} = obj;
 
-  setDataAttr(elements: NodeList): void {
+    const div = document.createElement('div');
+    div.classList.add('slider__scale');
+    if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
+    const scaleOrientation = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
+    div.classList.add(`${scaleOrientation}`);
+    return div;
+  }
+
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
+    const { scale, vertical, breakpoint } = obj;
+
+    scale.style.position = 'absolute';
+    const leftOrTop = vertical === false ? 'left' : 'top';
+    scale.style[leftOrTop] = `${breakpoint - 1}px`;
+  }
+
+  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
+    const { parentNode, vertical } = obj;
+    const breakpoints = [...this.breakpoints];
+    const slider = parentNode.querySelector('.slider__range');
+
+    breakpoints.forEach((breakpoint: number, index, array) => {
+      const scale: HTMLDivElement = this.createScale({ index, array, vertical });
+      this.setScalePosition({scale, vertical, breakpoint });
+
+      if (index > 0 && index < array.length - 1) slider.appendChild(scale);
+    });
+  }
+
+
+  setRunnersDataAttributes(elements: NodeList) {
     const collection = elements;
     let pair = 1;
 
@@ -558,12 +593,15 @@ export default class View {
         HTMLrunner.dataset.tooltipSibling = String(index);
       });
     }
-    else if ((elements[0] as HTMLElement).classList.contains('slider__tooltip')) {
-      collection.forEach((target, index) => {
-        const HTMLtooltip = target as HTMLElement;
-        HTMLtooltip.dataset.runnerSibling = String(index);
-      });
-    }
+  }
+
+  setTooltipDataAttributes(elements: NodeList) {
+    const collection = elements;
+
+    collection.forEach((target, index) => {
+      const HTMLtooltip = target as HTMLElement;
+      HTMLtooltip.dataset.runnerSibling = String(index);
+    });
   }
 
   onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
@@ -705,7 +743,7 @@ export default class View {
 
   onRestrictDrag(obj: {firstPointPosition: number; secondPointPosition: number; beforeFirstPoint: boolean; afterSecondPoint: boolean; position: number}): number {
     const { firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position } = obj;
-
+    
     let point;
     if (beforeFirstPoint) {
       point = firstPointPosition;
@@ -731,6 +769,10 @@ export default class View {
 
     if (!vertical) {
       const dataStart = targetElement.dataset.start;
+      if (!dataStart) {
+        answer.coords = nextPosition;
+        answer.collision = false;
+      }
 
       if (dataStart === 'true') {
         const brother = siblings[1] as HTMLElement;
@@ -763,6 +805,10 @@ export default class View {
     else {
       const dataStart = targetElement.dataset.start;
 
+      if (!dataStart) {
+        answer.coords = nextPosition;
+        answer.collision = false;
+      }
       if (dataStart === 'true') {
         const brother = siblings[1] as HTMLElement;
         const brotherTopSide = parseInt(brother.style.top, 10);
@@ -827,6 +873,7 @@ export default class View {
         vertical,
       });
       
+      console.log(collisionData.coords, 'collisition data');
       const RunnerPositionValidation = this.onRestrictDrag({
         firstPointPosition: firstPoint,
         secondPointPosition: secondPoint, 
@@ -834,6 +881,8 @@ export default class View {
         afterSecondPoint: secondPoint < collisionData.coords,
         position: collisionData.coords,
       });
+
+      console.log(RunnerPositionValidation);
 
       element.style.left = `${RunnerPositionValidation}px`;
 
