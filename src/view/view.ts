@@ -25,9 +25,10 @@ export default class View {
     throw new Error('no such property was found');
   }
 
-  setModelProperty(obj: {property: string, value: number, index: number}) {
-    this.controller.setModelProperty(obj);
-    return true;
+  setModelProperty(obj: {property: string, value: number, index: number}):void {
+    if (obj.value > 0) {
+      this.controller.setModelProperty(obj);
+    }
   }
 
 
@@ -905,6 +906,19 @@ export default class View {
     return CONTROL_POINTS;
   }
 
+  moveRunner(obj: {element, vertical, position}) {
+    const { element, vertical, position } = obj;
+    if (!vertical) {
+      element.style.left = `${position}px`;
+    } else {
+      element.style.top = `${position}px`;
+    }
+  }
+
+  updateRunnerPosition(obj: {position: number, index: string}):void {
+    this.controller.setRunnerPosition(obj);
+  }
+
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
@@ -930,12 +944,7 @@ export default class View {
       position: collisionData.coords,
     });
 
-
-    if (!vertical) {
-      element.style.left = `${RunnerPositionValidation}px`;
-    } else {
-      element.style.top = `${RunnerPositionValidation}px`;
-    }
+    this.moveRunner({ element, vertical, position: RunnerPositionValidation });
 
     this.onMoveProgress({
       parent,
@@ -943,15 +952,9 @@ export default class View {
       collision: collisionData.collision,
     });
 
-    if (!vertical) {
-      this.moveTooltipSibling({
-        parent, runner: element, position: RunnerPositionValidation, axis: 'left', vertical,
-      });
-    } else {
-      this.moveTooltipSibling({
-        parent, runner: element, position: RunnerPositionValidation, axis: 'top', vertical,
-      });
-    }
+    this.moveTooltipSibling({
+      parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
+    });
 
     this.setModelProperty({
       property: 'runners',
@@ -961,6 +964,11 @@ export default class View {
         vertical,
       }),
       index: this.draggable.dataset.number - 1,
+    });
+
+    this.updateRunnerPosition({
+      position: RunnerPositionValidation,
+      index: this.draggable.dataset.number,
     });
   }
 
@@ -1010,7 +1018,7 @@ export default class View {
   }
 
   onHandlerDelete(bookmark: string) {
-    if(bookmark in this.handlers) {
+    if (bookmark in this.handlers) {
       const { element, eventName, bindedFunc } = this.handlers[bookmark];
       element.removeEventListener(eventName, bindedFunc);
       delete element.dataset[bookmark];
