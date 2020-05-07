@@ -425,24 +425,18 @@ export default class View {
     return NEW_SLIDER;
   }
 
-  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-    const { runners, vertical, id } = obj;
-    const ROOT_NODE = document.getElementById(id);
-    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
-    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
-
-    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
- 
-    runners.forEach((runnerPosition: number, index, array) => {
+  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
+    const { runners, slider, size, vertical } = obj;
+    runners.forEach((runnerPosition: number) => {
       const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
 
       const runner = this.createRunner();
-      NEW_SLIDER.appendChild(runner);
+      slider.appendChild(runner);
       this.setElementPosition({
         element: runner,
         position,
         axis: vertical === false ? 'left' : 'top',
-        parent: NEW_SLIDER,
+        parent: slider,
       });
 
       const tooltip = this.createTooltip(position);
@@ -450,20 +444,35 @@ export default class View {
         element: tooltip,
         position,
         axis: vertical === false ? 'left' : 'top',
-        parent: NEW_SLIDER,
+        parent: slider,
         negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
       });
 
       const tooltipPosition = this.positionToValue({
-        parent: NEW_SLIDER,
+        parent: slider,
         runner,
         vertical,
       });
 
       tooltip.innerHTML = String(tooltipPosition);
-      NEW_SLIDER.appendChild(tooltip);
+      slider.appendChild(tooltip);
+    });
+  }
 
 
+  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+    const { runners, vertical, id } = obj;
+    const ROOT_NODE = document.getElementById(id);
+    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
+
+    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+    
+    this.RenderSliderRunners({
+      runners,
+      slider: NEW_SLIDER,
+      size,
+      vertical,
     });
 
     const RenderedRunners = ROOT_NODE.querySelectorAll('.slider__runner');
