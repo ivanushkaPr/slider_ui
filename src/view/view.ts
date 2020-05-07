@@ -755,12 +755,18 @@ export default class View {
     return point;
   }
 
+  getSiblingRunners(obj: {runner: HTMLElement, pair: string}): NodeList {
+    const {runner, pair} = obj;
+    const selector = `.slider__runner[data-pair="${pair}"]`;
+    const siblings = runner.parentNode.querySelectorAll(selector);
+    return siblings;
+  }
+
   onRunnersCollision(obj: {targetElement: HTMLElement, pair: string, nextPosition: number, vertical: boolean}) {
     const {
       targetElement, pair, nextPosition, vertical,
     } = obj;
-    const selector = `.slider__runner[data-pair="${pair}"]`;
-    const siblings = targetElement.parentNode.querySelectorAll(selector);
+    const siblings = this.getSiblingRunners({runner: targetElement, pair});
 
     const answer = {
       coords: 0,
@@ -840,12 +846,16 @@ export default class View {
     return answer;
   }
 
-  MoveNeighborRunner() {
-    
-  }
-
-  findSiblingRunner() {
-
+  moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}) {
+    const { parent, runner, position, axis, vertical } = obj;
+    const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
+    tooltipSibling.classList.add('slider__tooltip--show');
+    tooltipSibling.style[axis] = `${position}px`;
+    tooltipSibling.innerHTML = String(this.positionToValue({
+      parent,
+      runner,
+      vertical,
+    }));
   }
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
@@ -853,7 +863,6 @@ export default class View {
     
     const parent = element.parentNode as HTMLElement;
 
-    let positionOfRunner;
     if (!vertical) {
 
       // Отступ слева родителя.
@@ -898,6 +907,11 @@ export default class View {
         collision: collisionData.collision,
       });
 
+      this.moveTooltipSibling({
+        parent, runner: element, position: RunnerPositionValidation, axis: 'left', vertical,
+      });
+
+      /*
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
       tooltipSibling.classList.add('slider__tooltip--show');
       tooltipSibling.style.left = `${RunnerPositionValidation}px`;
@@ -906,6 +920,7 @@ export default class View {
         runner: element,
         vertical,
       })); 
+      */
 
       // Переписать функцию, чтобы она не устанавливалась повторно.
 
@@ -956,6 +971,11 @@ export default class View {
         collision: collisionData.collision,
       });
 
+      this.moveTooltipSibling({
+        parent, runner: element, position: RunnerPositionValidation, axis: 'top', vertical,
+      });
+
+      /*
       const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
 
       tooltipSibling.classList.add('slider__tooltip--show');
@@ -966,7 +986,7 @@ export default class View {
         vertical,
       }));
 
-
+      */
       const runnerIndex = this.draggable.dataset.number - 1;
       const absolutePosition = RunnerPositionValidation / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight) / 100);
       this.setModelProperty({ property: 'runners', value: absolutePosition, index: runnerIndex });
