@@ -907,106 +907,61 @@ export default class View {
 
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
-    
     const parent = element.parentNode as HTMLElement;
 
+    const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
+      vertical, parent, point, element,
+    });
+
+    const runnerPosition = this.runnerStepHandler(relativePointPosition);
+
+
+    const collisionData = this.onRunnersCollision({
+      targetElement: element,
+      pair: element.dataset.pair,
+      nextPosition: runnerPosition,
+      vertical,
+    });
+    const RunnerPositionValidation = this.onRestrictDrag({
+      firstPointPosition: firstPoint,
+      secondPointPosition: secondPoint,
+      beforeFirstPoint: firstPoint > collisionData.coords,
+      afterSecondPoint: secondPoint < collisionData.coords,
+      position: collisionData.coords,
+    });
+
+
     if (!vertical) {
-      const {
-        firstPoint,
-        secondPoint,
-        relativePointPosition,
-      } = this.getSliderControlPoints({
-        vertical,
-        parent,
-        point,
-        element,
-      });
-
-      // Коорндинаты позиции мыши с выключенными или включенныими шагами.
-      const runnerPosition = this.runnerStepHandler(relativePointPosition);
-
-      // Создание селектора родственного бегунка.
-
-      const collisionData = this.onRunnersCollision({
-        targetElement: element,
-        pair: element.dataset.pair,
-        nextPosition: runnerPosition,
-        vertical,
-      });
-      const RunnerPositionValidation = this.onRestrictDrag({
-        firstPointPosition: firstPoint,
-        secondPointPosition: secondPoint,
-        beforeFirstPoint: firstPoint > collisionData.coords,
-        afterSecondPoint: secondPoint < collisionData.coords,
-        position: collisionData.coords,
-      });
-
-
       element.style.left = `${RunnerPositionValidation}px`;
+    } else {
+      element.style.top = `${RunnerPositionValidation}px`;
+    }
 
-      this.onMoveProgress({
-        parent,
-        runner: element,
-        collision: collisionData.collision,
-      });
+    this.onMoveProgress({
+      parent,
+      runner: element,
+      collision: collisionData.collision,
+    });
 
+    if (!vertical) {
       this.moveTooltipSibling({
         parent, runner: element, position: RunnerPositionValidation, axis: 'left', vertical,
       });
-
-      this.setModelProperty({
-        property: 'runners',
-        value: this.calculateRunnerPosition({
-          parent,
-          position: RunnerPositionValidation,
-          vertical,
-        }),
-        index: this.draggable.dataset.number - 1,
-      });
     } else {
-      const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
-        vertical, parent, point, element,
-      });
-
-      const runnerPosition: number = this.runnerStepHandler(relativePointPosition);
-
-      const collisionData = this.onRunnersCollision({
-        targetElement: element,
-        pair: element.dataset.pair,
-        nextPosition: runnerPosition,
-        vertical,
-      });
-
-      const RunnerPositionValidation = this.onRestrictDrag({
-        firstPointPosition: firstPoint,
-        secondPointPosition: secondPoint,
-        beforeFirstPoint: firstPoint > collisionData.coords,
-        afterSecondPoint: secondPoint < collisionData.coords,
-        position: collisionData.coords,
-      });
-
-      element.style.top = `${RunnerPositionValidation}px`;
-
-      this.onMoveProgress({
-        parent,
-        runner: element,
-        collision: collisionData.collision,
-      });
-
       this.moveTooltipSibling({
         parent, runner: element, position: RunnerPositionValidation, axis: 'top', vertical,
       });
-
-      this.setModelProperty({
-        property: 'runners',
-        value: this.calculateRunnerPosition({
-          parent,
-          position: RunnerPositionValidation,
-          vertical,
-        }),
-        index: this.draggable.dataset.number - 1,
-      });
     }
+
+    this.setModelProperty({
+      property: 'runners',
+      value: this.calculateRunnerPosition({
+        parent,
+        position: RunnerPositionValidation,
+        vertical,
+      }),
+      index: this.draggable.dataset.number - 1,
+    });
   }
 
   runnerStepHandler(point) {
