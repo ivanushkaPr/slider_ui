@@ -858,28 +858,72 @@ export default class View {
     }));
   }
 
+
+  calculateRunnerPosition(obj: {parent, position, vertical }) {
+    const {parent, position, vertical } = obj;
+    let absolutePosition;
+    if (!vertical) {
+      absolutePosition = position
+      / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth)
+      / 100);
+    } else {
+      absolutePosition = position
+      / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
+      / 100);
+    }
+    return absolutePosition;
+  }
+
+  getSliderControlPoints(obj: {vertical, parent, point, element}) {
+    const {
+      vertical, parent, point, element,
+    } = obj;
+
+    type controlPoints = {
+      firstPoint: number,
+      secondPoint: number,
+      relativePointPosition: number
+    }
+
+    const CONTROL_POINTS: controlPoints = {
+      firstPoint: 0,
+      secondPoint: undefined,
+      relativePointPosition: undefined,
+    };
+
+    if (!vertical) {
+      CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().width
+      - parent.clientLeft * 2 - element.offsetWidth;
+      CONTROL_POINTS.relativePointPosition = point
+      - parent.getBoundingClientRect().left - window.pageXOffset;
+    } else {
+      CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().height
+      - parent.clientTop * 2 - element.offsetHeight;
+      CONTROL_POINTS.relativePointPosition = point
+      - parent.getBoundingClientRect().top - window.pageYOffset;
+    }
+    return CONTROL_POINTS;
+  }
+
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     
     const parent = element.parentNode as HTMLElement;
 
     if (!vertical) {
-
-      // Отступ слева родителя.
-      const parentOffsetLeft = parent.getBoundingClientRect().left;
-
-      // Левая и правая сторона слайдера.
-      const firstPoint = 0;
-      const secondPoint = parent.getBoundingClientRect().width - parent.clientLeft * 2 - element.offsetWidth;
-
-      // Координаты мыши за вычетом левого отступа родителя и скролла.
-      const relativePointPosition = point - parentOffsetLeft - window.pageXOffset;
-
-
+      const {
+        firstPoint,
+        secondPoint,
+        relativePointPosition,
+      } = this.getSliderControlPoints({
+        vertical,
+        parent,
+        point,
+        element,
+      });
 
       // Коорндинаты позиции мыши с выключенными или включенныими шагами.
-      const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
-        ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
+      const runnerPosition = this.runnerStepHandler(relativePointPosition);
 
       // Создание селектора родственного бегунка.
 
@@ -889,10 +933,9 @@ export default class View {
         nextPosition: runnerPosition,
         vertical,
       });
-    
       const RunnerPositionValidation = this.onRestrictDrag({
         firstPointPosition: firstPoint,
-        secondPointPosition: secondPoint, 
+        secondPointPosition: secondPoint,
         beforeFirstPoint: firstPoint > collisionData.coords,
         afterSecondPoint: secondPoint < collisionData.coords,
         position: collisionData.coords,
@@ -911,42 +954,22 @@ export default class View {
         parent, runner: element, position: RunnerPositionValidation, axis: 'left', vertical,
       });
 
-      /*
-      const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
-      tooltipSibling.classList.add('slider__tooltip--show');
-      tooltipSibling.style.left = `${RunnerPositionValidation}px`;
-      tooltipSibling.innerHTML = String(this.positionToValue({
-        parent,
-        runner: element,
-        vertical,
-      })); 
-      */
-
-      // Переписать функцию, чтобы она не устанавливалась повторно.
-
-
-
-      const runnerIndex = this.draggable.dataset.number - 1;
-      const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
-      this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex});
-
-
+      this.setModelProperty({
+        property: 'runners',
+        value: this.calculateRunnerPosition({
+          parent,
+          position: RunnerPositionValidation,
+          vertical,
+        }),
+        index: this.draggable.dataset.number - 1,
+      });
     } else {
-      const parentOffsetTop = parent.getBoundingClientRect().top;
+      const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
+        vertical, parent, point, element,
+      });
 
+      const runnerPosition: number = this.runnerStepHandler(relativePointPosition);
 
-      const firstPoint = 0;
-      const secondPoint = parent.getBoundingClientRect().height - parent.clientTop * 2 - element.offsetHeight;
-
-      const relativePointPosition = point - parentOffsetTop - window.pageYOffset;
-
-
-
-      const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
-        ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
-
-
-      
       const collisionData = this.onRunnersCollision({
         targetElement: element,
         pair: element.dataset.pair,
@@ -964,7 +987,6 @@ export default class View {
 
       element.style.top = `${RunnerPositionValidation}px`;
 
-
       this.onMoveProgress({
         parent,
         runner: element,
@@ -975,53 +997,46 @@ export default class View {
         parent, runner: element, position: RunnerPositionValidation, axis: 'top', vertical,
       });
 
-      /*
-      const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${element.dataset.tooltipSibling}"]`) as HTMLElement;
-
-      tooltipSibling.classList.add('slider__tooltip--show');
-      tooltipSibling.style.top = `${RunnerPositionValidation}px`;
-      tooltipSibling.innerHTML = String(this.positionToValue({
-        parent,
-        runner: element,
-        vertical,
-      }));
-
-      */
-      const runnerIndex = this.draggable.dataset.number - 1;
-      const absolutePosition = RunnerPositionValidation / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight) / 100);
-      this.setModelProperty({ property: 'runners', value: absolutePosition, index: runnerIndex });
-
+      this.setModelProperty({
+        property: 'runners',
+        value: this.calculateRunnerPosition({
+          parent,
+          position: RunnerPositionValidation,
+          vertical,
+        }),
+        index: this.draggable.dataset.number - 1,
+      });
     }
   }
-  
 
   runnerStepHandler(point) {
     let smaller;
     let larger;
     let closestPoint;
 
-    for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
-      if (this.breakpoints[breakpoint] > point) {
-        larger = this.breakpoints[breakpoint];
-        smaller = this.breakpoints[breakpoint - 1];
-        break;
+    if (this.fetchModelProperty('stepsOn')) {
+      for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
+        if (this.breakpoints[breakpoint] > point) {
+          larger = this.breakpoints[breakpoint];
+          smaller = this.breakpoints[breakpoint - 1];
+          break;
+        }
       }
-    }
-    if (larger === undefined) {
-      closestPoint = smaller;
-    }
-    if (smaller === undefined) {
-      closestPoint = larger;
-    }
-    if (larger !== undefined && smaller !== undefined) {
-      const distanceToLeft = point - smaller;
-      const distanceToRight = larger - point;
-      if (distanceToLeft < distanceToRight) {
+      if (larger === undefined) {
         closestPoint = smaller;
-      }
-      else {
+      } else if (smaller === undefined) {
         closestPoint = larger;
+      } else if (larger !== undefined && smaller !== undefined) {
+        const distanceToLeft = point - smaller;
+        const distanceToRight = larger - point;
+        if (distanceToLeft < distanceToRight) {
+          closestPoint = smaller;
+        } else {
+          closestPoint = larger;
+        }
       }
+    } else {
+      closestPoint = point;
     }
     return closestPoint;
   }
