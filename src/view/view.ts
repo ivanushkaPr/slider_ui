@@ -319,7 +319,7 @@ export default class View {
 
   checkCoordsAvailability(obj: {percents, rangeSize}) {
     const { percents, rangeSize } = obj;
-    // console.log(position, size, size/100 * position)
+    
     const percentToPx = (rangeSize / 100) * percents;
     const runnerPosition = percentToPx;
 
@@ -338,6 +338,7 @@ export default class View {
         }
       }
     }
+
     const percent = rangeSize / 100;
     const point = this.breakpoints[index] / percent;
     return point;
@@ -484,6 +485,14 @@ export default class View {
     const { runners, vertical, id } = obj;
     const ROOT_NODE = document.getElementById(id);
     const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    this.onHandlerRegister({
+      bookmark: 'runnerMouseDown',
+      element: NEW_SLIDER as HTMLElement,
+      eventName: 'click',
+      cb: this.onRangeClickHandler,
+      enviroment: this,
+    });
+
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
     const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
@@ -621,6 +630,39 @@ export default class View {
     };
     element.addEventListener(eventName, bindedFunc);
     element.dataset[bookmark] = 'true';
+    return true;
+  }
+
+
+
+  onRangeClickHandler(event: MouseEvent):boolean {
+    const range = (event.currentTarget as HTMLElement);
+    const runners = range.querySelectorAll('.slider__runner');
+    const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
+    let click = event.pageX - range.offsetLeft - range.clientLeft;
+
+    let prevDiff = 10000;
+    let index = undefined;
+    runners.forEach((runner, i, array) => {
+      const pos = parseInt((runner as HTMLElement).style.left, 10);
+      const diff = Math.abs(click - pos);
+      if (diff < prevDiff) {
+        prevDiff = diff;
+        index = i;
+      }
+    });
+
+    const runner = runners[index] as HTMLElement;
+    console.log(runner.dataset.start === 'false');
+    if(runner.dataset.start === 'false') {
+      click -= runnerWidth;
+    }
+    runner.style.left = `${click}px`;
+    this.draggable = runner;
+    this.onMoveProgress({parent: range, runner, collision: false});
+
+
+
     return true;
   }
 
@@ -976,7 +1018,6 @@ export default class View {
     let smaller;
     let larger;
     let closestPoint;
-
     if (this.fetchModelProperty('stepsOn')) {
       for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
         if (this.breakpoints[breakpoint] > point) {
