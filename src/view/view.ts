@@ -755,11 +755,11 @@ export default class View {
     return point;
   }
 
-  onRunnersCollision(obj: {targetElement: HTMLElement, selector: string, nextPosition: number, vertical: boolean}) {
+  onRunnersCollision(obj: {targetElement: HTMLElement, pair: string, nextPosition: number, vertical: boolean}) {
     const {
-      targetElement, selector, nextPosition, vertical,
+      targetElement, pair, nextPosition, vertical,
     } = obj;
-
+    const selector = `.slider__runner[data-pair="${pair}"]`;
     const siblings = targetElement.parentNode.querySelectorAll(selector);
 
     const answer = {
@@ -844,6 +844,10 @@ export default class View {
     
   }
 
+  findSiblingRunner() {
+
+  }
+
   onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
     const { point, element, vertical } = obj;
     
@@ -851,29 +855,32 @@ export default class View {
 
     let positionOfRunner;
     if (!vertical) {
+
+      // Отступ слева родителя.
       const parentOffsetLeft = parent.getBoundingClientRect().left;
 
-
+      // Левая и правая сторона слайдера.
       const firstPoint = 0;
       const secondPoint = parent.getBoundingClientRect().width - parent.clientLeft * 2 - element.offsetWidth;
 
+      // Координаты мыши за вычетом левого отступа родителя и скролла.
       const relativePointPosition = point - parentOffsetLeft - window.pageXOffset;
 
 
+
+      // Коорндинаты позиции мыши с выключенными или включенныими шагами.
       const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
         ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
-      const siblingPair = element.dataset.pair;
 
-      const siblingSelector = `.slider__runner[data-pair="${siblingPair}"]`;
+      // Создание селектора родственного бегунка.
 
       const collisionData = this.onRunnersCollision({
         targetElement: element,
-        selector: siblingSelector,
+        pair: element.dataset.pair,
         nextPosition: runnerPosition,
         vertical,
       });
-      
-      console.log(collisionData.coords, 'collisition data');
+    
       const RunnerPositionValidation = this.onRestrictDrag({
         firstPointPosition: firstPoint,
         secondPointPosition: secondPoint, 
@@ -882,10 +889,8 @@ export default class View {
         position: collisionData.coords,
       });
 
-      console.log(RunnerPositionValidation);
 
       element.style.left = `${RunnerPositionValidation}px`;
-
 
       this.onMoveProgress({
         parent,
@@ -910,7 +915,6 @@ export default class View {
       const absolutePosition = RunnerPositionValidation / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth) / 100);
       this.setModelProperty({property: 'runners', value: absolutePosition, index: runnerIndex});
 
-      
 
     } else {
       const parentOffsetTop = parent.getBoundingClientRect().top;
@@ -925,14 +929,12 @@ export default class View {
 
       const runnerPosition: number = this.fetchModelProperty('stepsOn') === true
         ? this.runnerStepHandler(relativePointPosition) : relativePointPosition;
-      const siblingPair = element.dataset.pair;
 
-      const siblingSelector = `.slider__runner[data-pair="${siblingPair}"]`;
 
       
       const collisionData = this.onRunnersCollision({
         targetElement: element,
-        selector: siblingSelector,
+        pair: element.dataset.pair,
         nextPosition: runnerPosition,
         vertical,
       });
@@ -979,14 +981,12 @@ export default class View {
     let closestPoint;
 
     for (let breakpoint = 0; breakpoint < this.breakpoints.length; breakpoint += 1) {
-      if(this.breakpoints[breakpoint] > point) {
-        
+      if (this.breakpoints[breakpoint] > point) {
         larger = this.breakpoints[breakpoint];
         smaller = this.breakpoints[breakpoint - 1];
         break;
       }
     }
-
     if (larger === undefined) {
       closestPoint = smaller;
     }
@@ -996,7 +996,7 @@ export default class View {
     if (larger !== undefined && smaller !== undefined) {
       const distanceToLeft = point - smaller;
       const distanceToRight = larger - point;
-      if(distanceToLeft < distanceToRight) {
+      if (distanceToLeft < distanceToRight) {
         closestPoint = smaller;
       }
       else {
