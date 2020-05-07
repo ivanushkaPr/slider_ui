@@ -357,7 +357,7 @@ export default class View {
     const POSITION = vertical === false ? LEFT : TOP;
 
     const SUM = Math.abs(this.fetchModelProperty('minValue')) + Math.abs(this.fetchModelProperty('maxValue'));
-    let VALUE = Math.round((SUM / RANGE_BORDER_BOX) * POSITION);
+    let VALUE = Math.ceil((SUM / RANGE_BORDER_BOX) * POSITION);
 
     const minValue = this.fetchModelProperty('minValue');
     VALUE = minValue < 0 ? VALUE += minValue : VALUE;
@@ -485,13 +485,15 @@ export default class View {
     const { runners, vertical, id } = obj;
     const ROOT_NODE = document.getElementById(id);
     const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
-    this.onHandlerRegister({
-      bookmark: 'runnerMouseDown',
-      element: NEW_SLIDER as HTMLElement,
-      eventName: 'click',
-      cb: this.onRangeClickHandler,
-      enviroment: this,
-    });
+    if (this.controller.getModelProperty('stepsOn') === false) {
+      this.onHandlerRegister({
+        bookmark: 'elementClick',
+        element: NEW_SLIDER as HTMLElement,
+        eventName: 'click',
+        cb: this.onElementClickHandler,
+        enviroment: this,
+      });
+    }
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
@@ -572,13 +574,21 @@ export default class View {
     const slider = parentNode.querySelector('.slider__range');
 
     breakpoints.forEach((breakpoint: number, index, array) => {
+
       const scale: HTMLDivElement = this.createScale({ index, array, vertical });
       this.setScalePosition({scale, vertical, breakpoint });
 
-      if (index > 0 && index < array.length - 1) slider.appendChild(scale);
+      this.onHandlerRegister({
+        bookmark: 'elementClick',
+        element: scale as HTMLElement,
+        eventName: 'click',
+        cb: this.onElementClickHandler,
+        enviroment: this,
+      });
+
+      slider.appendChild(scale);
     });
   }
-
 
   setRunnersDataAttributes(elements: NodeList) {
     const collection = elements;
@@ -635,15 +645,23 @@ export default class View {
 
 
 
-  onRangeClickHandler(event: MouseEvent):boolean {
-    const range = (event.currentTarget as HTMLElement);
+  onElementClickHandler(event: MouseEvent):boolean {
+    let range;
+    if (this.controller.getModelProperty('stepsOn')) {
+      const scale = (event.target) as HTMLElement;
+      range = scale.parentNode as HTMLElement;
+
+    } else {
+      range = (event.currentTarget as HTMLElement);
+    }
+
     const runners = range.querySelectorAll('.slider__runner');
     const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
     let click = event.pageX - range.offsetLeft - range.clientLeft;
 
     let prevDiff = 10000;
-    let index = undefined;
-    runners.forEach((runner, i, array) => {
+    let index;
+    runners.forEach((runner, i) => {
       const pos = parseInt((runner as HTMLElement).style.left, 10);
       const diff = Math.abs(click - pos);
       if (diff < prevDiff) {
@@ -653,8 +671,7 @@ export default class View {
     });
 
     const runner = runners[index] as HTMLElement;
-    console.log(runner.dataset.start === 'false');
-    if(runner.dataset.start === 'false') {
+    if (runner.dataset.start === 'false') {
       click -= runnerWidth;
     }
     runner.style.left = `${click}px`;
@@ -894,6 +911,7 @@ export default class View {
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
     tooltipSibling.classList.add('slider__tooltip--show');
     tooltipSibling.style[axis] = `${position}px`;
+    console.log(position)
     tooltipSibling.innerHTML = String(this.positionToValue({
       parent,
       runner,
