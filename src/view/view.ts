@@ -1,3 +1,5 @@
+import { rejects } from "assert";
+
 export default class View {
   handlers: handlers = {
 
@@ -340,40 +342,34 @@ export default class View {
     return point;
   }
 
-  
-
-  
   positionToValue(obj: { parent: HTMLElement, runner: HTMLElement, vertical: boolean, }):
     number {
     const { parent, runner, vertical } = obj;
 
     const WIDTH = parent.offsetWidth - parent.clientLeft * 2 - runner.offsetWidth;
     const HEIGHT = parent.offsetHeight - parent.clientTop * 2 - runner.offsetHeight;
-    const rangeBorderBox = vertical === false ? WIDTH : HEIGHT;
+    const RANGE_BORDER_BOX = vertical === false ? WIDTH : HEIGHT;
 
     const LEFT = parseInt(runner.style.left, 10);
     const TOP = parseInt(runner.style.top, 10);
     const POSITION = vertical === false ? LEFT : TOP;
 
     const SUM = Math.abs(this.fetchModelProperty('minValue')) + Math.abs(this.fetchModelProperty('maxValue'));
-    let VALUE = Math.round((SUM / rangeBorderBox) * POSITION);
+    let VALUE = Math.round((SUM / RANGE_BORDER_BOX) * POSITION);
 
     const minValue = this.fetchModelProperty('minValue');
     VALUE = minValue < 0 ? VALUE += minValue : VALUE;
 
     return VALUE;
-
   }
 
 
-  setRunnerPosition(obj:{
+  setElementPosition(obj:{
       element: HTMLElement;
       position: number;
       axis: string;
       parent: HTMLElement,
-      negative?: number, }):void
-  {
-
+      negative?: number, }):void {
     const {
       element, position, axis, parent,
     } = obj;
@@ -385,78 +381,94 @@ export default class View {
     }
 
     if (axis === 'left') {
-      const elementWidth = element.offsetWidth - element.clientLeft * 2;
-      const parentWidth = parent.offsetWidth - parent.clientLeft * 2 - elementWidth - negative;
-      const onePercent = parentWidth / 100;
-      const runnerLeft = onePercent * position;
-      element.style.left = `${runnerLeft}px`;
+      const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
+      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
+      const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
+      const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
+      element.style.left = `${STYLE_LEFT}px`;
     } else {
-      const elementHeight = element.offsetHeight - element.clientTop * 2;
-      const parentHeight = parent.offsetHeight - parent.clientTop * 2 - elementHeight - negative;
-      const onePercent = parentHeight / 100;
-      const runnerTop = onePercent * position;
-      element.style.top = `${runnerTop}px`;
+      const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
+      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
+      const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
+      const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
+      element.style.top = `${STYLE_TOP}px`;
     }
   }
 
+  removeSlider(root: HTMLElement):void {
+    const OLD_SLIDER = root.querySelector('.slider__range')
+    if (OLD_SLIDER) {
+      OLD_SLIDER.remove();
+    }
+  }
+
+  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
+    const { range, rect, vertical } = obj;
+    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
+    return size;
+  }
+
+  getTemporaryRunnerRectangle(parent):DOMRect {
+    const temporaryRunner = this.createRunner();
+    parent.appendChild(temporaryRunner);
+    const runnerDomRect = temporaryRunner.getBoundingClientRect();
+    parent.removeChild(temporaryRunner);
+    return runnerDomRect;
+  }
+
+
+  renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
+    const { root, id} = obj;
+    this.removeSlider(root);
+    const NEW_SLIDER = this.createRange();
+    this.renderElement(NEW_SLIDER, document.getElementById(id));
+    return NEW_SLIDER;
+  }
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
+    const ROOT_NODE = document.getElementById(id);
+    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
-    const rangeParentNode = document.getElementById(id);
-    const prevRange = rangeParentNode.querySelector('.slider__range');
-    if (prevRange) {
-      prevRange.remove();
-    }
-
-    const range = this.createRange();
-
-
-    this.renderElement(range, document.getElementById(id));
-    const temporaryRunner = this.createRunner();
-    range.appendChild(temporaryRunner);
-    const tempRect = temporaryRunner.getBoundingClientRect();
-    range.removeChild(temporaryRunner);
-    this.calculateBreakpoints({ range, vertical });
-
-    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - tempRect.width : range.offsetHeight - range.clientTop * 2 - tempRect.height;
-
+    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+ 
     runners.forEach((runnerPosition: number, index, array) => {
       const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
 
       const runner = this.createRunner();
-      range.appendChild(runner);
-      this.setRunnerPosition({
+      NEW_SLIDER.appendChild(runner);
+      this.setElementPosition({
         element: runner,
         position,
         axis: vertical === false ? 'left' : 'top',
-        parent: range,
+        parent: NEW_SLIDER,
       });
 
       const tooltip = this.createTooltip(position);
-      this.setRunnerPosition({
+      this.setElementPosition({
         element: tooltip,
         position,
         axis: vertical === false ? 'left' : 'top',
-        parent: range,
+        parent: NEW_SLIDER,
         negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
       });
 
       const tooltipPosition = this.positionToValue({
-        parent: range,
+        parent: NEW_SLIDER,
         runner,
         vertical,
       });
 
       tooltip.innerHTML = String(tooltipPosition);
-      range.appendChild(tooltip);
+      NEW_SLIDER.appendChild(tooltip);
 
 
     });
 
-    const RenderedRunners = rangeParentNode.querySelectorAll('.slider__runner');
+    const RenderedRunners = ROOT_NODE.querySelectorAll('.slider__runner');
     this.setDataAttr(RenderedRunners);
-    const RenderedTooltips = rangeParentNode.querySelectorAll('.slider__tooltip');
+    const RenderedTooltips = ROOT_NODE.querySelectorAll('.slider__tooltip');
     this.setDataAttr(RenderedTooltips);
 
     RenderedRunners.forEach((runner) => {
@@ -470,12 +482,13 @@ export default class View {
     });
 
     this.renderProgress({
-      runners: rangeParentNode.getElementsByClassName('slider__runner'),
-      parent: range,
-      vertical: this.fetchModelProperty('vertical')
+      runners: ROOT_NODE.getElementsByClassName('slider__runner'),
+      parent: NEW_SLIDER,
+      vertical: this.fetchModelProperty('vertical'),
     });
 
-    this.createScale({parentNode: rangeParentNode, runnerWidth: tempRect.width, vertical});
+    const RUNNER_WIDTH = (document.querySelector('.slider__runner') as HTMLElement).offsetWidth;
+    this.createScale({parentNode: ROOT_NODE, runnerWidth: RUNNER_WIDTH, vertical});
     return undefined;
   }
 
