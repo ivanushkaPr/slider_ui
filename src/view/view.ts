@@ -68,7 +68,7 @@ export default class View {
 
   createElement(nodeName: string, className: string): HTMLElement {
     const element = document.createElement(nodeName);
-    element.classList.add(className);
+    element.className = className;
     return element as HTMLElement;
   }
 
@@ -587,8 +587,6 @@ export default class View {
     }
   }
 
-
-
   setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
     const { scale, vertical, breakpoint } = obj;
     scale.style.position = 'absolute';
@@ -601,7 +599,9 @@ export default class View {
     const breakpoints = [...this.breakpoints];
     const slider = parentNode.querySelector('.slider__range');
     const ruler = document.createElement('div');
-    ruler.classList.add('slider__ruler');
+    const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
+    ruler.className = `${classNames}`;
+
 
     slider.appendChild(ruler);
     const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
@@ -609,7 +609,17 @@ export default class View {
 
       const scale: HTMLDivElement = this.createScale({ mods });
       this.setScalePosition({scale, vertical, breakpoint });
-
+      if (index === 0) {
+        const textNode = this.createElement('p', 'scale__value scale__value--start');
+        const value = document.createTextNode(this.fetchModelProperty('minValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      } else if (index === array.length - 1) {
+        const textNode = this.createElement('p', 'scale__value scale__value--end');
+        const value = document.createTextNode(this.fetchModelProperty('maxValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      }
       this.onHandlerRegister({
         bookmark: 'elementClick',
         element: scale as HTMLElement,
@@ -621,9 +631,6 @@ export default class View {
       ruler.appendChild(scale);
     });
 
-    breakpoints.forEach((breakpoint: number, index, array) => {
-      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
-    });
   }
 
   setRunnersDataAttributes(elements: NodeList) {
