@@ -26,6 +26,7 @@ export class Model {
   changeConfState(obj: {property: string; value: string | number | boolean; index?: number})
   :boolean {
     const { property, value, index } = obj;
+    console.log('[this.changeConfState]' , value);
     if (typeof index === 'number') {
       this.configuration[property][index] = value;
     } else {
@@ -92,7 +93,7 @@ export const uConfiguration = {
   steps: 10,
   units: 'px',
   runners: [25, 50],
-  stepsOn: true,
+  stepsOn: false,
   vertical: false,
   scaleOn: true,
   panel: true,

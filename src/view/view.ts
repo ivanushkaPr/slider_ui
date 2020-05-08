@@ -27,9 +27,7 @@ export default class View {
   }
 
   setModelProperty(obj: {property: string, value: number, index: number}):void {
-    if (obj.value > 0) {
-      this.controller.setModelProperty(obj);
-    }
+    this.controller.setModelProperty(obj);
   }
 
 
@@ -165,7 +163,7 @@ export default class View {
         progressGeometry.position = firstRunner.getBoundingClientRect().right
               - parentOffsetLeft + window.pageXOffset;
         const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left + parent.clientLeft;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left + parent.clientLeft * 2;
         progressGeometry.size = this.calculateProgressSize({
           progressStartPosition: PROGRESS_START_POSITION,
           progressEndPosition: PROGRESS_END_POSITION,
@@ -185,7 +183,7 @@ export default class View {
         progressGeometry.position = firstRunner.getBoundingClientRect().bottom - parent.offsetTop
         - parent.clientTop + window.pageYOffset;
         const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top + parent.clientTop * 2;
         progressGeometry.size = this.calculateProgressSize({
           progressStartPosition: PROGRESS_START_POSITION,
           progressEndPosition: PROGRESS_END_POSITION,
@@ -240,6 +238,7 @@ export default class View {
     const progress = this.createProgress();
     if (!vertical) {
       const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
+
       this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
       this.setPosition({
         element: progress, position, axis: 'left',
@@ -268,6 +267,7 @@ export default class View {
           });
         }
         if (runners.length % 2 === 0 && runner % 2 === 0) {
+          console.log('multiple;')
           this.renderMultipleProgressBars({
             vertical, parent, runners, index: runner, pair: count,
           });
@@ -295,7 +295,8 @@ export default class View {
   // Устанавливает ширину или высоту элемента
   setSize(obj: {element: HTMLElement; property: string; value: string}): void {
     const { element, property, value } = obj;
-    element.style[property] = `${parseInt(value, 10)}px`;
+    console.log(Math.round(Number(value)));;
+    element.style[property] = `${Math.round(Number(value))}px`;
     return undefined;
   }
 
@@ -817,7 +818,7 @@ export default class View {
         const progressStart = siblings[0].getBoundingClientRect().right;
         const progressEnd = siblings[1].getBoundingClientRect().left;
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
-        progress.style.width = `${width}px`;
+        progress.style.width = `${width + parent.clientLeft}px`;
       }
     } else if(this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
@@ -825,14 +826,14 @@ export default class View {
         const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
-      } else if(start === 'true') { 
+      } else if (start === 'true') { 
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[1].getBoundingClientRect().top;
         const progressEnd = siblings[0].getBoundingClientRect().bottom;
         const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
           ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        progress.style.height = `${height}px`;
+        progress.style.height = `${height - parent.clientTop}px`;
         progress.style.top = `${siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset}px`;
       } else {
         const siblingRunnerNumber = element.dataset.pair;
@@ -956,7 +957,6 @@ export default class View {
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
     tooltipSibling.classList.add('slider__tooltip--show');
     tooltipSibling.style[axis] = `${position}px`;
-    console.log(position)
     tooltipSibling.innerHTML = String(this.positionToValue({
       parent,
       runner,
@@ -977,6 +977,7 @@ export default class View {
       / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
       / 100);
     }
+    console.log('[view calculateRunnerPosition]' ,absolutePosition);
     return absolutePosition;
   }
 
@@ -1060,6 +1061,8 @@ export default class View {
     this.moveTooltipSibling({
       parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
     });
+
+    
 
     this.setModelProperty({
       property: 'runners',

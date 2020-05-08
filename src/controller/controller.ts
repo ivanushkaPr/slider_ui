@@ -13,6 +13,7 @@ class PanelChangeHandler {
 
   changeFormHandler(e) {
     const targetNode = e.target;
+    console.log('changed');
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
       const INPUT_TYPE = targetNode.getAttribute('type');
       if (targetNode.classList.contains('panel__input--positions')) {
@@ -41,6 +42,7 @@ class PanelChangeHandler {
     const VALUE_IS_VALID = this.validateRunnersProperty({ index: INDEX, value: VALUE });
     if (VALUE_IS_VALID) {
       this.controller.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
+      console.log(VALUE, 'changeRunProp');
     }
   }
 
@@ -327,7 +329,7 @@ export default class Controller {
 
     const abs = position / (sizeBorderBox / 100);
     if (typeof position === 'number') {
-      input.value = String(Math.ceil(abs));
+      input.value = String(Math.round(abs));
     }
   }
 
