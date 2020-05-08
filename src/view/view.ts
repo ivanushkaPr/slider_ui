@@ -512,9 +512,7 @@ export default class View {
       vertical: this.fetchModelProperty('vertical'),
     });
 
-    this.createScales({
-      parentNode: ROOT_NODE, vertical,
-    });
+    if (this.fetchModelProperty('scaleOn')) this.createScales({ parentNode: ROOT_NODE, vertical });
     return undefined;
   }
 
@@ -549,21 +547,11 @@ export default class View {
     });
   }
 
-
-  createScale(obj: {index, array, vertical}) {
-    const {index, array, vertical} = obj;
+  createScale(obj: {mods}) {
+    const {mods} = obj;
 
     const div = document.createElement('div');
-    div.classList.add('slider__scale');
-    if (index === 0 || index === array.length - 1) {
-      
-    } 
-
-   // const value = document.createTextNode(array[index]);
-   // div.appendChild(value);
-    // div.classList.add('slider__scale--transparent');
-    const scaleOrientation = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
-    div.classList.add(`${scaleOrientation}`);
+    div.className = `slider__scale ${mods}`
     return div;
   }
 
@@ -571,41 +559,29 @@ export default class View {
     const {
       start, end, parent, vertical, index, array,
     } = obj;
-    const scaleClass = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
-    const scaleClassMd = vertical === false ? 'slider__scale--horizontal-md' : 'slider__scale--vertical-md';
-    const axis = vertical === false ? 'left' : 'top';
     const step = start + ((end - start) / 2);
 
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
+      : 'slider__scale--vertical slider__scale--vertical-md';
     if (index < this.breakpoints.length - 1) {
-      const smallScale = document.createElement('div');
-      smallScale.classList.add('slider__scale');
-      smallScale.classList.add(scaleClassMd);
-      smallScale.classList.add(scaleClass);
-      smallScale.style.position = 'absolute';
-      smallScale.style[axis] = `${step}px`;
+      const smallScale = this.createScale({ mods });
+      this.setScalePosition({scale: smallScale, vertical, breakpoint: step});
       parent.appendChild(smallScale);
-
       this.createSmallScales({start, end: step, parent, vertical, index, array });
       this.createSmallScales({start: step, end, parent, vertical, index, array });
     }
   }
 
   createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
-    const {start, end, parent, vertical, index, array} = obj;
-
-    const scaleClass = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
-    const scaleClassMd = vertical === false ? 'slider__scale--horizontal-sm' : 'slider__scale--vertical-sm';
-    const axis = vertical === false ? 'left' : 'top';
+    const {start, end, parent, vertical, index} = obj;
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
+      : 'slider__scale--vertical slider__scale--vertical-sm';
 
     const step = (end - start) / 4;
     for (let i = 0; i <= 3; i += 1) {
       if (index < this.breakpoints.length - 1) {
-        const smallScale = document.createElement('div');
-        smallScale.classList.add('slider__scale');
-        smallScale.classList.add(scaleClassMd);
-        smallScale.classList.add(scaleClass);
-        smallScale.style.position = 'absolute';
-        smallScale.style[axis] = `${step * i + start}px`;
+        const smallScale = this.createScale({ mods });
+        this.setScalePosition({scale: smallScale, vertical, breakpoint: step * i + start});
         parent.appendChild(smallScale);
       }
     }
@@ -613,18 +589,11 @@ export default class View {
 
 
 
-  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number, index: number, array}) {
-    const { scale, vertical, breakpoint, index, array } = obj;
-
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
+    const { scale, vertical, breakpoint } = obj;
     scale.style.position = 'absolute';
     const leftOrTop = vertical === false ? 'left' : 'top';
-    let position;
-    if( index === array.length - 1) {
-      position = breakpoint;
-    } else {
-      position = breakpoint;
-    }
-    scale.style[leftOrTop] = `${position}px`;
+    scale.style[leftOrTop] = `${breakpoint}px`;
   }
 
   createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
@@ -633,11 +602,13 @@ export default class View {
     const slider = parentNode.querySelector('.slider__range');
     const ruler = document.createElement('div');
     ruler.classList.add('slider__ruler');
-    
+
+    slider.appendChild(ruler);
+    const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
     breakpoints.forEach((breakpoint: number, index, array) => {
 
-      const scale: HTMLDivElement = this.createScale({ index, array, vertical });
-      this.setScalePosition({scale, vertical, breakpoint, index, array });
+      const scale: HTMLDivElement = this.createScale({ mods });
+      this.setScalePosition({scale, vertical, breakpoint });
 
       this.onHandlerRegister({
         bookmark: 'elementClick',
@@ -646,14 +617,12 @@ export default class View {
         cb: this.onElementClickHandler,
         enviroment: this,
       });
-
+      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
       ruler.appendChild(scale);
     });
 
-    slider.appendChild(ruler);
-
     breakpoints.forEach((breakpoint: number, index, array) => {
-      this.createMediumScale({start: array[index], end: array[index + 1], parent: ruler, vertical, index, array});
+      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
     });
   }
 

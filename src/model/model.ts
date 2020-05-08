@@ -80,6 +80,7 @@ export type configuration = {
   runners?: number[]
   stepsOn?: boolean
   vertical?: boolean
+  scaleOn?: boolean,
   units?: string
   id: string | undefined
   panel?: boolean
@@ -93,6 +94,7 @@ export const uConfiguration = {
   runners: [25, 50],
   stepsOn: true,
   vertical: false,
+  scaleOn: true,
   panel: true,
   id: '#slider',
 };
