@@ -610,12 +610,14 @@ export default class View {
       const scale: HTMLDivElement = this.createScale({ mods });
       this.setScalePosition({scale, vertical, breakpoint });
       if (index === 0) {
-        const textNode = this.createElement('p', 'scale__value scale__value--start');
+        const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
+        const textNode = this.createElement('p', classes);
         const value = document.createTextNode(this.fetchModelProperty('minValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);
       } else if (index === array.length - 1) {
-        const textNode = this.createElement('p', 'scale__value scale__value--end');
+        const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
+        const textNode = this.createElement('p', classes);
         const value = document.createTextNode(this.fetchModelProperty('maxValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);

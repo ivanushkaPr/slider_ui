@@ -48,12 +48,24 @@
       position: absolute;
     }
     
-    .scale__value--start {
+    .scale__value--start-horizontal {
       left: 0;
     }
 
-    .scale__value--end {
+    .scale__value--end-horizontal {
       right: -2px;
+    }
+
+    .scale__value--start-vertical {
+      transform: translateX(50%);
+      margin: 0px;
+      top: -1px;
+    }
+
+    .scale__value--end-vertical {
+      transform: translateX(50%);
+      margin: 0px;
+      bottom: -2px;
     }
 
     .slider__scale--horizontal {
@@ -137,11 +149,11 @@
     }
 
     .slider__tooltip--horizontal {
-      margin-top: 30px;
+      margin-top: -35px;
     }
 
     .slider__tooltip--vertical {
-      margin-left: 30px;
+      margin-left: -35px;
     }
 
     .slider__tooltip--show {
