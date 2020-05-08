@@ -20,13 +20,15 @@
       border: 1px solid red;
       border-radius: 5px;
       position: relative;
-
-
       position: relative;
       background: #FFFFFF;
       border: 1px solid rgba(31, 32, 65, 0.25);
 
       border-radius: 3px;
+    }
+
+    .slider__ruler {
+      margin-top: 25px;
     }
 
     .slider__scale {
@@ -35,8 +37,17 @@
     }
 
     .slider__scale--horizontal {
-      width: 1px;
+      width: 0.5px;
       height: 10px;
+    }
+
+    
+    .slider__scale--horizontal-md {
+      height: 5px;
+    }
+
+    .slider__scale--horizontal-sm {
+      height: 2px;
     }
 
     .slider__scale--vertical {
@@ -44,12 +55,25 @@
       height: 1px;
     }
 
+    .slider__scale--vertical-md {
+      width: 5px;
+    }
+
+
+    .slider__scale--vertical-sm {
+      width: 2px;
+    }
+
     .slider__scale--transparent {
       background-color: transparent;
     }
 
+    .slider__scale--sm {
+
+    }
+
     .slider__range--horizontal {
-      width: 300px;
+      width: 500px;
       height: 10px;
     }
 
@@ -125,6 +149,7 @@
       display: flex;
       max-width: 500px;
       flex-wrap: wrap;
+      margin-top: 50px;
     }
 
     .panel__label {

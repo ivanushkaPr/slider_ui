@@ -1,4 +1,5 @@
 import { rejects } from "assert";
+import { Z_ASCII } from "zlib";
 
 export default class View {
   handlers: handlers = {
@@ -554,29 +555,89 @@ export default class View {
 
     const div = document.createElement('div');
     div.classList.add('slider__scale');
-    if (index === 0 || index === array.length - 1) div.classList.add('slider__scale--transparent');
+    if (index === 0 || index === array.length - 1) {
+      
+    } 
+
+   // const value = document.createTextNode(array[index]);
+   // div.appendChild(value);
+    // div.classList.add('slider__scale--transparent');
     const scaleOrientation = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
     div.classList.add(`${scaleOrientation}`);
     return div;
   }
 
-  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
-    const { scale, vertical, breakpoint } = obj;
+  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
+    const {
+      start, end, parent, vertical, index, array,
+    } = obj;
+    const scaleClass = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
+    const scaleClassMd = vertical === false ? 'slider__scale--horizontal-md' : 'slider__scale--vertical-md';
+    const axis = vertical === false ? 'left' : 'top';
+    const step = start + ((end - start) / 2);
+
+    if (index < this.breakpoints.length - 1) {
+      const smallScale = document.createElement('div');
+      smallScale.classList.add('slider__scale');
+      smallScale.classList.add(scaleClassMd);
+      smallScale.classList.add(scaleClass);
+      smallScale.style.position = 'absolute';
+      smallScale.style[axis] = `${step}px`;
+      parent.appendChild(smallScale);
+
+      this.createSmallScales({start, end: step, parent, vertical, index, array });
+      this.createSmallScales({start: step, end, parent, vertical, index, array });
+    }
+  }
+
+  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
+    const {start, end, parent, vertical, index, array} = obj;
+
+    const scaleClass = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
+    const scaleClassMd = vertical === false ? 'slider__scale--horizontal-sm' : 'slider__scale--vertical-sm';
+    const axis = vertical === false ? 'left' : 'top';
+
+    const step = (end - start) / 4;
+    for (let i = 0; i <= 3; i += 1) {
+      if (index < this.breakpoints.length - 1) {
+        const smallScale = document.createElement('div');
+        smallScale.classList.add('slider__scale');
+        smallScale.classList.add(scaleClassMd);
+        smallScale.classList.add(scaleClass);
+        smallScale.style.position = 'absolute';
+        smallScale.style[axis] = `${step * i + start}px`;
+        parent.appendChild(smallScale);
+      }
+    }
+  }
+
+
+
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number, index: number, array}) {
+    const { scale, vertical, breakpoint, index, array } = obj;
 
     scale.style.position = 'absolute';
     const leftOrTop = vertical === false ? 'left' : 'top';
-    scale.style[leftOrTop] = `${breakpoint - 1}px`;
+    let position;
+    if( index === array.length - 1) {
+      position = breakpoint;
+    } else {
+      position = breakpoint;
+    }
+    scale.style[leftOrTop] = `${position}px`;
   }
 
   createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
     const { parentNode, vertical } = obj;
     const breakpoints = [...this.breakpoints];
     const slider = parentNode.querySelector('.slider__range');
-
+    const ruler = document.createElement('div');
+    ruler.classList.add('slider__ruler');
+    
     breakpoints.forEach((breakpoint: number, index, array) => {
 
       const scale: HTMLDivElement = this.createScale({ index, array, vertical });
-      this.setScalePosition({scale, vertical, breakpoint });
+      this.setScalePosition({scale, vertical, breakpoint, index, array });
 
       this.onHandlerRegister({
         bookmark: 'elementClick',
@@ -586,7 +647,13 @@ export default class View {
         enviroment: this,
       });
 
-      slider.appendChild(scale);
+      ruler.appendChild(scale);
+    });
+
+    slider.appendChild(ruler);
+
+    breakpoints.forEach((breakpoint: number, index, array) => {
+      this.createMediumScale({start: array[index], end: array[index + 1], parent: ruler, vertical, index, array});
     });
   }
 
@@ -649,7 +716,7 @@ export default class View {
     let range;
     if (this.controller.getModelProperty('stepsOn')) {
       const scale = (event.target) as HTMLElement;
-      range = scale.parentNode as HTMLElement;
+      range = scale.parentNode.parentNode as HTMLElement;
 
     } else {
       range = (event.currentTarget as HTMLElement);
