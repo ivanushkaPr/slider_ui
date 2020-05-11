@@ -23,12 +23,56 @@ class Slider {
 
   controller;
 
+  api;
+
   constructor(configuration) {
     this.model = new this.ModelConstructor(configuration);
     this.view = new this.ViewConstructor();
     this.controller = new this.ControllerConstructor(this.model, this.view);
+  };
+
+  minVal(value) {
+    
   }
+
+  maxVal(value) {
+
+  }
+
+  stepsOn() {
+
+  }
+
+  units() {
+
+  }
+
+  runners() {
+
+  }
+
+  vertical() {
+
+  }
+
+  scaleOn() {
+
+  }
+
+  panel() {
+
+  }
+
+  tooltips() {
+
+  }
+
+  id() {
+
+  }
+
 }
+
 
 /*
 const slider = new Slider(uConfiguration);
@@ -64,7 +108,7 @@ let sliderApi;
 $(document).ready(function() {
   console.log(uConfiguration)
   const slider = $().slider(uConfiguration);
-  sliderApi = slider;
+  slider.change('vertical', true);
 //  const slider2 = $().slider(secondConfig);
 })
 

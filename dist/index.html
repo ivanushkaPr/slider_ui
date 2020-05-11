@@ -3,24 +3,110 @@
 <body>
   <style>
     body {
-      margin-left: 100px;
-      margin-top: 100px;
-      padding-left: 100px;
-      padding-right: 100px;
-      padding-top: 100px;
-      padding-bottom: 100px;
+      
+    }
+
+    .slider__root {
+      display: flex;
+      align-items: center;
+      flex-direction: column; 
+      border-radius: 10px;
+      margin: 50px;
     }
 
     .slider__range {
+      display: flex;
       background-color: white;
       border: 1px solid red;
       border-radius: 5px;
       position: relative;
+      position: relative;
+      background: #FFFFFF;
+      border: 1px solid rgba(31, 32, 65, 0.25);
+
+      border-radius: 3px;
+    }
+
+    .slider__ruler {
+      
+    }
+
+    .slider__ruler--margin-top {
+      margin-top: 25px;
+    }
+
+    .slider__ruler--margin-left {
+      margin-left: 25px;
+    }
+
+    .slider__scale {
+      background-color: white;
+      background-color: black;
+    }
+
+    .scale__value {
+      position: absolute;
+    }
+    
+    .scale__value--start-horizontal {
+      left: 0;
+    }
+
+    .scale__value--end-horizontal {
+      right: -2px;
+    }
+
+    .scale__value--start-vertical {
+      transform: translateX(50%);
+      margin: 0px;
+      top: -1px;
+    }
+
+    .scale__value--end-vertical {
+      transform: translateX(50%);
+      margin: 0px;
+      bottom: -2px;
+    }
+
+    .slider__scale--horizontal {
+      width: 0.5px;
+      height: 10px;
+    }
+
+    
+    .slider__scale--horizontal-md {
+      height: 5px;
+    }
+
+    .slider__scale--horizontal-sm {
+      height: 2px;
+    }
+
+    .slider__scale--vertical {
+      width: 10px;
+      height: 1px;
+    }
+
+    .slider__scale--vertical-md {
+      width: 5px;
+    }
+
+
+    .slider__scale--vertical-sm {
+      width: 2px;
+    }
+
+    .slider__scale--transparent {
+      background-color: transparent;
+    }
+
+    .slider__scale--sm {
+
     }
 
     .slider__range--horizontal {
+      width: 100%;
       height: 10px;
-      width: 300px;
     }
 
     .slider__range--vertical {
@@ -30,32 +116,55 @@
 
     .slider__runner {
       position: absolute;
+
       width: 10px;
       height: 10px;
-      background-color: blue;
-      border-radius: 1px solid black;
+      background-image: linear-gradient(180deg, #6FCF97 0%, #66D2EA 100%);
+      
+      border-radius: 10px;
+      cursor: pointer;
     }
 
     .slider__tooltip {
+      display: none;
       position: absolute;
       width: 30px;
       height: 30px;
-      background-color: white;
-      border: 2px solid 
-      black;
+      align-items: center;
+      justify-content: center;
+
+
+      background-color: #FFFFFF;
+      border: 1px solid rgba(31, 32, 65, 0.25);
+      box-sizing: border-box;
+      border-radius: 4px;
+
+      font-family: Arial, Helvetica, sans-serif;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 18px;
+      font-weight: bold;
+      color: rgba(31, 32, 65, 0.75);
     }
 
     .slider__tooltip--horizontal {
-      margin-top: 30px;
+      margin-top: -35px;
     }
 
     .slider__tooltip--vertical {
-      margin-left: 30px;
+      margin-left: -35px;
+    }
+
+    .slider__tooltip--show {
+      display: flex;
     }
 
     .slider__progress {
       position: absolute;
-      background-color: red;
+      background: linear-gradient(180deg, #6FCF97 0%, #66D2EA 100%)
+
+
     }
 
     .slider__progress--horizontal {
@@ -66,14 +175,91 @@
       width: 10px;
     }
 
-    .slider__root {
 
-     
+
+    .panel {
+      display: flex;
+      max-width: 500px;
+      flex-wrap: wrap;
+      margin-top: 50px;
     }
+
+    .panel__label {
+      margin-right: 15px;
+      margin-bottom: 5px;
+    }
+
+    .panel__description {
+      font-family: Arial, Helvetica, sans-serif;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 12px;
+      line-height: 15px;
+      text-transform: uppercase;
+      color: #1F2041;
+      margin-bottom: 3px;
+    }
+
+    .panel__input {
+      width: 105px;
+      height: 44px;
+      padding: 10px;
+      text-align: center;
+      background: #FFFFFF;
+      border: 1px solid rgba(31, 32, 65, 0.25);
+      box-sizing: border-box;
+      border-radius: 4px;
+
+      font-family: Arial, Helvetica, sans-serif;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 18px;
+      font-weight: bold;
+      color: rgba(31, 32, 65, 0.75);
+    }
+
+    .panel__input::placeholder {
+      color: rgba(31, 32, 65, 0.25);
+    }
+
+    .panel__input[name="runners"] {
+      margin-right: 15px;
+      margin-bottom: 5px;
+    }
+
+    .panel__input[name="runners"]:last-child {
+      margin-right: 0px;
+    }
+
+    .panel__input[type="checkbox"] {
+      display: none;
+    }
+
+    .panel__fakebox {
+      width: 25px;
+      height: 25px;
+      background-color: #FFFFFF;
+      border: 1px solid rgba(31, 32, 65, 0.25);
+      border-radius: 4px;
+      margin-right: 9px;
+    }
+
+    .panel__input[type="checkbox"]:checked ~ .panel__fakebox {
+      border: 1px solid #BC9CFF;
+      background-image:  url('https://svgshare.com/getbyhash/sha1-hy2oPMJxARkVfIJ2Z8P4u6OaGiY=');
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      background-size: contain;
+    }
+
   </style>
   <!--<div class='slider'> Это слайдер </div> -->
-  <div id='#slider' class='slider__root'> </div>
 
-  <div id='#slider2'> </div>
+    <div id='#slider' class='slider__root'> </div>
+
+    <div id='#slider2' class='slider__root'> </div>
+
+
 <script type="text/javascript" src="bundle.js"></script></body>
 </html>

@@ -10,6 +10,7 @@ export class Model {
     stepsOn: false,
     vertical: false,
     panel: false,
+    tooltips: true,
     id: undefined,
 
   }
@@ -26,7 +27,6 @@ export class Model {
   changeConfState(obj: {property: string; value: string | number | boolean; index?: number})
   :boolean {
     const { property, value, index } = obj;
-    console.log('[this.changeConfState]' , value);
     if (typeof index === 'number') {
       this.configuration[property][index] = value;
     } else {
@@ -79,12 +79,14 @@ export type configuration = {
   currentValue?: number
   steps?: number
   runners?: number[]
-  stepsOn?: boolean
+  stepsOn?: boolean,
+  adjustSteps?: boolean,
   vertical?: boolean
   scaleOn?: boolean,
   units?: string
   id: string | undefined
-  panel?: boolean
+  panel?: boolean,
+  tooltips?: boolean,
 };
 
 export const uConfiguration = {
@@ -92,11 +94,13 @@ export const uConfiguration = {
   maxValue: 100,
   steps: 10,
   units: 'px',
-  runners: [25, 50],
+  runners: [20, 40, 60, 80],
   stepsOn: false,
+  adjustSteps: true,
   vertical: false,
   scaleOn: true,
   panel: true,
+  tooltips: true,
   id: '#slider',
 };
 

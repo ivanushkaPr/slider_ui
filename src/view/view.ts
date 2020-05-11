@@ -1,4 +1,4 @@
-import { rejects } from "assert";
+import { rejects, throws } from "assert";
 import { Z_ASCII } from "zlib";
 
 export default class View {
@@ -27,6 +27,7 @@ export default class View {
   }
 
   setModelProperty(obj: {property: string, value: number, index: number}):void {
+    console.log(obj.value)
     this.controller.setModelProperty(obj);
   }
 
@@ -295,8 +296,7 @@ export default class View {
   // Устанавливает ширину или высоту элемента
   setSize(obj: {element: HTMLElement; property: string; value: string}): void {
     const { element, property, value } = obj;
-    console.log(Math.round(Number(value)));;
-    element.style[property] = `${Math.round(Number(value))}px`;
+    element.style[property] = `${Math.round(parseFloat(value))}px`;
     return undefined;
   }
 
@@ -431,8 +431,15 @@ export default class View {
 
   RenderSliderRunners(obj: {runners, slider, size, vertical}) {
     const { runners, slider, size, vertical } = obj;
-    runners.forEach((runnerPosition: number) => {
-      const position = this.fetchModelProperty('stepsOn') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
+    console.log(this.fetchModelProperty('runners'));
+    runners.forEach((runnerPosition: number, index, array) => {
+      // const position = this.fetchModelProperty('stepsOn') && this.fetchModelProperty('adjustSteps') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
+      const position = runnerPosition;
+      this.setModelProperty({
+        property: 'runners',
+        value: Math.round(position),
+        index,
+      });
 
       const runner = this.createRunner();
       slider.appendChild(runner);
@@ -485,6 +492,11 @@ export default class View {
 
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
+
+
+    document.body.addEventListener('resize', this.onScaleResizeHandler);
+
+
     const ROOT_NODE = document.getElementById(id);
     const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
     if (this.controller.getModelProperty('stepsOn') === false) {
@@ -689,44 +701,51 @@ export default class View {
     return true;
   }
 
-
+  onScaleResizeHandler() {
+    console.log('resize')
+    const id = this.fetchModelProperty('id');
+    const parentNode = document.getElementById(id);
+    parentNode.querySelector('slider__ruler').remove();
+    this.createScales({parentNode, vertical: this.fetchModelProperty('vertical')});
+    return true;
+  }
 
   onElementClickHandler(event: MouseEvent):boolean {
     let range;
-    if (this.controller.getModelProperty('stepsOn')) {
-      const scale = (event.target) as HTMLElement;
-      range = scale.parentNode.parentNode as HTMLElement;
-
-    } else {
-      range = (event.currentTarget as HTMLElement);
-    }
-
-    const runners = range.querySelectorAll('.slider__runner');
-    const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
-    let click = event.pageX - range.offsetLeft - range.clientLeft;
-
-    let prevDiff = 10000;
-    let index;
-    runners.forEach((runner, i) => {
-      const pos = parseInt((runner as HTMLElement).style.left, 10);
-      const diff = Math.abs(click - pos);
-      if (diff < prevDiff) {
-        prevDiff = diff;
-        index = i;
+    if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2, 
+      event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
+      if (this.controller.getModelProperty('stepsOn')) {
+        const scale = (event.currentTarget) as HTMLElement;
+        range = scale.parentNode.parentNode as HTMLElement;
+      } else {
+        range = (event.currentTarget as HTMLElement);
       }
-    });
 
-    const runner = runners[index] as HTMLElement;
-    if (runner.dataset.start === 'false') {
-      click -= runnerWidth;
+      const runners = range.querySelectorAll('.slider__runner');
+      const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
+      let click = event.pageX - range.offsetLeft - range.clientLeft;
+
+      let prevDiff = 10000;
+      let index;
+      runners.forEach((runner, i) => {
+        const pos = parseInt((runner as HTMLElement).style.left, 10);
+        const diff = Math.abs(click - pos);
+        if (diff < prevDiff) {
+          prevDiff = diff;
+          index = i;
+        }
+      });
+
+      const runner = runners[index] as HTMLElement;
+      if (runner.dataset.start === 'false') {
+        click -= runnerWidth;
+      }
+      runner.style.left = `${click}px`;
+      this.draggable = runner;
+      this.onMoveProgress({parent: range, runner, collision: false});
+      return true;
     }
-    runner.style.left = `${click}px`;
-    this.draggable = runner;
-    this.onMoveProgress({parent: range, runner, collision: false});
-
-
-
-    return true;
+    return false;
   }
 
 
@@ -791,16 +810,16 @@ export default class View {
     const { start, startAndEnd } = this.draggable.dataset;
     const siblingProgressNumber = element.dataset.pair;
     const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
-    if(collision) {
+    if (collision) {
       progress.style.display = 'none';
     }
-    if(!collision) {
+    if (!collision) {
       progress.style.display = 'block';
     }
 
     if (!this.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-        const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left ;
+        const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left;
         progress.style.width = `${width}px`;
       } else if (start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
@@ -955,7 +974,9 @@ export default class View {
   moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}) {
     const { parent, runner, position, axis, vertical } = obj;
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
-    tooltipSibling.classList.add('slider__tooltip--show');
+    if (this.fetchModelProperty('tooltips') === true) {
+      tooltipSibling.classList.add('slider__tooltip--show');
+    }
     tooltipSibling.style[axis] = `${position}px`;
     tooltipSibling.innerHTML = String(this.positionToValue({
       parent,
@@ -977,7 +998,6 @@ export default class View {
       / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
       / 100);
     }
-    console.log('[view calculateRunnerPosition]' ,absolutePosition);
     return absolutePosition;
   }
 
@@ -1062,8 +1082,6 @@ export default class View {
       parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
     });
 
-    
-
     this.setModelProperty({
       property: 'runners',
       value: this.calculateRunnerPosition({
@@ -1078,6 +1096,13 @@ export default class View {
       position: RunnerPositionValidation,
       index: this.draggable.dataset.number,
     });
+
+  }
+
+  onTooltipHide = (runner) => {
+    const parent = runner.offsetParent;
+    const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
+    tooltipSibling.classList.remove('slider__tooltip--show');
   }
 
   runnerStepHandler(point) {
@@ -1112,15 +1137,14 @@ export default class View {
   }
 
   onRunnerMouseUpHandler() {
+    if (this.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
+
     const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
     this.onHandlerDelete(mouseMoveBookmark);
-
     const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
     this.onHandlerDelete(mouseUpBookmark);
-
     const { bookmark: dragStartBookmark } = this.handlers.runnerDragStart;
     this.onHandlerDelete(dragStartBookmark);
-
     return true;
   }
 
@@ -1146,7 +1170,7 @@ type rules = {
   [property: string]: string | number
 }
 
-type runnerEvents = 'mousedown' | 'mousemove' | 'mouseup' | 'click' | 'dragstart';
+type runnerEvents = 'mousedown' | 'mousemove' | 'mouseup' | 'click' | 'dragstart' | 'resize';
 type handlerData = {
   element: HTMLElement;
   eventName: runnerEvents;
