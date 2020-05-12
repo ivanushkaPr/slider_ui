@@ -36,6 +36,23 @@ class Render {
     return size;
   }
 
+  getRangeSize(sliderProperties: {range, vertical:boolean }) {
+    const { range, vertical } = sliderProperties;
+
+    let elementSize;
+    if (!vertical) {
+      const borderWidth = range.clientLeft;
+      const rangeWidth = range.getBoundingClientRect().width;
+      elementSize = Math.ceil(rangeWidth - borderWidth);
+    } else {
+      const borderWidth = range.clientTop * 2;
+      const rangeHeight = range.getBoundingClientRect().height;
+      elementSize = Math.ceil(rangeHeight - borderWidth);
+    }
+
+    return elementSize;
+  }
+
 
 }
 
@@ -77,27 +94,9 @@ export default class View {
     this.controller.setModelProperty(obj);
   }
 
-
-  getRangeSize(sliderProperties: {range, vertical:boolean }) {
-    const { range, vertical } = sliderProperties;
-
-    let elementSize;
-    if (!vertical) {
-      const borderWidth = range.clientLeft;
-      const rangeWidth = range.getBoundingClientRect().width;
-      elementSize = Math.ceil(rangeWidth - borderWidth);
-    } else {
-      const borderWidth = range.clientTop * 2;
-      const rangeHeight = range.getBoundingClientRect().height;
-      elementSize = Math.ceil(rangeHeight - borderWidth);
-    }
-
-    return elementSize;
-  }
-
   calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
     const { range, vertical } = sliderProperties;
-    const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
+    const ELEMENT_SIZE = this.render.getRangeSize({ range, vertical });
     const steps = this.fetchModelProperty('steps');
     const sizeOfStep = ELEMENT_SIZE / steps;
     const breakpoints: number[] = [];
