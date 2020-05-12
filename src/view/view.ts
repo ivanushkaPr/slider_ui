@@ -89,7 +89,7 @@ class Render {
         parent: slider,
       });
 
-      const tooltip = this.view.createTooltip(position);
+      const tooltip = this.createTooltip(position);
       this.setElementPosition({
         element: tooltip,
         position,
@@ -107,6 +107,21 @@ class Render {
       tooltip.innerHTML = String(tooltipPosition);
       slider.appendChild(tooltip);
     });
+  }
+
+  createTooltip(position): HTMLElement {
+    const TOOLTIP_ELEMENT = this.view.createElement('div', 'slider__tooltip');
+    const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
+    if (!SLIDER_IS_VERTICAL) {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
+    } else {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
+    }
+    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
+      e.preventDefault();
+    });
+    TOOLTIP_ELEMENT.innerHTML = String(position);
+    return TOOLTIP_ELEMENT;
   }
 
   createRunner(): HTMLElement {
@@ -210,21 +225,6 @@ export default class View {
       RANGE_ELEMENT.classList.add('slider__range--horizontal');
     }
     return RANGE_ELEMENT;
-  }
-
-  createTooltip(position): HTMLElement {
-    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
-    const SLIDER_IS_VERTICAL = this.fetchModelProperty('vertical');
-    if (!SLIDER_IS_VERTICAL) {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
-    } else {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
-    }
-    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      e.preventDefault();
-    });
-    TOOLTIP_ELEMENT.innerHTML = String(position);
-    return TOOLTIP_ELEMENT;
   }
 
   createProgress(): HTMLElement {
