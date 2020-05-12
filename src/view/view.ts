@@ -361,7 +361,7 @@ class Render {
     return progressEndPosition - progressStartPosition;
   }
 
-  //scales
+  // Scales
 
   createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
     const { parentNode, vertical } = obj;
@@ -450,7 +450,42 @@ class Render {
     }
   }
 
+  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+    const { runners, vertical, id } = obj;
+    document.body.addEventListener('resize', this.view.onScaleResizeHandler);
 
+
+    const ROOT_NODE = document.getElementById(id);
+    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    if (this.view.controller.getModelProperty('stepsOn') === false) {
+      this.view.onHandlerRegister({
+        bookmark: 'elementClick',
+        element: NEW_SLIDER as HTMLElement,
+        eventName: 'click',
+        cb: this.view.onElementClickHandler,
+        enviroment: this,
+      });
+    }
+
+    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
+
+    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+    this.RenderSliderRunners({
+      runners, slider: NEW_SLIDER, size, vertical,
+    });
+
+    const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
+    this.view.registerEventHandlers(RenderedRunners);
+
+    this.renderProgress({
+      runners: ROOT_NODE.getElementsByClassName('slider__runner'),
+      parent: NEW_SLIDER,
+      vertical: this.view.fetchModelProperty('vertical'),
+    });
+
+    if (this.view.fetchModelProperty('scaleOn')) this.createScales({ parentNode: ROOT_NODE, vertical });
+    return undefined;
+  }
 }
 
 
@@ -629,45 +664,6 @@ export default class View {
         enviroment: this,
       });
     });
-  }
-
-  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-    const { runners, vertical, id } = obj;
-
-
-    document.body.addEventListener('resize', this.onScaleResizeHandler);
-
-
-    const ROOT_NODE = document.getElementById(id);
-    const NEW_SLIDER = this.render.renderNewSlider({root: ROOT_NODE, id });
-    if (this.controller.getModelProperty('stepsOn') === false) {
-      this.onHandlerRegister({
-        bookmark: 'elementClick',
-        element: NEW_SLIDER as HTMLElement,
-        eventName: 'click',
-        cb: this.onElementClickHandler,
-        enviroment: this,
-      });
-    }
-
-    this.render.calculateBreakpoints({ range: NEW_SLIDER, vertical });
-
-    const size = this.render.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
-    this.render.RenderSliderRunners({
-      runners, slider: NEW_SLIDER, size, vertical,
-    });
-
-    const RenderedRunners = this.render.setSliderElementsDataAttributes(ROOT_NODE);
-    this.registerEventHandlers(RenderedRunners);
-
-    this.render.renderProgress({
-      runners: ROOT_NODE.getElementsByClassName('slider__runner'),
-      parent: NEW_SLIDER,
-      vertical: this.fetchModelProperty('vertical'),
-    });
-
-    if (this.fetchModelProperty('scaleOn')) this.render.createScales({ parentNode: ROOT_NODE, vertical });
-    return undefined;
   }
 
   createHorizontalScales(parentNode):void {
