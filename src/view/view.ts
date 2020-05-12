@@ -30,6 +30,13 @@ class Render {
     }
   }
 
+  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
+    const { range, rect, vertical } = obj;
+    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
+    return size;
+  }
+
+
 }
 
 
@@ -433,12 +440,6 @@ export default class View {
     }
   }
 
-  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
-    const { range, rect, vertical } = obj;
-    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
-    return size;
-  }
-
   getTemporaryRunnerRectangle(parent):DOMRect {
     const temporaryRunner = this.createRunner();
     parent.appendChild(temporaryRunner);
@@ -531,7 +532,7 @@ export default class View {
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
-    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+    const size = this.render.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
     this.RenderSliderRunners({
       runners, slider: NEW_SLIDER, size, vertical,
     });
