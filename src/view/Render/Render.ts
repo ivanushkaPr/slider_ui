@@ -1,10 +1,12 @@
-import View from '../view.ts'; 
-import { threadId } from 'worker_threads';
+import View from '../view.ts';
 
 export default class Render {
   view: View;
+
   root;
+
   range;
+
   constructor(view) {
     this.view = view;
   }
@@ -16,7 +18,7 @@ export default class Render {
   }
 
   renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
-    const { root, id} = obj;
+    const { root, id } = obj;
     this.removeSlider(root);
     const NEW_SLIDER = this.createRange();
     this.renderElement(NEW_SLIDER, document.getElementById(id));
@@ -36,7 +38,7 @@ export default class Render {
 
 
   removeSlider(root: HTMLElement):void {
-    const OLD_SLIDER = root.querySelector('.slider__range')
+    const OLD_SLIDER = root.querySelector('.slider__range');
     if (OLD_SLIDER) {
       OLD_SLIDER.remove();
     }
@@ -44,7 +46,8 @@ export default class Render {
 
   getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
     const { range, rect, vertical } = obj;
-    const size = vertical === false ? range.offsetWidth - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
+    const size = vertical === false ? range.offsetWidth
+    - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
     return size;
   }
 
@@ -82,9 +85,14 @@ export default class Render {
   }
 
   RenderSliderRunners(obj: {runners, slider, size, vertical}) {
-    const { runners, slider, size, vertical } = obj;
-    runners.forEach((runnerPosition: number, index, array) => {
-      // const position = this.fetchModelProperty('stepsOn') && this.fetchModelProperty('adjustSteps') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
+    const {
+      runners, slider, vertical,
+    } = obj;
+    runners.forEach((runnerPosition: number, index) => {
+      // const position = this.fetchModelProperty('stepsOn')
+      // && this.fetchModelProperty('adjustSteps') ?
+      // this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }
+      // : runnerPosition;
       const position = runnerPosition;
       this.view.setModelProperty({
         property: 'runners',
@@ -214,8 +222,6 @@ export default class Render {
     });
   }
 
-  //progress
-
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     if (!vertical) {
@@ -251,13 +257,20 @@ export default class Render {
     }
   }
 
-  renderSingleProgressBar(obj: {vertical, parent: HTMLElement, runners: HTMLCollection, pair: number}) {
+  renderSingleProgressBar(obj: {
+    vertical,
+    parent: HTMLElement,
+    runners: HTMLCollection,
+    pair: number
+  }) {
     const {
       vertical, parent, runners, pair,
     } = obj;
     const progress = this.createProgress();
     if (!vertical) {
-      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
+      const {
+        position, size,
+      } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
       this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
       this.setPosition({
         element: progress, position, axis: 'left',
@@ -265,7 +278,10 @@ export default class Render {
       progress.dataset.pair = pair.toString();
       parent.appendChild(progress);
     } else {
-      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
+      const {
+        position,
+        size,
+      } = this.getProgressSize({ vertical, parent, firstRunner: runners[0] });
       this.setSize({ element: progress, property: 'height', value: `${size - parent.clientTop}` });
       this.setPosition({
         element: progress, position, axis: 'top',
@@ -275,11 +291,33 @@ export default class Render {
     }
   }
 
-  renderMultipleProgressBars(obj: {vertical, parent: HTMLElement, runners: HTMLCollection, index:number, pair: number,}) {
-    const {vertical, parent, runners, index, pair } = obj;
+  renderMultipleProgressBars(obj: {
+    vertical,
+    parent: HTMLElement,
+    runners: HTMLCollection,
+    index:number,
+    pair: number,
+  }) {
+    const {
+      vertical,
+      parent,
+      runners,
+      index,
+      pair,
+    } = obj;
+
     const progress = this.createProgress();
+
     if (!vertical) {
-      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
+      const {
+        position,
+        size,
+      } = this.getProgressSize({
+        vertical,
+        parent,
+        firstRunner: runners[index],
+        secondRunner: runners[index + 1],
+      });
       this.setSize({ element: progress, property: 'width', value: `${size - parent.clientLeft}` });
       this.setPosition({
         element: progress, position, axis: 'left',
@@ -287,7 +325,13 @@ export default class Render {
       progress.dataset.pair = pair.toString();
       parent.appendChild(progress);
     } else {
-      const { position, size } = this.getProgressSize({ vertical, parent, firstRunner: runners[index], secondRunner: runners[index + 1] });
+      const { position, size } = this.getProgressSize({
+        vertical,
+        parent,
+        firstRunner: runners[index],
+        secondRunner: runners[index + 1],
+      });
+
       this.setSize({ element: progress, property: 'height', value: `${size - parent.clientTop}` });
       this.setPosition({
         element: progress, position, axis: 'top',
@@ -325,8 +369,12 @@ export default class Render {
     return PROGRESS_ELEMENT;
   }
 
-  getProgressSize(obj: { vertical: string, parent: HTMLElement, firstRunner: Element, secondRunner?: Element }) {
-    const { vertical, parent, firstRunner, secondRunner } = obj;
+  getProgressSize(obj: { vertical: string, parent: HTMLElement,
+     firstRunner: Element, secondRunner?: Element
+    }) {
+    const {
+      vertical, parent, firstRunner, secondRunner,
+    } = obj;
     type styles = {
       position: number;
       size: number,
@@ -352,7 +400,8 @@ export default class Render {
         progressGeometry.position = firstRunner.getBoundingClientRect().right
               - parentOffsetLeft + window.pageXOffset;
         const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left + parent.clientLeft * 2;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left
+         + parent.clientLeft * 2;
         progressGeometry.size = this.calculateProgressSize({
           progressStartPosition: PROGRESS_START_POSITION,
           progressEndPosition: PROGRESS_END_POSITION,
@@ -360,19 +409,21 @@ export default class Render {
       }
     } else if (vertical) {
       if (secondRunner === undefined) {
-        progressGeometry.position = parent.getBoundingClientRect().height - (parent.getBoundingClientRect().height - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
+        progressGeometry.position = parent.getBoundingClientRect().height
+        - (parent.getBoundingClientRect().height
+        - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
         const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
         const PROGRESS_END_POSITION = parent.getBoundingClientRect().bottom;
         progressGeometry.size = this.calculateProgressSize({
           progressStartPosition: PROGRESS_START_POSITION,
           progressEndPosition: PROGRESS_END_POSITION,
         });
-
       } else {
         progressGeometry.position = firstRunner.getBoundingClientRect().bottom - parent.offsetTop
         - parent.clientTop + window.pageYOffset;
         const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top + parent.clientTop * 2;
+        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top
+         + parent.clientTop * 2;
         progressGeometry.size = this.calculateProgressSize({
           progressStartPosition: PROGRESS_START_POSITION,
           progressEndPosition: PROGRESS_END_POSITION,
@@ -402,9 +453,8 @@ export default class Render {
     slider.appendChild(ruler);
     const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
     breakpoints.forEach((breakpoint: number, index, array) => {
-
       const scale: HTMLDivElement = this.createScale({ mods });
-      this.setScalePosition({scale, vertical, breakpoint });
+      this.setScalePosition({ scale, vertical, breakpoint });
       if (index === 0) {
         const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
         const textNode = this.createElement('p', classes);
@@ -419,13 +469,15 @@ export default class Render {
         ruler.appendChild(textNode);
       }
       this.view.onHandlerRegister({
-        bookmark: 'elementClick',
+        bookmark: 'elementMouseDown',
         element: scale as HTMLElement,
-        eventName: 'click',
+        eventName: 'mousedown',
         cb: this.view.handler.onElementClickHandler,
         enviroment: this,
       });
-      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
+      this.createMediumScale({
+        start: array[index], end: array[index + 1], parent: ruler, vertical, index, array,
+      });
       ruler.appendChild(scale);
     });
   }
@@ -455,15 +507,21 @@ export default class Render {
       : 'slider__scale--vertical slider__scale--vertical-md';
     if (index < this.view.breakpoints.length - 1) {
       const smallScale = this.createScale({ mods });
-      this.setScalePosition({scale: smallScale, vertical, breakpoint: step});
+      this.setScalePosition({ scale: smallScale, vertical, breakpoint: step });
       parent.appendChild(smallScale);
-      this.createSmallScales({start, end: step, parent, vertical, index, array });
-      this.createSmallScales({start: step, end, parent, vertical, index, array });
+      this.createSmallScales({
+        start, end: step, parent, vertical, index, array,
+      });
+      this.createSmallScales({
+        start: step, end, parent, vertical, index, array,
+      });
     }
   }
 
   createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
-    const {start, end, parent, vertical, index} = obj;
+    const {
+      start, end, parent, vertical, index,
+    } = obj;
     const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
       : 'slider__scale--vertical slider__scale--vertical-sm';
 
@@ -471,7 +529,7 @@ export default class Render {
     for (let i = 0; i <= 3; i += 1) {
       if (index < this.view.breakpoints.length - 1) {
         const smallScale = this.createScale({ mods });
-        this.setScalePosition({scale: smallScale, vertical, breakpoint: step * i + start});
+        this.setScalePosition({ scale: smallScale, vertical, breakpoint: step * i + start });
         parent.appendChild(smallScale);
       }
     }
@@ -485,13 +543,13 @@ export default class Render {
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
 
-    
-    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+
+    const NEW_SLIDER = this.renderNewSlider({ root: ROOT_NODE, id });
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
-        bookmark: 'elementClick',
+        bookmark: 'elementMouseDown',
         element: NEW_SLIDER as HTMLElement,
-        eventName: 'click',
+        eventName: 'mousedown',
         cb: this.view.handler.onElementClickHandler,
         enviroment: this,
       });
@@ -501,7 +559,9 @@ export default class Render {
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
-    const size = this.getSliderSize({ range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
+    const size = this.getSliderSize({
+      range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical,
+    });
     this.RenderSliderRunners({
       runners, slider: NEW_SLIDER, size, vertical,
     });

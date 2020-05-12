@@ -2,6 +2,7 @@ import View from '../view.ts';
 
 export default class Handler {
   view: View;
+
   draggable;
 
   constructor(view: View) {
@@ -11,7 +12,7 @@ export default class Handler {
   onElementClickHandler = (event: MouseEvent):boolean => {
     let range;
     if (!this.draggable) {
-      
+      this.draggable = this.view.render.range.querySelector('.slider__runner');
     }
     if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2,
       event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
@@ -21,7 +22,7 @@ export default class Handler {
       } else {
         range = (event.currentTarget as HTMLElement);
       }
-/*
+
       const runners = range.querySelectorAll('.slider__runner');
       const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
       let click = event.pageX - range.offsetLeft - range.clientLeft;
@@ -44,13 +45,28 @@ export default class Handler {
       runner.style.left = `${click}px`;
       this.draggable = runner;
       this.onMoveProgress({ parent: range, runner, collision: false });
+
+      this.view.setModelProperty({
+        property: 'runners',
+        value: this.calculateRunnerPosition({
+          parent: this.view.render.range,
+          position: click,
+          vertical: this.view.fetchModelProperty('vertical'),
+        }),
+        index: this.draggable.dataset.number - 1,
+      });
+
+      this.view.updateRunnerPosition({
+        position: click,
+        index: this.draggable.dataset.number,
+      });
+
       return true;
-      */
     }
-    
+
     return false;
   }
-  
+
   registerEventHandlers(runners) {
     runners.forEach((runner) => {
       this.view.onHandlerRegister({
@@ -103,7 +119,7 @@ export default class Handler {
     return true;
   }
 
-  
+
   onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
     const { pageX, pageY } = event;
 
@@ -123,8 +139,6 @@ export default class Handler {
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
-    console.log(point);
-
     const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
       vertical, parent, point, element,
     });
@@ -138,6 +152,7 @@ export default class Handler {
       nextPosition: runnerPosition,
       vertical,
     });
+
     const RunnerPositionValidation = this.onRestrictDrag({
       firstPointPosition: firstPoint,
       secondPointPosition: secondPoint,
@@ -160,11 +175,11 @@ export default class Handler {
 
     this.view.setModelProperty({
       property: 'runners',
-      value: this.calculateRunnerPosition({
+      value: Math.round(this.calculateRunnerPosition({
         parent,
         position: RunnerPositionValidation,
         vertical,
-      }),
+      })),
       index: this.draggable.dataset.number - 1,
     });
 
@@ -236,11 +251,16 @@ export default class Handler {
     return closestPoint;
   }
 
-  onRunnersCollision(obj: {targetElement: HTMLElement, pair: string, nextPosition: number, vertical: boolean}) {
+  onRunnersCollision(obj: {
+    targetElement: HTMLElement,
+    pair: string,
+    nextPosition: number,
+    vertical: boolean
+  }) {
     const {
       targetElement, pair, nextPosition, vertical,
     } = obj;
-    const siblings = this.getSiblingRunners({runner: targetElement, pair});
+    const siblings = this.getSiblingRunners({ runner: targetElement, pair });
 
     const answer = {
       coords: 0,
@@ -281,8 +301,7 @@ export default class Handler {
           answer.collision = false;
         }
       }
-    }
-    else {
+    } else {
       const dataStart = targetElement.dataset.start;
 
       if (!dataStart) {
@@ -292,7 +311,7 @@ export default class Handler {
       if (dataStart === 'true') {
         const brother = siblings[1] as HTMLElement;
         const brotherTopSide = parseInt(brother.style.top, 10);
-        if (brotherTopSide <= nextPosition) { 
+        if (brotherTopSide <= nextPosition) {
           targetElement.style.zIndex = '9999';
           answer.coords = brotherTopSide;
           answer.collision = true;
@@ -321,12 +340,12 @@ export default class Handler {
   }
 
   getSiblingRunners(obj: {runner: HTMLElement, pair: string}): NodeList {
-    const {runner, pair} = obj;
+    const { runner, pair } = obj;
     const selector = `.slider__runner[data-pair="${pair}"]`;
     const siblings = runner.parentNode.querySelectorAll(selector);
     return siblings;
   }
-  
+
   onRestrictDrag(obj: {
     firstPointPosition: number;
     secondPointPosition: number;
@@ -357,9 +376,8 @@ export default class Handler {
     }
   }
 
-  
   onMoveProgress = (obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean}) => {
-    const {parent, runner: element, collision} = obj;
+    const { parent, runner: element, collision } = obj;
     const { start, startAndEnd } = this.draggable.dataset;
     const siblingProgressNumber = element.dataset.pair;
     const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
@@ -381,24 +399,25 @@ export default class Handler {
         const progressEnd = siblings[1].getBoundingClientRect().left;
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
-        progress.style.width = `${width + parent.clientLeft}px`;
+        progress.style.width = `${width}px`;
         progress.style.left = `${progressLeft + window.pageXOffset}px`;
-
       } else {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[0].getBoundingClientRect().right;
         const progressEnd = siblings[1].getBoundingClientRect().left;
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
-        progress.style.width = `${width + parent.clientLeft}px`;
+        progress.style.width = `${width}px`;
       }
-    } else if(this.view.fetchModelProperty('vertical')) {
+    } else if (this.view.fetchModelProperty('vertical')) {
       if (startAndEnd) {
-        const top = element.getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset;
-        const height = parent.offsetHeight + parent.offsetTop - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
+        const top = element.getBoundingClientRect().bottom
+        - parent.offsetTop - parent.clientTop + window.pageYOffset;
+        const height = parent.offsetHeight + parent.offsetTop
+        - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset;
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
-      } else if (start === 'true') { 
+      } else if (start === 'true') {
         const siblingRunnerNumber = element.dataset.pair;
         const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
         const progressStart = siblings[1].getBoundingClientRect().top;
@@ -420,7 +439,9 @@ export default class Handler {
   }
 
   moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}) {
-    const { parent, runner, position, axis, vertical } = obj;
+    const {
+      parent, runner, position, axis, vertical,
+    } = obj;
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
     if (this.view.fetchModelProperty('tooltips') === true) {
       tooltipSibling.classList.add('slider__tooltip--show');
@@ -434,14 +455,13 @@ export default class Handler {
   }
 
   calculateRunnerPosition(obj: {parent, position, vertical }) {
-    const {parent, position, vertical } = obj;
+    const { parent, position, vertical } = obj;
     let absolutePosition;
     if (!vertical) {
       absolutePosition = position
       / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth)
       / 100);
     } else {
-
       absolutePosition = position
       / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
       / 100);
@@ -467,9 +487,7 @@ export default class Handler {
     tooltipSibling.classList.remove('slider__tooltip--show');
   }
 
-  onDragStartHandler = () => {
-    return false;
-  }
+  onDragStartHandler = () => false
 
   onScaleResizeHandler() {
     const id = this.view.fetchModelProperty('id');
@@ -478,5 +496,4 @@ export default class Handler {
     this.view.render.createScales({ parentNode, vertical: this.view.fetchModelProperty('vertical') });
     return true;
   }
-
 }

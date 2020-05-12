@@ -5,14 +5,12 @@ export class Model {
     minValue: 0,
     maxValue: 100,
     steps: 0,
-    units: '',
     runners: [0],
     stepsOn: false,
     vertical: false,
     panel: false,
     tooltips: true,
     id: undefined,
-
   }
 
   controller;
@@ -83,7 +81,6 @@ export type configuration = {
   adjustSteps?: boolean,
   vertical?: boolean
   scaleOn?: boolean,
-  units?: string
   id: string | undefined
   panel?: boolean,
   tooltips?: boolean,
@@ -93,7 +90,7 @@ export const uConfiguration = {
   minValue: 0,
   maxValue: 100,
   steps: 10,
-  units: 'px',
+  id: '#slider',
   runners: [20, 40, 60, 80],
   stepsOn: false,
   adjustSteps: true,
@@ -101,7 +98,6 @@ export const uConfiguration = {
   scaleOn: true,
   panel: true,
   tooltips: true,
-  id: '#slider',
 };
 
 export const incompleteConfiguration = {

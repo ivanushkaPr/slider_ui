@@ -1,9 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import { rejects, throws } from "assert";
-import { Z_ASCII } from "zlib";
 import Handler from './Handler/Handler.ts';
 import Render from './Render/Render.ts';
-import { runInNewContext } from "vm";
 
 export default class View {
   handlers: handlers = {
@@ -89,7 +86,8 @@ export default class View {
 
     const LEFT = parseInt(runner.style.left, 10);
     const TOP = parseInt(runner.style.top, 10);
-    const POSITION = vertical === false ? LEFT :this.positionFromEnd({size: HEIGHT, position: TOP});
+    const POSITION = vertical === false
+      ? LEFT : this.positionFromEnd({ size: HEIGHT, position: TOP });
     const SUM = Math.abs(this.fetchModelProperty('minValue')) + Math.abs(this.fetchModelProperty('maxValue'));
     let VALUE = Math.ceil((SUM / RANGE_BORDER_BOX) * POSITION);
 
