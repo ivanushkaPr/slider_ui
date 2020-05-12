@@ -1,19 +1,37 @@
 /* eslint-disable max-classes-per-file */
+import { rejects, throws } from "assert";
+import { Z_ASCII } from "zlib";
 
 class Render {
-  View: View;
+  view: View;
 
-  constructor(View) {
-    this.View = View;
-  } 
+  constructor(view) {
+    this.view = view;
+  }
 
-  
+
+  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
+    parentElement.prepend(element);
+    return undefined;
+  }
+
+  renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
+    const { root, id} = obj;
+    this.view.removeSlider(root);
+    const NEW_SLIDER = this.view.createRange();
+    this.renderElement(NEW_SLIDER, document.getElementById(id));
+    return NEW_SLIDER;
+  }
+
 }
+
 
 export default class View {
   handlers: handlers = {
 
   }
+
+  render: Render;
 
   controller;
 
@@ -26,6 +44,11 @@ export default class View {
   shiftX;
 
   shiftY;
+
+  constructor() {
+    const view = this;
+    this.render = new Render(view);
+  }
 
   fetchModelProperty(property: string) {
     const propertyValue = this.controller.getModelProperty(property);
@@ -78,11 +101,6 @@ export default class View {
     const element = document.createElement(nodeName);
     element.className = className;
     return element as HTMLElement;
-  }
-
-  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
-    parentElement.prepend(element);
-    return undefined;
   }
 
   setElementCss(element: HTMLElement, cssRules: rules): HTMLElement {
@@ -430,13 +448,6 @@ export default class View {
   }
 
 
-  renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
-    const { root, id} = obj;
-    this.removeSlider(root);
-    const NEW_SLIDER = this.createRange();
-    this.renderElement(NEW_SLIDER, document.getElementById(id));
-    return NEW_SLIDER;
-  }
 
   RenderSliderRunners(obj: {runners, slider, size, vertical}) {
     const { runners, slider, size, vertical } = obj;
@@ -507,7 +518,7 @@ export default class View {
 
 
     const ROOT_NODE = document.getElementById(id);
-    const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
+    const NEW_SLIDER = this.render.renderNewSlider({root: ROOT_NODE, id });
     if (this.controller.getModelProperty('stepsOn') === false) {
       this.onHandlerRegister({
         bookmark: 'elementClick',
