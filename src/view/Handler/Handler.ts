@@ -64,7 +64,7 @@ export default class Handler {
   }
 
   onRunnerMouseDownHandler = (event: MouseEvent): boolean => {
-    event.preventDefault();
+    // event.preventDefault();
     const targetElement = event.target as HTMLElement;
 
     targetElement.style.position = 'absolute';
@@ -123,7 +123,7 @@ export default class Handler {
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
-
+    console.log(point);
 
     const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
       vertical, parent, point, element,

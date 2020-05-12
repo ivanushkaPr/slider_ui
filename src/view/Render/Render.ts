@@ -1,8 +1,10 @@
 import View from '../view.ts'; 
+import { threadId } from 'worker_threads';
 
 export default class Render {
   view: View;
-
+  root;
+  range;
   constructor(view) {
     this.view = view;
   }
@@ -481,6 +483,9 @@ export default class Render {
 
 
     const ROOT_NODE = document.getElementById(id);
+    this.root = ROOT_NODE;
+
+    
     const NEW_SLIDER = this.renderNewSlider({root: ROOT_NODE, id });
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
@@ -491,6 +496,8 @@ export default class Render {
         enviroment: this,
       });
     }
+
+    this.range = ROOT_NODE.querySelector('.slider__range');
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 

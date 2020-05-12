@@ -26,7 +26,7 @@ export default class PanelChangeHandler {
       } else {
         throw new Error('No such input was expected');
       }
-      this.controller.update();
+    //this.controller.update();  this.controller.update();
     }
   }
 
@@ -36,8 +36,8 @@ export default class PanelChangeHandler {
     const INDEX = +(INPUT.id.slice(-1) - 1);
     const VALUE_IS_VALID = this.validateRunnersProperty({ index: INDEX, value: VALUE });
     if (VALUE_IS_VALID) {
-
       this.controller.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
+      this.controller.update();
     }
   }
 
@@ -59,7 +59,14 @@ export default class PanelChangeHandler {
     const { input } = obj;
     const { checked } = (input as HTMLInputElement);
     const INPUT_NAME = input.getAttribute('name');
-    this.controller.setModelProperty({ property: INPUT_NAME, value: checked });
+
+    if (input.id === 'stepsOn') {
+      this.controller.setModelProperty({ property: INPUT_NAME, value: checked });
+    } else {
+      this.controller.setModelProperty({ property: INPUT_NAME, value: checked });
+      this.controller.update();
+    }
+
   }
 
   changeNumberProperty(obj: {input}) {
@@ -80,6 +87,7 @@ export default class PanelChangeHandler {
     } else {
       throw new Error('Unexpected input');
     }
+    this.controller.update();
   }
 
   changeUnitsProperty(obj: {input}) {
@@ -87,6 +95,7 @@ export default class PanelChangeHandler {
     const INPUT_NAME = input.getAttribute('name');
     const INPUT_VALUE = (input as HTMLInputElement).value;
     this.controller.setModelProperty({ property: INPUT_NAME, value: String(INPUT_VALUE) });
+    this.controller.update();
   }
 
   changeIDProperty(obj: {input}) {
@@ -101,6 +110,7 @@ export default class PanelChangeHandler {
       PARENT.removeChild(RANGE);
       PARENT.removeChild(PANEL);
       this.controller.setModelProperty({ property: INPUT_NAME, value: INPUT_VALUE });
+      this.controller.update()
     }
   }
 
@@ -113,5 +123,6 @@ export default class PanelChangeHandler {
     PANEL.style.display = 'none';
     const INPUT_NAME = input.getAttribute('name');
     this.controller.setModelProperty({ property: INPUT_NAME, value: checked });
+    this.controller.update();
   }
 }

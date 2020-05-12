@@ -48,7 +48,6 @@ export default class Controller {
     if (this.getModelProperty('panel')) {
       this.render.configPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
     }
-
     this.view.render.createSlider({
       runners: this.model.configuration.runners,
       vertical: this.model.configuration.vertical,

@@ -3,6 +3,7 @@ import { rejects, throws } from "assert";
 import { Z_ASCII } from "zlib";
 import Handler from './Handler/Handler.ts';
 import Render from './Render/Render.ts';
+import { runInNewContext } from "vm";
 
 export default class View {
   handlers: handlers = {
