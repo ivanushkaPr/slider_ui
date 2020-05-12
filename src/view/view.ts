@@ -69,6 +69,46 @@ class Render {
     this.view.breakpoints = breakpoints;
   }
 
+  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
+    const { runners, slider, size, vertical } = obj;
+    runners.forEach((runnerPosition: number, index, array) => {
+      // const position = this.fetchModelProperty('stepsOn') && this.fetchModelProperty('adjustSteps') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
+      const position = runnerPosition;
+      this.view.setModelProperty({
+        property: 'runners',
+        value: Math.round(position),
+        index,
+      });
+
+      const runner = this.view.createRunner();
+      slider.appendChild(runner);
+      this.view.setElementPosition({
+        element: runner,
+        position,
+        axis: vertical === false ? 'left' : 'top',
+        parent: slider,
+      });
+
+      const tooltip = this.view.createTooltip(position);
+      this.view.setElementPosition({
+        element: tooltip,
+        position,
+        axis: vertical === false ? 'left' : 'top',
+        parent: slider,
+        negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
+      });
+
+      const tooltipPosition = this.view.positionToValue({
+        parent: slider,
+        runner,
+        vertical,
+      });
+
+      tooltip.innerHTML = String(tooltipPosition);
+      slider.appendChild(tooltip);
+    });
+  }
+
 
 }
 
@@ -106,7 +146,6 @@ export default class View {
   }
 
   setModelProperty(obj: {property: string, value: number, index: number}):void {
-    console.log(obj.value)
     this.controller.setModelProperty(obj);
   }
 
@@ -447,49 +486,6 @@ export default class View {
     return runnerDomRect;
   }
 
-
-
-  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
-    const { runners, slider, size, vertical } = obj;
-    console.log(this.fetchModelProperty('runners'));
-    runners.forEach((runnerPosition: number, index, array) => {
-      // const position = this.fetchModelProperty('stepsOn') && this.fetchModelProperty('adjustSteps') ? this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }) : runnerPosition;
-      const position = runnerPosition;
-      this.setModelProperty({
-        property: 'runners',
-        value: Math.round(position),
-        index,
-      });
-
-      const runner = this.createRunner();
-      slider.appendChild(runner);
-      this.setElementPosition({
-        element: runner,
-        position,
-        axis: vertical === false ? 'left' : 'top',
-        parent: slider,
-      });
-
-      const tooltip = this.createTooltip(position);
-      this.setElementPosition({
-        element: tooltip,
-        position,
-        axis: vertical === false ? 'left' : 'top',
-        parent: slider,
-        negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
-      });
-
-      const tooltipPosition = this.positionToValue({
-        parent: slider,
-        runner,
-        vertical,
-      });
-
-      tooltip.innerHTML = String(tooltipPosition);
-      slider.appendChild(tooltip);
-    });
-  }
-
   setSliderElementsDataAttributes(root) {
     const RenderedRunners = root.querySelectorAll('.slider__runner');
     this.setRunnersDataAttributes(RenderedRunners);
@@ -532,7 +528,7 @@ export default class View {
     this.render.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
     const size = this.render.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
-    this.RenderSliderRunners({
+    this.render.RenderSliderRunners({
       runners, slider: NEW_SLIDER, size, vertical,
     });
 
