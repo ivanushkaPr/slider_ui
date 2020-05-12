@@ -579,7 +579,7 @@ class Handler {
       bookmark: 'runnerMouseMove',
       element: document.body as HTMLElement,
       eventName: 'mousemove',
-      cb: this.view.onRunnerMouseMoveHandler,
+      cb: this.onRunnerMouseMoveHandler,
       enviroment: this,
     });
 
@@ -601,6 +601,76 @@ class Handler {
     });
 
     return true;
+  }
+
+  
+  onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
+    const { pageX, pageY } = event;
+
+    const vertical = this.view.fetchModelProperty('vertical');
+
+    let params;
+    if (!vertical) {
+      params = { point: pageX, element: this.view.draggable, vertical };
+    } else {
+      params = { point: pageY, element: this.view.draggable, vertical };
+    }
+
+    this.onMoveElementAtPoint(params);
+    return true;
+  }
+
+  onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
+    const { point, element, vertical } = obj;
+    const parent = element.parentNode as HTMLElement;
+
+    const { firstPoint, secondPoint, relativePointPosition } = this.view.getSliderControlPoints({
+      vertical, parent, point, element,
+    });
+
+    const runnerPosition = this.view.runnerStepHandler(relativePointPosition);
+
+
+    const collisionData = this.view.onRunnersCollision({
+      targetElement: element,
+      pair: element.dataset.pair,
+      nextPosition: runnerPosition,
+      vertical,
+    });
+    const RunnerPositionValidation = this.view.onRestrictDrag({
+      firstPointPosition: firstPoint,
+      secondPointPosition: secondPoint,
+      beforeFirstPoint: firstPoint > collisionData.coords,
+      afterSecondPoint: secondPoint < collisionData.coords,
+      position: collisionData.coords,
+    });
+
+    this.view.moveRunner({ element, vertical, position: RunnerPositionValidation });
+
+    this.view.onMoveProgress({
+      parent,
+      runner: element,
+      collision: collisionData.collision,
+    });
+
+    this.view.moveTooltipSibling({
+      parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
+    });
+
+    this.view.setModelProperty({
+      property: 'runners',
+      value: this.view.calculateRunnerPosition({
+        parent,
+        position: RunnerPositionValidation,
+        vertical,
+      }),
+      index: this.view.draggable.dataset.number - 1,
+    });
+
+    this.view.updateRunnerPosition({
+      position: RunnerPositionValidation,
+      index: this.view.draggable.dataset.number,
+    });
   }
 
   onRunnerMouseUpHandler = () => {
@@ -832,23 +902,6 @@ export default class View {
     return true;
   }
 
-
-
-  onRunnerMouseMoveHandler(event: MouseEvent): boolean {
-    const { pageX, pageY } = event;
-
-    const vertical = this.fetchModelProperty('vertical');
-
-    let params;
-    if (!vertical) {
-      params = { point: pageX, element: this.draggable, vertical };
-    } else {
-      params = { point: pageY, element: this.draggable, vertical };
-    }
-
-    this.onMoveElementAtPoint(params);
-    return true;
-  }
 
   onMoveProgress(obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean}) {
     const {parent, runner: element, collision} = obj;
@@ -1088,60 +1141,6 @@ export default class View {
 
   updateRunnerPosition(obj: {position: number, index: string}):void {
     this.controller.setRunnerPosition(obj);
-  }
-
-  onMoveElementAtPoint(obj: {point: number; element: HTMLElement; vertical: boolean}) {
-    const { point, element, vertical } = obj;
-    const parent = element.parentNode as HTMLElement;
-
-    const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
-      vertical, parent, point, element,
-    });
-
-    const runnerPosition = this.runnerStepHandler(relativePointPosition);
-
-
-    const collisionData = this.onRunnersCollision({
-      targetElement: element,
-      pair: element.dataset.pair,
-      nextPosition: runnerPosition,
-      vertical,
-    });
-    const RunnerPositionValidation = this.onRestrictDrag({
-      firstPointPosition: firstPoint,
-      secondPointPosition: secondPoint,
-      beforeFirstPoint: firstPoint > collisionData.coords,
-      afterSecondPoint: secondPoint < collisionData.coords,
-      position: collisionData.coords,
-    });
-
-    this.moveRunner({ element, vertical, position: RunnerPositionValidation });
-
-    this.onMoveProgress({
-      parent,
-      runner: element,
-      collision: collisionData.collision,
-    });
-
-    this.moveTooltipSibling({
-      parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
-    });
-
-    this.setModelProperty({
-      property: 'runners',
-      value: this.calculateRunnerPosition({
-        parent,
-        position: RunnerPositionValidation,
-        vertical,
-      }),
-      index: this.draggable.dataset.number - 1,
-    });
-
-    this.updateRunnerPosition({
-      position: RunnerPositionValidation,
-      index: this.draggable.dataset.number,
-    });
-
   }
 
   onTooltipHide = (runner) => {
