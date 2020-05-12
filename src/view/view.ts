@@ -160,6 +160,48 @@ class Render {
     }
   }
 
+  setSliderElementsDataAttributes(root) {
+    const RenderedRunners = root.querySelectorAll('.slider__runner');
+    this.setRunnersDataAttributes(RenderedRunners);
+    const RenderedTooltips = root.querySelectorAll('.slider__tooltip');
+    this.setTooltipDataAttributes(RenderedTooltips);
+    return RenderedRunners;
+  }
+
+  setRunnersDataAttributes(elements: NodeList) {
+    const collection = elements;
+    let pair = 1;
+
+    if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
+      collection.forEach((target, index, array) => {
+        const HTMLrunner = target as HTMLElement;
+        HTMLrunner.dataset.pair = String(pair);
+        HTMLrunner.dataset.number = String(index + 1);
+        if (array.length === 1) {
+          HTMLrunner.dataset.startAndEnd = 'true';
+        } else if (index % 2 === 0) {
+          HTMLrunner.dataset.start = 'true';
+        } else {
+          HTMLrunner.dataset.start = 'false';
+        }
+        if (index % 2 === 1) {
+          pair += 1;
+        }
+
+        HTMLrunner.dataset.tooltipSibling = String(index);
+      });
+    }
+  }
+
+  setTooltipDataAttributes(elements: NodeList) {
+    const collection = elements;
+
+    collection.forEach((target, index) => {
+      const HTMLtooltip = target as HTMLElement;
+      HTMLtooltip.dataset.runnerSibling = String(index);
+    });
+  }
+
 }
 
 
@@ -484,13 +526,7 @@ export default class View {
     return runnerDomRect;
   }
 
-  setSliderElementsDataAttributes(root) {
-    const RenderedRunners = root.querySelectorAll('.slider__runner');
-    this.setRunnersDataAttributes(RenderedRunners);
-    const RenderedTooltips = root.querySelectorAll('.slider__tooltip');
-    this.setTooltipDataAttributes(RenderedTooltips);
-    return RenderedRunners;
-  }
+
 
   registerEventHandlers(runners) {
     runners.forEach((runner) => {
@@ -530,7 +566,7 @@ export default class View {
       runners, slider: NEW_SLIDER, size, vertical,
     });
 
-    const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
+    const RenderedRunners = this.render.setSliderElementsDataAttributes(ROOT_NODE);
     this.registerEventHandlers(RenderedRunners);
 
     this.renderProgress({
@@ -660,40 +696,6 @@ export default class View {
       ruler.appendChild(scale);
     });
 
-  }
-
-  setRunnersDataAttributes(elements: NodeList) {
-    const collection = elements;
-    let pair = 1;
-
-    if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
-      collection.forEach((target, index, array) => {
-        const HTMLrunner = target as HTMLElement;
-        HTMLrunner.dataset.pair = String(pair);
-        HTMLrunner.dataset.number = String(index + 1);
-        if (array.length === 1) {
-          HTMLrunner.dataset.startAndEnd = 'true';
-        } else if (index % 2 === 0) {
-          HTMLrunner.dataset.start = 'true';
-        } else {
-          HTMLrunner.dataset.start = 'false';
-        }
-        if (index % 2 === 1) {
-          pair += 1;
-        }
-
-        HTMLrunner.dataset.tooltipSibling = String(index);
-      });
-    }
-  }
-
-  setTooltipDataAttributes(elements: NodeList) {
-    const collection = elements;
-
-    collection.forEach((target, index) => {
-      const HTMLtooltip = target as HTMLElement;
-      HTMLtooltip.dataset.runnerSibling = String(index);
-    });
   }
 
   onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
