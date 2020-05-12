@@ -18,10 +18,22 @@ class Render {
   renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
     const { root, id} = obj;
     this.removeSlider(root);
-    const NEW_SLIDER = this.view.createRange();
+    const NEW_SLIDER = this.createRange();
     this.renderElement(NEW_SLIDER, document.getElementById(id));
     return NEW_SLIDER;
   }
+
+  createRange(): HTMLElement {
+    const IS_VERTICAL = this.view.fetchModelProperty('vertical');
+    const RANGE_ELEMENT = this.createElement('div', 'slider__range');
+    if (IS_VERTICAL) {
+      RANGE_ELEMENT.classList.add('slider__range--vertical');
+    } else {
+      RANGE_ELEMENT.classList.add('slider__range--horizontal');
+    }
+    return RANGE_ELEMENT;
+  }
+
 
   removeSlider(root: HTMLElement):void {
     const OLD_SLIDER = root.querySelector('.slider__range')
@@ -110,7 +122,7 @@ class Render {
   }
 
   createTooltip(position): HTMLElement {
-    const TOOLTIP_ELEMENT = this.view.createElement('div', 'slider__tooltip');
+    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
     const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
     if (!SLIDER_IS_VERTICAL) {
       TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
@@ -125,7 +137,7 @@ class Render {
   }
 
   createRunner(): HTMLElement {
-    const RUNNER_ELEMENT = this.view.createElement('div', 'slider__runner');
+    const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
     return RUNNER_ELEMENT;
   }
 
@@ -287,7 +299,7 @@ class Render {
   }
 
   createProgress(): HTMLElement {
-    const PROGRESS_ELEMENT = this.view.createElement('div', 'slider__progress');
+    const PROGRESS_ELEMENT = this.createElement('div', 'slider__progress');
     const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
     if (SLIDER_IS_VERTICAL) {
       PROGRESS_ELEMENT.classList.add('slider__progress--vertical');
@@ -380,13 +392,13 @@ class Render {
       this.setScalePosition({scale, vertical, breakpoint });
       if (index === 0) {
         const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
-        const textNode = this.view.createElement('p', classes);
+        const textNode = this.createElement('p', classes);
         const value = document.createTextNode(this.view.fetchModelProperty('minValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);
       } else if (index === array.length - 1) {
         const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
-        const textNode = this.view.createElement('p', classes);
+        const textNode = this.createElement('p', classes);
         const value = document.createTextNode(this.view.fetchModelProperty('maxValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);
@@ -486,7 +498,22 @@ class Render {
     if (this.view.fetchModelProperty('scaleOn')) this.createScales({ parentNode: ROOT_NODE, vertical });
     return undefined;
   }
+
+  createElement(nodeName: string, className: string): HTMLElement {
+    const element = document.createElement(nodeName);
+    element.className = className;
+    return element as HTMLElement;
+  }
 }
+
+class Handler {
+  constructor(text) {
+    console.log(text);
+  }
+
+
+}
+
 
 
 export default class View {
@@ -525,12 +552,6 @@ export default class View {
     this.controller.setModelProperty(obj);
   }
 
-  createElement(nodeName: string, className: string): HTMLElement {
-    const element = document.createElement(nodeName);
-    element.className = className;
-    return element as HTMLElement;
-  }
-
   setElementCss(element: HTMLElement, cssRules: rules): HTMLElement {
     const El = element;
     const Rules = Object.entries(cssRules);
@@ -540,17 +561,6 @@ export default class View {
       El.style[propertyName] = propertyValue;
     });
     return El;
-  }
-
-  createRange(): HTMLElement {
-    const IS_VERTICAL = this.fetchModelProperty('vertical');
-    const RANGE_ELEMENT = this.createElement('div', 'slider__range');
-    if (IS_VERTICAL) {
-      RANGE_ELEMENT.classList.add('slider__range--vertical');
-    } else {
-      RANGE_ELEMENT.classList.add('slider__range--horizontal');
-    }
-    return RANGE_ELEMENT;
   }
 
   setProgessStyles(obj: { element:HTMLElement, property: string, value: string, position: number, axis: string, parent: HTMLElement}):void {
