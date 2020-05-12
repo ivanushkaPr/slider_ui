@@ -376,8 +376,8 @@ class Render {
     const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
     breakpoints.forEach((breakpoint: number, index, array) => {
 
-      const scale: HTMLDivElement = this.view.createScale({ mods });
-      this.view.setScalePosition({scale, vertical, breakpoint });
+      const scale: HTMLDivElement = this.createScale({ mods });
+      this.setScalePosition({scale, vertical, breakpoint });
       if (index === 0) {
         const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
         const textNode = this.view.createElement('p', classes);
@@ -398,11 +398,58 @@ class Render {
         cb: this.view.onElementClickHandler,
         enviroment: this,
       });
-      this.view.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
+      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
       ruler.appendChild(scale);
     });
-
   }
+
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
+    const { scale, vertical, breakpoint } = obj;
+    scale.style.position = 'absolute';
+    const leftOrTop = vertical === false ? 'left' : 'top';
+    scale.style[leftOrTop] = `${breakpoint}px`;
+  }
+
+  createScale(obj: {mods}) {
+    const { mods } = obj;
+
+    const div = document.createElement('div');
+    div.className = `slider__scale ${mods}`;
+    return div;
+  }
+
+  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
+    const {
+      start, end, parent, vertical, index, array,
+    } = obj;
+    const step = start + ((end - start) / 2);
+
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
+      : 'slider__scale--vertical slider__scale--vertical-md';
+    if (index < this.view.breakpoints.length - 1) {
+      const smallScale = this.createScale({ mods });
+      this.setScalePosition({scale: smallScale, vertical, breakpoint: step});
+      parent.appendChild(smallScale);
+      this.createSmallScales({start, end: step, parent, vertical, index, array });
+      this.createSmallScales({start: step, end, parent, vertical, index, array });
+    }
+  }
+
+  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
+    const {start, end, parent, vertical, index} = obj;
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
+      : 'slider__scale--vertical slider__scale--vertical-sm';
+
+    const step = (end - start) / 4;
+    for (let i = 0; i <= 3; i += 1) {
+      if (index < this.view.breakpoints.length - 1) {
+        const smallScale = this.createScale({ mods });
+        this.setScalePosition({scale: smallScale, vertical, breakpoint: step * i + start});
+        parent.appendChild(smallScale);
+      }
+    }
+  }
+
 
 }
 
@@ -653,54 +700,6 @@ export default class View {
       if (index > 0 && index < array.length - 1) slider.appendChild(div);
     });
   }
-
-  createScale(obj: {mods}) {
-    const { mods } = obj;
-
-    const div = document.createElement('div');
-    div.className = `slider__scale ${mods}`;
-    return div;
-  }
-
-  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
-    const {
-      start, end, parent, vertical, index, array,
-    } = obj;
-    const step = start + ((end - start) / 2);
-
-    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
-      : 'slider__scale--vertical slider__scale--vertical-md';
-    if (index < this.breakpoints.length - 1) {
-      const smallScale = this.createScale({ mods });
-      this.setScalePosition({scale: smallScale, vertical, breakpoint: step});
-      parent.appendChild(smallScale);
-      this.createSmallScales({start, end: step, parent, vertical, index, array });
-      this.createSmallScales({start: step, end, parent, vertical, index, array });
-    }
-  }
-
-  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
-    const {start, end, parent, vertical, index} = obj;
-    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
-      : 'slider__scale--vertical slider__scale--vertical-sm';
-
-    const step = (end - start) / 4;
-    for (let i = 0; i <= 3; i += 1) {
-      if (index < this.breakpoints.length - 1) {
-        const smallScale = this.createScale({ mods });
-        this.setScalePosition({scale: smallScale, vertical, breakpoint: step * i + start});
-        parent.appendChild(smallScale);
-      }
-    }
-  }
-
-  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
-    const { scale, vertical, breakpoint } = obj;
-    scale.style.position = 'absolute';
-    const leftOrTop = vertical === false ? 'left' : 'top';
-    scale.style[leftOrTop] = `${breakpoint}px`;
-  }
-
 
   onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
      eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: any}): boolean {
