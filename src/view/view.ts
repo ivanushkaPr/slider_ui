@@ -545,7 +545,7 @@ class Handler {
       }
       runner.style.left = `${click}px`;
       this.view.draggable = runner;
-      this.view.onMoveProgress({parent: range, runner, collision: false});
+      this.view.onMoveProgress({ parent: range, runner, collision: false });
       return true;
     }
     return false;
@@ -557,10 +557,50 @@ class Handler {
         bookmark: 'runnerMouseDown',
         element: runner as HTMLElement,
         eventName: 'mousedown',
-        cb: this.view.onRunnerMouseDownHandler,
+        cb: this.onRunnerMouseDownHandler,
         enviroment: this,
       });
     });
+  }
+
+  onRunnerMouseDownHandler= (event: MouseEvent): boolean => {
+    event.preventDefault();
+    const targetElement = event.target as HTMLElement;
+
+    targetElement.style.position = 'absolute';
+    targetElement.style.zIndex = '1000';
+    this.view.draggable = targetElement;
+
+    this.view.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
+    this.view.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
+
+
+    this.view.onHandlerRegister({
+      bookmark: 'runnerMouseMove',
+      element: document.body as HTMLElement,
+      eventName: 'mousemove',
+      cb: this.view.onRunnerMouseMoveHandler,
+      enviroment: this,
+    });
+
+    this.view.onHandlerRegister({
+      bookmark: 'runnerMouseUp',
+      element: document.body as HTMLElement,
+      eventName: 'mouseup',
+      cb: this.view.onRunnerMouseUpHandler,
+      enviroment: this,
+    });
+
+
+    this.view.onHandlerRegister({
+      bookmark: 'runnerDragStart',
+      element: event.target as HTMLElement,
+      eventName: 'dragstart',
+      cb: this.view.onDragStartHandler,
+      enviroment: this,
+    });
+
+    return true;
   }
 
 }
@@ -777,47 +817,6 @@ export default class View {
   }
 
 
-
-
-  onRunnerMouseDownHandler(event: MouseEvent): boolean {
-    event.preventDefault();
-    const targetElement = event.target as HTMLElement;
-
-    targetElement.style.position = 'absolute';
-    targetElement.style.zIndex = '1000';
-    this.draggable = targetElement;
-
-    this.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
-    this.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
-
-
-    this.onHandlerRegister({
-      bookmark: 'runnerMouseMove',
-      element: document.body as HTMLElement,
-      eventName: 'mousemove',
-      cb: this.onRunnerMouseMoveHandler,
-      enviroment: this,
-    });
-
-    this.onHandlerRegister({
-      bookmark: 'runnerMouseUp',
-      element: document.body as HTMLElement,
-      eventName: 'mouseup',
-      cb: this.onRunnerMouseUpHandler,
-      enviroment: this,
-    });
-
-
-    this.onHandlerRegister({
-      bookmark: 'runnerDragStart',
-      element: event.target as HTMLElement,
-      eventName: 'dragstart',
-      cb: this.onDragStartHandler,
-      enviroment: this,
-    });
-
-    return true;
-  }
 
   onRunnerMouseMoveHandler(event: MouseEvent): boolean {
     const { pageX, pageY } = event;
