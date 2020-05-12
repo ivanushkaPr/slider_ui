@@ -407,7 +407,7 @@ class Render {
         bookmark: 'elementClick',
         element: scale as HTMLElement,
         eventName: 'click',
-        cb: this.view.onElementClickHandler,
+        cb: this.view.handler.onElementClickHandler,
         enviroment: this,
       });
       this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
@@ -474,7 +474,7 @@ class Render {
         bookmark: 'elementClick',
         element: NEW_SLIDER as HTMLElement,
         eventName: 'click',
-        cb: this.view.onElementClickHandler,
+        cb: this.view.handler.onElementClickHandler,
         enviroment: this,
       });
     }
@@ -507,10 +507,48 @@ class Render {
 }
 
 class Handler {
-  constructor(text) {
-    console.log(text);
+  view: View;
+  constructor(view) {
+    this.view = view;
   }
 
+  onElementClickHandler = (event: MouseEvent):boolean => {
+    let range;
+    if (document.elementFromPoint(event.pageX + this.view.draggable.offsetWidth / 2, 
+      event.pageY + this.view.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
+      if (this.view.controller.getModelProperty('stepsOn')) {
+        const scale = (event.currentTarget) as HTMLElement;
+        range = scale.parentNode.parentNode as HTMLElement;
+      } else {
+        range = (event.currentTarget as HTMLElement);
+      }
+
+      const runners = range.querySelectorAll('.slider__runner');
+      const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
+      let click = event.pageX - range.offsetLeft - range.clientLeft;
+
+      let prevDiff = 10000;
+      let index;
+      runners.forEach((runner, i) => {
+        const pos = parseInt((runner as HTMLElement).style.left, 10);
+        const diff = Math.abs(click - pos);
+        if (diff < prevDiff) {
+          prevDiff = diff;
+          index = i;
+        }
+      });
+
+      const runner = runners[index] as HTMLElement;
+      if (runner.dataset.start === 'false') {
+        click -= runnerWidth;
+      }
+      runner.style.left = `${click}px`;
+      this.view.draggable = runner;
+      this.view.onMoveProgress({parent: range, runner, collision: false});
+      return true;
+    }
+    return false;
+  }
 
 }
 
@@ -522,6 +560,8 @@ export default class View {
   }
 
   render: Render;
+
+  handler: Handler;
 
   controller;
 
@@ -538,6 +578,7 @@ export default class View {
   constructor() {
     const view = this;
     this.render = new Render(view);
+    this.handler = new Handler(view);
   }
 
   fetchModelProperty(property: string) {
@@ -567,7 +608,6 @@ export default class View {
     const {
       element, property, value, position, axis, parent,
     } = obj;
-    
 
     this.setSize({ element, property, value });
 
@@ -662,8 +702,6 @@ export default class View {
     return runnerDomRect;
   }
 
-
-
   registerEventHandlers(runners) {
     runners.forEach((runner) => {
       this.onHandlerRegister({
@@ -735,43 +773,7 @@ export default class View {
     return true;
   }
 
-  onElementClickHandler(event: MouseEvent):boolean {
-    let range;
-    if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2, 
-      event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
-      if (this.controller.getModelProperty('stepsOn')) {
-        const scale = (event.currentTarget) as HTMLElement;
-        range = scale.parentNode.parentNode as HTMLElement;
-      } else {
-        range = (event.currentTarget as HTMLElement);
-      }
 
-      const runners = range.querySelectorAll('.slider__runner');
-      const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
-      let click = event.pageX - range.offsetLeft - range.clientLeft;
-
-      let prevDiff = 10000;
-      let index;
-      runners.forEach((runner, i) => {
-        const pos = parseInt((runner as HTMLElement).style.left, 10);
-        const diff = Math.abs(click - pos);
-        if (diff < prevDiff) {
-          prevDiff = diff;
-          index = i;
-        }
-      });
-
-      const runner = runners[index] as HTMLElement;
-      if (runner.dataset.start === 'false') {
-        click -= runnerWidth;
-      }
-      runner.style.left = `${click}px`;
-      this.draggable = runner;
-      this.onMoveProgress({parent: range, runner, collision: false});
-      return true;
-    }
-    return false;
-  }
 
 
   onRunnerMouseDownHandler(event: MouseEvent): boolean {
