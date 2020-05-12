@@ -53,6 +53,22 @@ class Render {
     return elementSize;
   }
 
+  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
+    const { range, vertical } = sliderProperties;
+    const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
+    const steps = this.view.fetchModelProperty('steps');
+    const sizeOfStep = ELEMENT_SIZE / steps;
+    const breakpoints: number[] = [];
+    const FIRST_POINT = 0;
+    breakpoints.push(FIRST_POINT);
+    for (let multiplier = 1; multiplier < steps; multiplier += 1) {
+      breakpoints.push(Math.ceil(multiplier * sizeOfStep));
+    }
+    const LAST_POINT = ELEMENT_SIZE;
+    breakpoints.push(LAST_POINT);
+    this.view.breakpoints = breakpoints;
+  }
+
 
 }
 
@@ -92,22 +108,6 @@ export default class View {
   setModelProperty(obj: {property: string, value: number, index: number}):void {
     console.log(obj.value)
     this.controller.setModelProperty(obj);
-  }
-
-  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
-    const { range, vertical } = sliderProperties;
-    const ELEMENT_SIZE = this.render.getRangeSize({ range, vertical });
-    const steps = this.fetchModelProperty('steps');
-    const sizeOfStep = ELEMENT_SIZE / steps;
-    const breakpoints: number[] = [];
-    const FIRST_POINT = 0;
-    breakpoints.push(FIRST_POINT);
-    for (let multiplier = 1; multiplier < steps; multiplier += 1) {
-      breakpoints.push(Math.ceil(multiplier * sizeOfStep));
-    }
-    const LAST_POINT = ELEMENT_SIZE;
-    breakpoints.push(LAST_POINT);
-    this.breakpoints = breakpoints;
   }
 
   createElement(nodeName: string, className: string): HTMLElement {
@@ -529,7 +529,7 @@ export default class View {
       });
     }
 
-    this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
+    this.render.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
     const size = this.render.getSliderSize({ range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical });
     this.RenderSliderRunners({
