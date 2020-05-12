@@ -202,6 +202,8 @@ class Render {
     });
   }
 
+  //progress
+
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     if (!vertical) {
@@ -358,6 +360,50 @@ class Render {
     const { progressStartPosition, progressEndPosition } = obj;
     return progressEndPosition - progressStartPosition;
   }
+
+  //scales
+
+  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
+    const { parentNode, vertical } = obj;
+    const breakpoints = [...this.view.breakpoints];
+    const slider = parentNode.querySelector('.slider__range');
+    const ruler = document.createElement('div');
+    const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
+    ruler.className = `${classNames}`;
+
+
+    slider.appendChild(ruler);
+    const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
+    breakpoints.forEach((breakpoint: number, index, array) => {
+
+      const scale: HTMLDivElement = this.view.createScale({ mods });
+      this.view.setScalePosition({scale, vertical, breakpoint });
+      if (index === 0) {
+        const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
+        const textNode = this.view.createElement('p', classes);
+        const value = document.createTextNode(this.view.fetchModelProperty('minValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      } else if (index === array.length - 1) {
+        const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
+        const textNode = this.view.createElement('p', classes);
+        const value = document.createTextNode(this.view.fetchModelProperty('maxValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      }
+      this.view.onHandlerRegister({
+        bookmark: 'elementClick',
+        element: scale as HTMLElement,
+        eventName: 'click',
+        cb: this.view.onElementClickHandler,
+        enviroment: this,
+      });
+      this.view.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
+      ruler.appendChild(scale);
+    });
+
+  }
+
 }
 
 
@@ -573,7 +619,7 @@ export default class View {
       vertical: this.fetchModelProperty('vertical'),
     });
 
-    if (this.fetchModelProperty('scaleOn')) this.createScales({ parentNode: ROOT_NODE, vertical });
+    if (this.fetchModelProperty('scaleOn')) this.render.createScales({ parentNode: ROOT_NODE, vertical });
     return undefined;
   }
 
@@ -655,46 +701,6 @@ export default class View {
     scale.style[leftOrTop] = `${breakpoint}px`;
   }
 
-  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
-    const { parentNode, vertical } = obj;
-    const breakpoints = [...this.breakpoints];
-    const slider = parentNode.querySelector('.slider__range');
-    const ruler = document.createElement('div');
-    const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
-    ruler.className = `${classNames}`;
-
-
-    slider.appendChild(ruler);
-    const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
-    breakpoints.forEach((breakpoint: number, index, array) => {
-
-      const scale: HTMLDivElement = this.createScale({ mods });
-      this.setScalePosition({scale, vertical, breakpoint });
-      if (index === 0) {
-        const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
-        const textNode = this.createElement('p', classes);
-        const value = document.createTextNode(this.fetchModelProperty('minValue'));
-        textNode.appendChild(value);
-        ruler.appendChild(textNode);
-      } else if (index === array.length - 1) {
-        const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
-        const textNode = this.createElement('p', classes);
-        const value = document.createTextNode(this.fetchModelProperty('maxValue'));
-        textNode.appendChild(value);
-        ruler.appendChild(textNode);
-      }
-      this.onHandlerRegister({
-        bookmark: 'elementClick',
-        element: scale as HTMLElement,
-        eventName: 'click',
-        cb: this.onElementClickHandler,
-        enviroment: this,
-      });
-      this.createMediumScale({ start: array[index], end: array[index + 1], parent: ruler, vertical, index, array });
-      ruler.appendChild(scale);
-    });
-
-  }
 
   onHandlerRegister(obj :{ bookmark: string; element: HTMLElement;
      eventName: runnerEvents; cb: (event: Event) => boolean; enviroment: any}): boolean {
@@ -720,7 +726,7 @@ export default class View {
     const id = this.fetchModelProperty('id');
     const parentNode = document.getElementById(id);
     parentNode.querySelector('slider__ruler').remove();
-    this.createScales({parentNode, vertical: this.fetchModelProperty('vertical')});
+    this.render.createScales({parentNode, vertical: this.fetchModelProperty('vertical')});
     return true;
   }
 
