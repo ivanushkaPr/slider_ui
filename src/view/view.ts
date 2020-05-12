@@ -596,7 +596,7 @@ class Handler {
       bookmark: 'runnerDragStart',
       element: event.target as HTMLElement,
       eventName: 'dragstart',
-      cb: this.view.onDragStartHandler,
+      cb: this.onDragStartHandler,
       enviroment: this,
     });
 
@@ -613,6 +613,10 @@ class Handler {
     const { bookmark: dragStartBookmark } = this.view.handlers.runnerDragStart;
     this.view.onHandlerDelete(dragStartBookmark);
     return true;
+  }
+
+  onDragStartHandler = () => {
+    return false;
   }
 
 }
