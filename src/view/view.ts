@@ -563,7 +563,7 @@ class Handler {
     });
   }
 
-  onRunnerMouseDownHandler= (event: MouseEvent): boolean => {
+  onRunnerMouseDownHandler = (event: MouseEvent): boolean => {
     event.preventDefault();
     const targetElement = event.target as HTMLElement;
 
@@ -587,7 +587,7 @@ class Handler {
       bookmark: 'runnerMouseUp',
       element: document.body as HTMLElement,
       eventName: 'mouseup',
-      cb: this.view.onRunnerMouseUpHandler,
+      cb: this.onRunnerMouseUpHandler,
       enviroment: this,
     });
 
@@ -600,6 +600,18 @@ class Handler {
       enviroment: this,
     });
 
+    return true;
+  }
+
+  onRunnerMouseUpHandler = () => {
+    if (this.view.fetchModelProperty('tooltips') === true) this.view.onTooltipHide(this.view.draggable);
+
+    const { bookmark: mouseMoveBookmark } = this.view.handlers.runnerMouseMove;
+    this.view.onHandlerDelete(mouseMoveBookmark);
+    const { bookmark: mouseUpBookmark } = this.view.handlers.runnerMouseUp;
+    this.view.onHandlerDelete(mouseUpBookmark);
+    const { bookmark: dragStartBookmark } = this.view.handlers.runnerDragStart;
+    this.view.onHandlerDelete(dragStartBookmark);
     return true;
   }
 
@@ -1165,17 +1177,6 @@ export default class View {
     return closestPoint;
   }
 
-  onRunnerMouseUpHandler() {
-    if (this.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
-
-    const { bookmark: mouseMoveBookmark } = this.handlers.runnerMouseMove;
-    this.onHandlerDelete(mouseMoveBookmark);
-    const { bookmark: mouseUpBookmark } = this.handlers.runnerMouseUp;
-    this.onHandlerDelete(mouseUpBookmark);
-    const { bookmark: dragStartBookmark } = this.handlers.runnerDragStart;
-    this.onHandlerDelete(dragStartBookmark);
-    return true;
-  }
 
   onHandlerDelete(bookmark: string) {
     if (bookmark in this.handlers) {
