@@ -80,9 +80,9 @@ class Render {
         index,
       });
 
-      const runner = this.view.createRunner();
+      const runner = this.createRunner();
       slider.appendChild(runner);
-      this.view.setElementPosition({
+      this.setElementPosition({
         element: runner,
         position,
         axis: vertical === false ? 'left' : 'top',
@@ -90,7 +90,7 @@ class Render {
       });
 
       const tooltip = this.view.createTooltip(position);
-      this.view.setElementPosition({
+      this.setElementPosition({
         element: tooltip,
         position,
         axis: vertical === false ? 'left' : 'top',
@@ -109,6 +109,41 @@ class Render {
     });
   }
 
+  createRunner(): HTMLElement {
+    const RUNNER_ELEMENT = this.view.createElement('div', 'slider__runner');
+    return RUNNER_ELEMENT;
+  }
+
+  setElementPosition(obj:{
+    element: HTMLElement;
+    position: number;
+    axis: string;
+    parent: HTMLElement,
+    negative?: number, }):void {
+    const {
+      element, position, axis, parent,
+    } = obj;
+
+    let { negative } = obj;
+
+    if (typeof negative !== 'number') {
+      negative = 0;
+    }
+
+    if (axis === 'left') {
+      const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
+      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
+      const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
+      const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
+      element.style.left = `${STYLE_LEFT}px`;
+    } else {
+      const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
+      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
+      const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
+      const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
+      element.style.top = `${STYLE_TOP}px`;
+    }
+  }
 
 }
 
@@ -175,11 +210,6 @@ export default class View {
       RANGE_ELEMENT.classList.add('slider__range--horizontal');
     }
     return RANGE_ELEMENT;
-  }
-
-  createRunner(): HTMLElement {
-    const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
-    return RUNNER_ELEMENT;
   }
 
   createTooltip(position): HTMLElement {
@@ -446,40 +476,8 @@ export default class View {
     return VALUE;
   }
 
-
-  setElementPosition(obj:{
-      element: HTMLElement;
-      position: number;
-      axis: string;
-      parent: HTMLElement,
-      negative?: number, }):void {
-    const {
-      element, position, axis, parent,
-    } = obj;
-
-    let { negative } = obj;
-
-    if (typeof negative !== 'number') {
-      negative = 0;
-    }
-
-    if (axis === 'left') {
-      const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
-      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
-      const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
-      const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
-      element.style.left = `${STYLE_LEFT}px`;
-    } else {
-      const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
-      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
-      const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
-      const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
-      element.style.top = `${STYLE_TOP}px`;
-    }
-  }
-
   getTemporaryRunnerRectangle(parent):DOMRect {
-    const temporaryRunner = this.createRunner();
+    const temporaryRunner = this.render.createRunner();
     parent.appendChild(temporaryRunner);
     const runnerDomRect = temporaryRunner.getBoundingClientRect();
     parent.removeChild(temporaryRunner);
