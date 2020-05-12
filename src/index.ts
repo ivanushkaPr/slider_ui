@@ -31,44 +31,54 @@ class Slider {
     this.controller = new this.ControllerConstructor(this.model, this.view);
   };
 
-  minVal(value) {
-    
+  changeState(obj: {
+    property: string; value: string | number | boolean; index?: number}) {
+    this.controller.setModelProperty(obj);
+    this.controller.removePanel();
+    this.controller.update();
   }
 
-  maxVal(value) {
-
+  minVal(value: number):void {
+    this.changeState({ property: 'minValue', value });
   }
 
-  stepsOn() {
-
+  maxVal(value: number) {
+    this.changeState({ property: 'maxValue', value });
   }
 
-  units() {
-
+  stepsOn(ammount: boolean) {
+    this.changeState({ property: 'stepsOn', value: ammount });
   }
 
-  runners() {
-
+  units(unit: string) {
+    this.changeState({ property: 'units', value: unit });
   }
 
-  vertical() {
-
+  runners(obj: {position: number, index: number}):void {
+    const { position } = obj;
+    let { index } = obj;
+    index -= 1;
+    this.changeState({ property: 'runners', value: position, index});
   }
 
-  scaleOn() {
-
+  vertical(isVertical: boolean) {
+    this.changeState({ property: 'vertical', value: isVertical });
   }
 
-  panel() {
-
+  scaleOn(isRendered: boolean) {
+    this.changeState({ property: 'scaleOn', value: isRendered });
   }
 
-  tooltips() {
-
+  panel(isRendered: boolean) {
+    this.changeState({ property: 'panel', value: isRendered });
   }
 
-  id() {
+  tooltips(show: boolean) {
+    this.changeState({ property: 'tooltips', value: show });
+  }
 
+  id(id: string) {
+    this.changeState({ property: 'id', value: id });
   }
 
 }
@@ -97,19 +107,18 @@ const secondConfig = {
   maxValue: 1000,
   currentValue: 0,
   steps: 10,
-  runners: [0, 50],
+  runners: [50],
   stepsOn: false,
   vertical: false,
   units: 'px',
   id: '#slider2',
+  panel: true,
 };
 let sliderApi;
 
 $(document).ready(function() {
   console.log(uConfiguration)
   const slider = $().slider(uConfiguration);
-  slider.change('vertical', true);
-//  const slider2 = $().slider(secondConfig);
+
+  const slider2 = $().slider(secondConfig);
 })
-
-

@@ -90,7 +90,7 @@ export type configuration = {
 };
 
 export const uConfiguration = {
-  minValue: -100,
+  minValue: 0,
   maxValue: 100,
   steps: 10,
   units: 'px',

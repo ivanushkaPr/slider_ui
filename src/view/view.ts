@@ -1,5 +1,14 @@
-import { rejects, throws } from "assert";
-import { Z_ASCII } from "zlib";
+/* eslint-disable max-classes-per-file */
+
+class Render {
+  View: View;
+
+  constructor(View) {
+    this.View = View;
+  } 
+
+  
+}
 
 export default class View {
   handlers: handlers = {
@@ -561,10 +570,10 @@ export default class View {
   }
 
   createScale(obj: {mods}) {
-    const {mods} = obj;
+    const { mods } = obj;
 
     const div = document.createElement('div');
-    div.className = `slider__scale ${mods}`
+    div.className = `slider__scale ${mods}`;
     return div;
   }
 
