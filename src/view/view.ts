@@ -487,7 +487,7 @@ class Render {
     });
 
     const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
-    this.view.registerEventHandlers(RenderedRunners);
+    this.view.handler.registerEventHandlers(RenderedRunners);
 
     this.renderProgress({
       runners: ROOT_NODE.getElementsByClassName('slider__runner'),
@@ -508,6 +508,7 @@ class Render {
 
 class Handler {
   view: View;
+
   constructor(view) {
     this.view = view;
   }
@@ -548,6 +549,18 @@ class Handler {
       return true;
     }
     return false;
+  }
+  
+  registerEventHandlers(runners) {
+    runners.forEach((runner) => {
+      this.view.onHandlerRegister({
+        bookmark: 'runnerMouseDown',
+        element: runner as HTMLElement,
+        eventName: 'mousedown',
+        cb: this.view.onRunnerMouseDownHandler,
+        enviroment: this,
+      });
+    });
   }
 
 }
@@ -702,17 +715,7 @@ export default class View {
     return runnerDomRect;
   }
 
-  registerEventHandlers(runners) {
-    runners.forEach((runner) => {
-      this.onHandlerRegister({
-        bookmark: 'runnerMouseDown',
-        element: runner as HTMLElement,
-        eventName: 'mousedown',
-        cb: this.onRunnerMouseDownHandler,
-        enviroment: this,
-      });
-    });
-  }
+
 
   createHorizontalScales(parentNode):void {
     const breakpoints = [...this.breakpoints];
