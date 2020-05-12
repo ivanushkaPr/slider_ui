@@ -17,10 +17,17 @@ class Render {
 
   renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
     const { root, id} = obj;
-    this.view.removeSlider(root);
+    this.removeSlider(root);
     const NEW_SLIDER = this.view.createRange();
     this.renderElement(NEW_SLIDER, document.getElementById(id));
     return NEW_SLIDER;
+  }
+
+  removeSlider(root: HTMLElement):void {
+    const OLD_SLIDER = root.querySelector('.slider__range')
+    if (OLD_SLIDER) {
+      OLD_SLIDER.remove();
+    }
   }
 
 }
@@ -423,13 +430,6 @@ export default class View {
       const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
       const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
       element.style.top = `${STYLE_TOP}px`;
-    }
-  }
-
-  removeSlider(root: HTMLElement):void {
-    const OLD_SLIDER = root.querySelector('.slider__range')
-    if (OLD_SLIDER) {
-      OLD_SLIDER.remove();
     }
   }
 
