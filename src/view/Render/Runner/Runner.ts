@@ -46,6 +46,21 @@ export default class Runner extends El {
     return true;
   }
 
+  onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
+    const { pageX, pageY } = event;
+
+    const vertical = this.parent.view.fetchModelProperty('vertical');
+
+    let params;
+    if (!vertical) {
+      params = { point: pageX, element: this.draggable, vertical };
+    } else {
+      params = { point: pageY, element: this.draggable, vertical };
+    }
+    this.parent.view.handler.onMoveElementAtPoint(params);
+    return true;
+  }
+
   RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
     const {
       runners, slider, vertical, root,
