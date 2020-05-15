@@ -96,8 +96,8 @@ class Tooltip {
     });
   }
 
-  setTooltipDataAttributes(elements: NodeList) {
-    const collection = elements;
+  setTooltipDataAttributes(root) {
+    const collection = root.querySelectorAll('.slider__tooltip');
 
     collection.forEach((target, index) => {
       const HTMLtooltip = target as HTMLElement;
@@ -160,7 +160,8 @@ class Runner {
     return RUNNER_ELEMENT;
   }
 
-  setRunnersDataAttributes(elements: NodeList) {
+  setRunnersDataAttributes(root) {
+    const elements = root.querySelectorAll('.slider__runner');
     const collection = elements;
     let pair = 1;
 
@@ -183,6 +184,7 @@ class Runner {
         HTMLrunner.dataset.tooltipSibling = String(index);
       });
     }
+    return elements;
   }
 }
 
@@ -303,14 +305,6 @@ export default class Render {
       const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
       element.style.top = `${STYLE_TOP}px`;
     }
-  }
-
-  setSliderElementsDataAttributes(root) {
-    const RenderedRunners = root.querySelectorAll('.slider__runner');
-    this.runnerClass.setRunnersDataAttributes(RenderedRunners);
-    const RenderedTooltips = root.querySelectorAll('.slider__tooltip');
-    this.tooltipClass.setTooltipDataAttributes(RenderedTooltips);
-    return RenderedRunners;
   }
 
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
@@ -662,8 +656,8 @@ export default class Render {
 
     this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER});
 
-    const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
-    const RenderedTooltips = this.setSliderElementsDataAttributes(ROOT_NODE);
+    const RenderedRunners = this.runnerClass.setRunnersDataAttributes(ROOT_NODE);
+    const RenderedTooltips = this.tooltipClass.setTooltipDataAttributes(ROOT_NODE);
 
     this.view.handler.registerEventHandlers(RenderedRunners);
 
