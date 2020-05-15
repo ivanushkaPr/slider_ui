@@ -46,6 +46,66 @@ class Range {
   }
 }
 
+class Tooltip {
+  parent;
+
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  createTooltip(): HTMLElement {
+    const TOOLTIP_ELEMENT = document.createElement('div');
+    TOOLTIP_ELEMENT.classList.add('slider__tooltip');
+
+    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    if (!SLIDER_IS_VERTICAL) {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
+    } else {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
+    }
+    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
+      return false;
+    });
+
+ //   TOOLTIP_ELEMENT.innerHTML = String(position);
+
+    return TOOLTIP_ELEMENT;
+  }
+
+  renderSliderTooltip(obj: {position, vertical, slider}) {
+    const { position, vertical, slider } = obj;
+
+    position.forEach((pos, index)=> {
+      const tooltip = this.createTooltip();
+      this.parent.setElementPosition({
+        element: tooltip,
+        pos,
+        axis: vertical === false ? 'left' : 'top',
+        parent: slider,
+        negative: vertical === false ? this.parent.runnerWidth : this.parent.runnerHeight,
+      });
+      const runner = this.parent.runnersAr[index];
+      const tooltipPosition = this.parent.view.positionToValue({
+        parent: slider,
+        runner,
+        vertical,
+      });
+
+      tooltip.innerHTML = String(tooltipPosition);
+      slider.appendChild(tooltip);
+    });
+  }
+
+  setTooltipDataAttributes(elements: NodeList) {
+    const collection = elements;
+
+    collection.forEach((target, index) => {
+      const HTMLtooltip = target as HTMLElement;
+      HTMLtooltip.dataset.runnerSibling = String(index);
+    });
+  }
+}
+
 class Runner {
   parent;
 
@@ -100,62 +160,30 @@ class Runner {
     return RUNNER_ELEMENT;
   }
 
-}
+  setRunnersDataAttributes(elements: NodeList) {
+    const collection = elements;
+    let pair = 1;
 
-class Tooltip {
-  parent;
+    if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
+      collection.forEach((target, index, array) => {
+        const HTMLrunner = target as HTMLElement;
+        HTMLrunner.dataset.pair = String(pair);
+        HTMLrunner.dataset.number = String(index + 1);
+        if (array.length === 1) {
+          HTMLrunner.dataset.startAndEnd = 'true';
+        } else if (index % 2 === 0) {
+          HTMLrunner.dataset.start = 'true';
+        } else {
+          HTMLrunner.dataset.start = 'false';
+        }
+        if (index % 2 === 1) {
+          pair += 1;
+        }
 
-  constructor(parent) {
-    this.parent = parent;
-  }
-
-  createTooltip(): HTMLElement {
-    const TOOLTIP_ELEMENT = document.createElement('div');
-    TOOLTIP_ELEMENT.classList.add('slider__tooltip');
-
-    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
-    if (!SLIDER_IS_VERTICAL) {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
-    } else {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
+        HTMLrunner.dataset.tooltipSibling = String(index);
+      });
     }
-    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      return false;
-    });
-
- //   TOOLTIP_ELEMENT.innerHTML = String(position);
-
-    return TOOLTIP_ELEMENT;
   }
-
-  renderSliderTooltip(obj: {position, vertical, slider}) {
-    const { position, vertical, slider } = obj;
-
-
-    position.forEach((pos, index)=> {
-      const tooltip = this.createTooltip();
-      this.parent.setElementPosition({
-        element: tooltip,
-        pos,
-        axis: vertical === false ? 'left' : 'top',
-        parent: slider,
-        negative: vertical === false ? this.parent.runnerWidth : this.parent.runnerHeight,
-      });
-      
-
-      const runner = this.parent.runnersAr[index];
-      const tooltipPosition = this.parent.view.positionToValue({
-        parent: slider,
-        runner,
-        vertical,
-      });
-  
-      tooltip.innerHTML = String(tooltipPosition);
-      slider.appendChild(tooltip);
-    })
-
-  }
-  
 }
 
 export default class Render {
@@ -170,6 +198,7 @@ export default class Render {
   runnerClass;
 
   runnersAr = [];
+
   runnerWidth;
 
   runnerHeight;
@@ -278,44 +307,10 @@ export default class Render {
 
   setSliderElementsDataAttributes(root) {
     const RenderedRunners = root.querySelectorAll('.slider__runner');
-    this.setRunnersDataAttributes(RenderedRunners);
+    this.runnerClass.setRunnersDataAttributes(RenderedRunners);
     const RenderedTooltips = root.querySelectorAll('.slider__tooltip');
-    this.setTooltipDataAttributes(RenderedTooltips);
+    this.tooltipClass.setTooltipDataAttributes(RenderedTooltips);
     return RenderedRunners;
-  }
-
-  setRunnersDataAttributes(elements: NodeList) {
-    const collection = elements;
-    let pair = 1;
-
-    if ((elements[0] as HTMLElement).classList.contains('slider__runner')) {
-      collection.forEach((target, index, array) => {
-        const HTMLrunner = target as HTMLElement;
-        HTMLrunner.dataset.pair = String(pair);
-        HTMLrunner.dataset.number = String(index + 1);
-        if (array.length === 1) {
-          HTMLrunner.dataset.startAndEnd = 'true';
-        } else if (index % 2 === 0) {
-          HTMLrunner.dataset.start = 'true';
-        } else {
-          HTMLrunner.dataset.start = 'false';
-        }
-        if (index % 2 === 1) {
-          pair += 1;
-        }
-
-        HTMLrunner.dataset.tooltipSibling = String(index);
-      });
-    }
-  }
-
-  setTooltipDataAttributes(elements: NodeList) {
-    const collection = elements;
-
-    collection.forEach((target, index) => {
-      const HTMLtooltip = target as HTMLElement;
-      HTMLtooltip.dataset.runnerSibling = String(index);
-    });
   }
 
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
@@ -642,6 +637,7 @@ export default class Render {
     this.root = ROOT_NODE;
 
     const NEW_SLIDER = this.rangeClass.renderNewSlider({ root: ROOT_NODE, id });
+    this.range = NEW_SLIDER;
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
         bookmark: 'elementMouseDown',
@@ -652,7 +648,7 @@ export default class Render {
       });
     }
 
-    this.range = ROOT_NODE.querySelector('.slider__range');
+    
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
@@ -667,6 +663,8 @@ export default class Render {
     this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER});
 
     const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
+    const RenderedTooltips = this.setSliderElementsDataAttributes(ROOT_NODE);
+
     this.view.handler.registerEventHandlers(RenderedRunners);
 
     this.renderProgress({
