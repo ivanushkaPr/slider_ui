@@ -3,6 +3,8 @@ import El from '../Element/Element';
 export default class Runner extends El {
   parent;
 
+  draggable;
+
   constructor(parent) {
     super();
     this.parent = parent;
@@ -14,7 +16,7 @@ export default class Runner extends El {
 
     targetElement.style.position = 'absolute';
     targetElement.style.zIndex = '1000';
-    this.parent.view.handler.draggable = targetElement;
+    this.draggable = targetElement;
 
     this.parent.view.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
     this.parent.view.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
@@ -23,15 +25,15 @@ export default class Runner extends El {
       element: document.body as HTMLElement,
       eventName: 'mousemove',
       cb: this.onRunnerMouseMoveHandler,
-      enviroment: this.parent.view.handler,
+      enviroment: this,
     });
 
     this.parent.view.onHandlerRegister({
       bookmark: 'runnerMouseUp',
       element: document.body as HTMLElement,
       eventName: 'mouseup',
-      cb: this.parent.view.handler.onRunnerMouseUpHandler,
-      enviroment: this.parent.view.handler,
+      cb: this.onRunnerMouseUpHandler,
+      enviroment: this,
     });
 
 
@@ -39,8 +41,8 @@ export default class Runner extends El {
       bookmark: 'runnerDragStart',
       element: event.target as HTMLElement,
       eventName: 'dragstart',
-      cb: this.parent.view.handler.onDragStartHandler,
-      enviroment: this.parent.view.handler,
+      cb: this.onDragStartHandler,
+      enviroment: this,
     });
 
     return true;
@@ -53,14 +55,46 @@ export default class Runner extends El {
 
     let params;
     if (!vertical) {
-      params = { point: pageX, element: this.parent.view.handler.draggable, vertical };
+      params = { point: pageX, element: this.draggable, vertical };
     } else {
-      params = { point: pageY, element: this.parent.view.handler.draggable, vertical };
+      params = { point: pageY, element: this.draggable, vertical };
     }
 
-    this.parent.view.handler.onMoveElementAtPoint(params);
+    this.onMoveElementAtPoint(params);
     return true;
   }
+
+  getSliderControlPoints(obj: {vertical, parent, point, element}) {
+    const {
+      vertical, parent, point, element,
+    } = obj;
+
+    type controlPoints = {
+      firstPoint: number,
+      secondPoint: number,
+      relativePointPosition: number
+    }
+
+    const CONTROL_POINTS: controlPoints = {
+      firstPoint: 0,
+      secondPoint: undefined,
+      relativePointPosition: undefined,
+    };
+
+    if (!vertical) {
+      CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().width
+      - parent.clientLeft * 2 - element.offsetWidth;
+      CONTROL_POINTS.relativePointPosition = point
+      - parent.getBoundingClientRect().left - window.pageXOffset;
+    } else {
+      CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().height
+      - parent.clientTop * 2 - element.offsetHeight;
+      CONTROL_POINTS.relativePointPosition = point
+      - parent.getBoundingClientRect().top - window.pageYOffset;
+    }
+    return CONTROL_POINTS;
+  }
+
 
 
   runnerStepHandler(point) {
@@ -111,7 +145,7 @@ export default class Runner extends El {
     } else {
       nextPosition -= this.parent.view.shiftY;
     }
-    const siblings = this.parent.view.handler.getSiblingRunners({ runner: targetElement, pair });
+    const siblings = this.getSiblingRunners({ runner: targetElement, pair });
 
     const answer = {
       coords: 0,
@@ -189,6 +223,170 @@ export default class Runner extends El {
     }
     return answer;
   }
+
+  getSiblingRunners(obj: {runner: HTMLElement, pair: string}): NodeList {
+    const { runner, pair } = obj;
+    const selector = `.slider__runner[data-pair="${pair}"]`;
+    const siblings = runner.parentNode.querySelectorAll(selector);
+    return siblings;
+  }
+
+  onRestrictDrag(obj: {
+    firstPointPosition: number;
+    secondPointPosition: number;
+    beforeFirstPoint: boolean;
+    afterSecondPoint: boolean;
+    position: number
+  }): number {
+    const {
+      firstPointPosition, secondPointPosition, beforeFirstPoint, afterSecondPoint, position,
+    } = obj;
+    let point;
+    if (beforeFirstPoint) {
+      point = firstPointPosition;
+    } else if (afterSecondPoint) {
+      point = secondPointPosition;
+    } else {
+      point = position;
+    }
+    return point;
+  }
+
+  moveRunner(obj: {element, vertical, position}) {
+    const { element, vertical, position } = obj;
+    if (!vertical) {
+      element.style.left = `${position}px`;
+    } else {
+      element.style.top = `${position}px`;
+    }
+  }
+
+  preventSiblingRunnerCollision(obj: {runner, parent, vertical, pos,}) {
+    const { runner, parent, vertical, pos } = obj;
+    console.log(pos);
+    const {pair, number, start } = runner.dataset;
+    if (!vertical) {
+      if (start === 'true') {
+        const selector = `.slider__runner[data-number="${Number(number) - 1}"]`;
+        const prevRunner = this.parent.range.querySelector(selector);
+        if (prevRunner && pos <= prevRunner.offsetLeft + prevRunner.offsetWidth - prevRunner.clientLeft * 2) {
+          runner.style.left = `${prevRunner.offsetLeft + 10}px`;
+          return false;
+        }
+      } else {
+        const selector = `.slider__runner[data-number="${Number(number) + 1}"]`;
+        const nextRunner = this.parent.range.querySelector(selector);
+        if (nextRunner && pos >= nextRunner.offsetLeft - nextRunner.offsetWidth - nextRunner.clientLeft * 2) {
+          runner.style.left = `${nextRunner.offsetLeft - 10}px`;
+          return false;
+        }
+      }
+    } else {
+      if(start === 'true') {
+
+      } else {
+
+      }
+    }
+    return true;
+  }
+
+  moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}) {
+    const {
+      parent, runner, position, axis, vertical,
+    } = obj;
+    const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
+    if (this.parent.view.fetchModelProperty('tooltips') === true) {
+      tooltipSibling.classList.add('slider__tooltip--show');
+    }
+    tooltipSibling.style[axis] = `${position}px`;
+    tooltipSibling.innerHTML = String(this.parent.view.positionToValue({
+      parent,
+      runner,
+      vertical,
+    }));
+  }
+
+
+
+  onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
+    const { point, element, vertical } = obj;
+    const parent = element.parentNode as HTMLElement;
+    const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
+      vertical, parent, point, element,
+    });
+
+    const { shiftX, shiftY } = this.parent.view;
+
+
+    const runnerPosition = this.runnerStepHandler(relativePointPosition);
+
+
+    const collisionData = this.onRunnersCollision({
+      targetElement: element,
+      pair: element.dataset.pair,
+      nextPosition: runnerPosition,
+      vertical,
+    });
+
+    const RunnerPositionValidation = this.onRestrictDrag({
+      firstPointPosition: firstPoint,
+      secondPointPosition: secondPoint,
+      beforeFirstPoint: firstPoint > collisionData.coords,
+      afterSecondPoint: secondPoint < collisionData.coords,
+      position: collisionData.coords,
+    });
+
+    this.moveRunner({ element, vertical, position: RunnerPositionValidation});
+
+    this.preventSiblingRunnerCollision({runner: element, parent, vertical, pos: RunnerPositionValidation });
+
+    this.onMoveProgress({
+      parent,
+      runner: element,
+      collision: collisionData.collision,
+    });
+
+    this.moveTooltipSibling({
+      parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
+    });
+
+    this.parent.view.setModelProperty({
+      property: 'runners',
+      value: Math.round(this.calculateRunnerPosition({
+        parent,
+        position: RunnerPositionValidation,
+        vertical,
+      })),
+      index: this.draggable.dataset.number - 1,
+    });
+
+    this.parent.view.updateRunnerPosition({
+      position: RunnerPositionValidation,
+      index: this.draggable.dataset.number,
+    });
+  }
+
+  onRunnerMouseUpHandler = () => {
+    if (this.parent.view.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
+
+    const { bookmark: mouseMoveBookmark } = this.parent.view.handlers.runnerMouseMove;
+    this.parent.view.onHandlerDelete(mouseMoveBookmark);
+    const { bookmark: mouseUpBookmark } = this.parent.view.handlers.runnerMouseUp;
+    this.parent.view.onHandlerDelete(mouseUpBookmark);
+    const { bookmark: dragStartBookmark } = this.parent.view.handlers.runnerDragStart;
+    this.parent.view.onHandlerDelete(dragStartBookmark);
+    this.draggable = null;
+    return true;
+  }
+
+  onTooltipHide = (runner) => {
+    const parent = runner.offsetParent;
+    const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
+    tooltipSibling.classList.remove('slider__tooltip--show');
+  }
+
+  onDragStartHandler = (e) => e.preventDefault();
 
   RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
     const {

@@ -1,5 +1,4 @@
 /* eslint-disable max-classes-per-file */
-import Handler from './Handler/Handler.ts';
 import Render from './Render/Render.ts';
 
 export default class View {
@@ -8,8 +7,6 @@ export default class View {
   }
 
   render: Render;
-
-  handler: Handler;
 
   controller;
 
@@ -24,7 +21,6 @@ export default class View {
   constructor() {
     const view = this;
     this.render = new Render(view);
-    this.handler = new Handler(view);
   }
 
   fetchModelProperty(property: string) {

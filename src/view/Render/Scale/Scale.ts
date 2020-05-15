@@ -158,4 +158,14 @@ export default class Scale extends El {
       }
     }
   }
+
+  onScaleResizeHandler() {
+    /*
+    const id = this.view.fetchModelProperty('id');
+    const parentNode = document.getElementById(id);
+    parentNode.querySelector('slider__ruler').remove();
+    this.view.render.createScales({ parentNode, vertical: this.view.fetchModelProperty('vertical') });
+    return true;
+  */
+  }
 }
