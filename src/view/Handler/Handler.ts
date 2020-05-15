@@ -9,103 +9,6 @@ export default class Handler {
     this.view = view;
   }
 
-  onElementClickHandler = (event: MouseEvent):boolean => {
-    let range;
-    if (!this.draggable) {
-      this.draggable = this.view.render.range.querySelector('.slider__runner');
-      if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2,
-        event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
-        if (this.view.controller.getModelProperty('stepsOn')) {
-          const scale = (event.currentTarget) as HTMLElement;
-          range = scale.parentNode.parentNode as HTMLElement;
-        } else {
-          range = (event.currentTarget as HTMLElement);
-        }
-
-        const runners = range.querySelectorAll('.slider__runner');
-        const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
-        let click = event.pageX - range.offsetLeft - range.clientLeft;
-
-        let prevDiff = 10000;
-        let index;
-        runners.forEach((runner, i) => {
-          const pos = parseInt((runner as HTMLElement).style.left, 10);
-          const diff = Math.abs(click - pos);
-          if (diff < prevDiff) {
-            prevDiff = diff;
-            index = i;
-          }
-        });
-
-        const runner = runners[index] as HTMLElement;
-        if (runner.dataset.start === 'false') {
-          click -= runnerWidth;
-        }
-        runner.style.left = `${click}px`;
-        this.draggable = runner;
-        this.onMoveProgress({ parent: range, runner, collision: false });
-
-        this.view.setModelProperty({
-          property: 'runners',
-          value: this.calculateRunnerPosition({
-            parent: this.view.render.range,
-            position: click,
-            vertical: this.view.fetchModelProperty('vertical'),
-          }),
-          index: this.draggable.dataset.number - 1,
-        });
-
-        this.view.updateRunnerPosition({
-          position: click,
-          index: this.draggable.dataset.number,
-        });
-        this.draggable = undefined;
-        return true;
-      }
-      return false;
-    }
-  }
-
-  onRunnerMouseDownHandler = (event: MouseEvent): boolean => {
-    // event.preventDefault();
-    const targetElement = event.target as HTMLElement;
-
-    targetElement.style.position = 'absolute';
-    targetElement.style.zIndex = '1000';
-    this.draggable = targetElement;
-
-    this.view.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
-    this.view.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
-
-    this.view.onHandlerRegister({
-      bookmark: 'runnerMouseMove',
-      element: document.body as HTMLElement,
-      eventName: 'mousemove',
-      cb: this.onRunnerMouseMoveHandler,
-      enviroment: this,
-    });
-
-    this.view.onHandlerRegister({
-      bookmark: 'runnerMouseUp',
-      element: document.body as HTMLElement,
-      eventName: 'mouseup',
-      cb: this.onRunnerMouseUpHandler,
-      enviroment: this,
-    });
-
-
-    this.view.onHandlerRegister({
-      bookmark: 'runnerDragStart',
-      element: event.target as HTMLElement,
-      eventName: 'dragstart',
-      cb: this.onDragStartHandler,
-      enviroment: this,
-    });
-
-    return true;
-  }
-
-
   onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
     const { pageX, pageY } = event;
 
@@ -117,7 +20,6 @@ export default class Handler {
     } else {
       params = { point: pageY, element: this.draggable, vertical };
     }
-    
     this.onMoveElementAtPoint(params);
     return true;
   }
@@ -403,6 +305,10 @@ export default class Handler {
     }
   }
 
+  getStartAndEndPoint(sibling) {
+    
+  }
+
   onMoveProgress = (obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean, msg?: string}) => {
     const { parent, runner: element, collision, msg } = obj;
     const { start, startAndEnd } = element.dataset;
@@ -415,6 +321,7 @@ export default class Handler {
       progress.style.display = 'block';
     }
     if (!this.view.fetchModelProperty('vertical')) {
+
       if (startAndEnd) {
         const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left;
         progress.style.width = `${width}px`;
@@ -435,7 +342,9 @@ export default class Handler {
         const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
         progress.style.width = `${width}px`;
       }
+
     } else if (this.view.fetchModelProperty('vertical')) {
+
       if (startAndEnd) {
         const top = element.getBoundingClientRect().bottom
         - parent.offsetTop - parent.clientTop + window.pageYOffset;
@@ -480,21 +389,6 @@ export default class Handler {
     }));
   }
 
-  calculateRunnerPosition(obj: {parent, position, vertical }) {
-    const { parent, position, vertical } = obj;
-    let absolutePosition;
-    if (!vertical) {
-      absolutePosition = position
-      / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth)
-      / 100);
-    } else {
-      absolutePosition = position
-      / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
-      / 100);
-    }
-    return absolutePosition;
-  }
-
   onRunnerMouseUpHandler = () => {
     if (this.view.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
 
@@ -524,5 +418,20 @@ export default class Handler {
     this.view.render.createScales({ parentNode, vertical: this.view.fetchModelProperty('vertical') });
     return true;
   */
+  }
+
+  calculateRunnerPosition(obj: {parent, position, vertical }) {
+    const { parent, position, vertical } = obj;
+    let absolutePosition;
+    if (!vertical) {
+      absolutePosition = position
+      / ((parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth)
+      / 100);
+    } else {
+      absolutePosition = position
+      / ((parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight)
+      / 100);
+    }
+    return absolutePosition;
   }
 }
