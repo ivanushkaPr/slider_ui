@@ -110,6 +110,7 @@ const secondConfig = {
   runners: [50],
   stepsOn: false,
   vertical: false,
+  scaleOn: true,
   units: 'px',
   id: '#slider2',
   panel: true,

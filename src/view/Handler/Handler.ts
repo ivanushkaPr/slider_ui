@@ -13,69 +13,57 @@ export default class Handler {
     let range;
     if (!this.draggable) {
       this.draggable = this.view.render.range.querySelector('.slider__runner');
-    if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2,
-      event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
-      if (this.view.controller.getModelProperty('stepsOn')) {
-        const scale = (event.currentTarget) as HTMLElement;
-        range = scale.parentNode.parentNode as HTMLElement;
-      } else {
-        range = (event.currentTarget as HTMLElement);
-      }
-
-      const runners = range.querySelectorAll('.slider__runner');
-      const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
-      let click = event.pageX - range.offsetLeft - range.clientLeft;
-
-      let prevDiff = 10000;
-      let index;
-      runners.forEach((runner, i) => {
-        const pos = parseInt((runner as HTMLElement).style.left, 10);
-        const diff = Math.abs(click - pos);
-        if (diff < prevDiff) {
-          prevDiff = diff;
-          index = i;
+      if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2,
+        event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
+        if (this.view.controller.getModelProperty('stepsOn')) {
+          const scale = (event.currentTarget) as HTMLElement;
+          range = scale.parentNode.parentNode as HTMLElement;
+        } else {
+          range = (event.currentTarget as HTMLElement);
         }
-      });
 
-      const runner = runners[index] as HTMLElement;
-      if (runner.dataset.start === 'false') {
-        click -= runnerWidth;
-      }
-      runner.style.left = `${click}px`;
-      this.draggable = runner;
-      this.onMoveProgress({ parent: range, runner, collision: false });
+        const runners = range.querySelectorAll('.slider__runner');
+        const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
+        let click = event.pageX - range.offsetLeft - range.clientLeft;
 
-      this.view.setModelProperty({
-        property: 'runners',
-        value: this.calculateRunnerPosition({
-          parent: this.view.render.range,
+        let prevDiff = 10000;
+        let index;
+        runners.forEach((runner, i) => {
+          const pos = parseInt((runner as HTMLElement).style.left, 10);
+          const diff = Math.abs(click - pos);
+          if (diff < prevDiff) {
+            prevDiff = diff;
+            index = i;
+          }
+        });
+
+        const runner = runners[index] as HTMLElement;
+        if (runner.dataset.start === 'false') {
+          click -= runnerWidth;
+        }
+        runner.style.left = `${click}px`;
+        this.draggable = runner;
+        this.onMoveProgress({ parent: range, runner, collision: false });
+
+        this.view.setModelProperty({
+          property: 'runners',
+          value: this.calculateRunnerPosition({
+            parent: this.view.render.range,
+            position: click,
+            vertical: this.view.fetchModelProperty('vertical'),
+          }),
+          index: this.draggable.dataset.number - 1,
+        });
+
+        this.view.updateRunnerPosition({
           position: click,
-          vertical: this.view.fetchModelProperty('vertical'),
-        }),
-        index: this.draggable.dataset.number - 1,
-      });
-
-      this.view.updateRunnerPosition({
-        position: click,
-        index: this.draggable.dataset.number,
-      });
-      this.draggable = undefined;
-      return true;
+          index: this.draggable.dataset.number,
+        });
+        this.draggable = undefined;
+        return true;
+      }
+      return false;
     }
-    return false;
-  }
-}
-
-  registerEventHandlers(runners) {
-    runners.forEach((runner) => {
-      this.view.onHandlerRegister({
-        bookmark: 'runnerMouseDown',
-        element: runner as HTMLElement,
-        eventName: 'mousedown',
-        cb: this.onRunnerMouseDownHandler,
-        enviroment: this,
-      });
-    });
   }
 
   onRunnerMouseDownHandler = (event: MouseEvent): boolean => {
@@ -426,9 +414,6 @@ export default class Handler {
     if (!collision) {
       progress.style.display = 'block';
     }
-
-
-    
     if (!this.view.fetchModelProperty('vertical')) {
       if (startAndEnd) {
         const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left;
@@ -532,10 +517,12 @@ export default class Handler {
   onDragStartHandler = (e) => e.preventDefault();
 
   onScaleResizeHandler() {
+    /*
     const id = this.view.fetchModelProperty('id');
     const parentNode = document.getElementById(id);
     parentNode.querySelector('slider__ruler').remove();
     this.view.render.createScales({ parentNode, vertical: this.view.fetchModelProperty('vertical') });
     return true;
+  */
   }
 }

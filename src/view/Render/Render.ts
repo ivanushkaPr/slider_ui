@@ -1,51 +1,6 @@
 /* eslint-disable max-classes-per-file */
 // eslint-disable-next-line import/extensions
 import View from '../view';
-
-class Range {
-  parent;
-
-  constructor(parent) {
-    this.parent = parent;
-  }
-
-  renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
-    const { root, id } = obj;
-    this.removeSlider(root);
-    const NEW_SLIDER = this.createRange();
-    this.renderElement(NEW_SLIDER, document.getElementById(id));
-    return NEW_SLIDER;
-  }
-
-  removeSlider(root: HTMLElement):void {
-    const OLD_SLIDER = root.querySelector('.slider__range');
-    if (OLD_SLIDER) {
-      OLD_SLIDER.remove();
-    }
-  }
-
-  createRange(): HTMLElement {
-    const IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
-    const RANGE_ELEMENT = document.createElement('div');
-    RANGE_ELEMENT.classList.add('slider__range');
-    if (IS_VERTICAL) {
-      RANGE_ELEMENT.classList.add('slider__range--vertical');
-    } else {
-      RANGE_ELEMENT.classList.add('slider__range--horizontal');
-    }
-    return RANGE_ELEMENT;
-  }
-
-  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
-    parentElement.prepend(element);
-    return undefined;
-  }
-
-  onElementClickHandler() {
-
-  }
-}
-
 class Tooltip {
   parent;
 
@@ -72,8 +27,8 @@ class Tooltip {
     return TOOLTIP_ELEMENT;
   }
 
-  renderSliderTooltip(obj: {position, vertical, slider}) {
-    const { position, vertical, slider } = obj;
+  renderSliderTooltip(obj: {position, vertical, slider, root}) {
+    const { position, vertical, slider, root } = obj;
 
     position.forEach((pos, index)=> {
       const tooltip = this.createTooltip();
@@ -94,6 +49,8 @@ class Tooltip {
       tooltip.innerHTML = String(tooltipPosition);
       slider.appendChild(tooltip);
     });
+
+    this.setTooltipDataAttributes(root);
   }
 
   setTooltipDataAttributes(root) {
@@ -113,34 +70,14 @@ class Runner {
     this.parent = parent;
   }
 
-  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
+  RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
     const {
-      runners, slider, vertical,
+      runners, slider, vertical, root,
     } = obj;
-    runners.forEach((runnerPosition: number, index) => {
-
-
-      // const position = this.fetchModelProperty('stepsOn')
-      // && this.fetchModelProperty('adjustSteps') ?
-      // this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }
-      // : runnerPosition;
-      
+    runners.forEach((runnerPosition: number) => {
       const position = runnerPosition;
-     
-     /*
-      this.view.setModelProperty({
-        property: 'runners',
-        value: Math.round(position),
-        index,
-      });
-      */
-
       const runner = this.createRunner();
       slider.appendChild(runner);
-
-     // this.parent.runnerWidth = runner.offsetWidth;
-     // this.parent.runnerHeight = runner.offsetHeight;
-
       this.parent.runnersAr.push(runner);
       this.parent.setElementPosition({
         element: runner,
@@ -148,10 +85,9 @@ class Runner {
         axis: vertical === false ? 'left' : 'top',
         parent: slider,
       });
-
-
-     // this.parent.tooltipClass.renderSliderTooltip({ position, vertical, slider, runner });
     });
+    const runnersDOM = this.setRunnersDataAttributes(root);
+    this.registerEventHandlers(runnersDOM);
   }
 
   createRunner(): HTMLElement {
@@ -186,6 +122,18 @@ class Runner {
     }
     return elements;
   }
+
+  registerEventHandlers(runners) {
+    runners.forEach((runner) => {
+      this.parent.view.onHandlerRegister({
+        bookmark: 'runnerMouseDown',
+        element: runner as HTMLElement,
+        eventName: 'mousedown',
+        cb: this.parent.view.handler.onRunnerMouseDownHandler,
+        enviroment: this,
+      });
+    });
+  }
 }
 
 
@@ -205,9 +153,9 @@ class Progress {
   getProgressSize(obj: { vertical: string, parent: HTMLElement,
     firstRunner: Element, secondRunner?: Element
    }) {
-   const {
-     vertical, parent, firstRunner, secondRunner,
-   } = obj;
+    const {
+      vertical, parent, firstRunner, secondRunner,
+    } = obj;
    type styles = {
      position: number;
      size: number,
@@ -265,6 +213,7 @@ class Progress {
    }
    return progressGeometry;
   }
+
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     if (!vertical) {
@@ -412,8 +361,162 @@ class Progress {
 
     return PROGRESS_ELEMENT;
   }
-
 }
+
+class Scale {
+  parent;
+
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
+    const { parentNode, vertical } = obj;
+    const breakpoints = [...this.parent.view.breakpoints];
+    const slider = parentNode.querySelector('.slider__range');
+    const ruler = document.createElement('div');
+    const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
+    ruler.className = `${classNames}`;
+
+
+    slider.appendChild(ruler);
+    const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
+    breakpoints.forEach((breakpoint: number, index, array) => {
+      const scale: HTMLDivElement = this.createScale({ mods });
+      this.setScalePosition({ scale, vertical, breakpoint });
+      if (index === 0) {
+        const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
+        const textNode = this.parent.createElement('p', classes);
+        const value = document.createTextNode(this.parent.view.fetchModelProperty('minValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      } else if (index === array.length - 1) {
+        const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
+        const textNode = this.parent.createElement('p', classes);
+        const value = document.createTextNode(this.parent.view.fetchModelProperty('maxValue'));
+        textNode.appendChild(value);
+        ruler.appendChild(textNode);
+      }
+      this.parent.view.onHandlerRegister({
+        bookmark: 'elementMouseDown',
+        element: scale as HTMLElement,
+        eventName: 'mousedown',
+        cb: this.parent.view.handler.onElementClickHandler,
+        enviroment: this,
+      });
+      this.createMediumScale({
+        start: array[index], end: array[index + 1], parent: ruler, vertical, index, array,
+      });
+      ruler.appendChild(scale);
+    });
+  }
+
+  createScale(obj: {mods}) {
+    const { mods } = obj;
+
+    const div = document.createElement('div');
+    div.className = `slider__scale ${mods}`;
+    return div;
+  }
+
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
+    const { scale, vertical, breakpoint } = obj;
+    scale.style.position = 'absolute';
+    const leftOrTop = vertical === false ? 'left' : 'top';
+    scale.style[leftOrTop] = `${breakpoint}px`;
+  }
+
+  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
+    const {
+      start, end, parent, vertical, index, array,
+    } = obj;
+    const step = start + ((end - start) / 2);
+
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
+      : 'slider__scale--vertical slider__scale--vertical-md';
+    if (index < this.parent.view.breakpoints.length - 1) {
+      const smallScale = this.createScale({ mods });
+      this.setScalePosition({ scale: smallScale, vertical, breakpoint: step });
+      parent.appendChild(smallScale);
+      this.createSmallScales({
+        start, end: step, parent, vertical, index, array,
+      });
+      this.createSmallScales({
+        start: step, end, parent, vertical, index, array,
+      });
+    }
+  }
+
+  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
+    const {
+      start, end, parent, vertical, index,
+    } = obj;
+    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
+      : 'slider__scale--vertical slider__scale--vertical-sm';
+
+    const step = (end - start) / 4;
+    for (let i = 0; i <= 3; i += 1) {
+      if (index < this.parent.view.breakpoints.length - 1) {
+        const smallScale = this.createScale({ mods });
+        this.setScalePosition({ scale: smallScale, vertical, breakpoint: step * i + start });
+        parent.appendChild(smallScale);
+      }
+    }
+  }
+}
+
+
+class Range {
+  parent;
+
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
+    const { root, id } = obj;
+    this.removeSlider(root);
+    const NEW_SLIDER = this.createRange();
+    if (this.parent.view.controller.getModelProperty('stepsOn') === false) this.registerEventHandlers( NEW_SLIDER);
+    this.renderElement(NEW_SLIDER, document.getElementById(id));
+    return NEW_SLIDER;
+  }
+
+  removeSlider(root: HTMLElement):void {
+    const OLD_SLIDER = root.querySelector('.slider__range');
+    if (OLD_SLIDER) {
+      OLD_SLIDER.remove();
+    }
+  }
+
+  createRange(): HTMLElement {
+    const IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    const RANGE_ELEMENT = document.createElement('div');
+    RANGE_ELEMENT.classList.add('slider__range');
+    if (IS_VERTICAL) {
+      RANGE_ELEMENT.classList.add('slider__range--vertical');
+    } else {
+      RANGE_ELEMENT.classList.add('slider__range--horizontal');
+    }
+    return RANGE_ELEMENT;
+  }
+
+  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
+    parentElement.prepend(element);
+    return undefined;
+  }
+
+  registerEventHandlers(slider) {
+    this.parent.view.onHandlerRegister({
+      bookmark: 'elementMouseDown',
+      element: slider as HTMLElement,
+      eventName: 'mousedown',
+      cb: this.parent.view.handler.onElementClickHandler,
+      enviroment: this,
+    });
+  }
+}
+
 
 export default class Render {
   view: View;
@@ -436,6 +539,8 @@ export default class Render {
 
   progressClass;
 
+  scaleClass;
+
   constructor(view) {
     const that = this;
     this.view = view;
@@ -443,6 +548,7 @@ export default class Render {
     this.runnerClass = new Runner(that);
     this.tooltipClass = new Tooltip(that);
     this.progressClass = new Progress(that);
+    this.scaleClass = new Scale(that);
   }
 
   getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
@@ -537,104 +643,6 @@ export default class Render {
     }
   }
 
-  // Scales
-
-  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
-    const { parentNode, vertical } = obj;
-    const breakpoints = [...this.view.breakpoints];
-    const slider = parentNode.querySelector('.slider__range');
-    const ruler = document.createElement('div');
-    const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
-    ruler.className = `${classNames}`;
-
-
-    slider.appendChild(ruler);
-    const mods = vertical === false ? 'slider__scale--horizontal' : 'slider__scale--vertical';
-    breakpoints.forEach((breakpoint: number, index, array) => {
-      const scale: HTMLDivElement = this.createScale({ mods });
-      this.setScalePosition({ scale, vertical, breakpoint });
-      if (index === 0) {
-        const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
-        const textNode = this.createElement('p', classes);
-        const value = document.createTextNode(this.view.fetchModelProperty('minValue'));
-        textNode.appendChild(value);
-        ruler.appendChild(textNode);
-      } else if (index === array.length - 1) {
-        const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
-        const textNode = this.createElement('p', classes);
-        const value = document.createTextNode(this.view.fetchModelProperty('maxValue'));
-        textNode.appendChild(value);
-        ruler.appendChild(textNode);
-      }
-      this.view.onHandlerRegister({
-        bookmark: 'elementMouseDown',
-        element: scale as HTMLElement,
-        eventName: 'mousedown',
-        cb: this.view.handler.onElementClickHandler,
-        enviroment: this,
-      });
-      this.createMediumScale({
-        start: array[index], end: array[index + 1], parent: ruler, vertical, index, array,
-      });
-      ruler.appendChild(scale);
-    });
-  }
-
-  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
-    const { scale, vertical, breakpoint } = obj;
-    scale.style.position = 'absolute';
-    const leftOrTop = vertical === false ? 'left' : 'top';
-    scale.style[leftOrTop] = `${breakpoint}px`;
-  }
-
-  createScale(obj: {mods}) {
-    const { mods } = obj;
-
-    const div = document.createElement('div');
-    div.className = `slider__scale ${mods}`;
-    return div;
-  }
-
-  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
-    const {
-      start, end, parent, vertical, index, array,
-    } = obj;
-    const step = start + ((end - start) / 2);
-
-    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
-      : 'slider__scale--vertical slider__scale--vertical-md';
-    if (index < this.view.breakpoints.length - 1) {
-      const smallScale = this.createScale({ mods });
-      this.setScalePosition({ scale: smallScale, vertical, breakpoint: step });
-      parent.appendChild(smallScale);
-      this.createSmallScales({
-        start, end: step, parent, vertical, index, array,
-      });
-      this.createSmallScales({
-        start: step, end, parent, vertical, index, array,
-      });
-    }
-  }
-
-  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
-    const {
-      start, end, parent, vertical, index,
-    } = obj;
-    const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-sm'
-      : 'slider__scale--vertical slider__scale--vertical-sm';
-
-    const step = (end - start) / 4;
-    for (let i = 0; i <= 3; i += 1) {
-      if (index < this.view.breakpoints.length - 1) {
-        const smallScale = this.createScale({ mods });
-        this.setScalePosition({ scale: smallScale, vertical, breakpoint: step * i + start });
-        parent.appendChild(smallScale);
-      }
-    }
-  }
-
-  
-
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
     //document.body.addEventListener('resize', this.view.handler.onScaleResizeHandler);
@@ -645,15 +653,6 @@ export default class Render {
 
     const NEW_SLIDER = this.rangeClass.renderNewSlider({ root: ROOT_NODE, id });
     this.range = NEW_SLIDER;
-    if (this.view.controller.getModelProperty('stepsOn') === false) {
-      this.view.onHandlerRegister({
-        bookmark: 'elementMouseDown',
-        element: NEW_SLIDER as HTMLElement,
-        eventName: 'mousedown',
-        cb: this.view.handler.onElementClickHandler,
-        enviroment: this,
-      });
-    }
 
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
@@ -662,15 +661,10 @@ export default class Render {
     });
 
     this.runnerClass.RenderSliderRunners({
-      runners, slider: NEW_SLIDER, size, vertical,
+      runners, slider: NEW_SLIDER, size, vertical, root: ROOT_NODE,
     });
 
-    this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER});
-
-    const RenderedRunners = this.runnerClass.setRunnersDataAttributes(ROOT_NODE);
-    const RenderedTooltips = this.tooltipClass.setTooltipDataAttributes(ROOT_NODE);
-
-    this.view.handler.registerEventHandlers(RenderedRunners);
+    this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER, root: ROOT_NODE });
 
     this.progressClass.renderProgress({
       runners: ROOT_NODE.getElementsByClassName('slider__runner'),
@@ -678,7 +672,7 @@ export default class Render {
       vertical: this.view.fetchModelProperty('vertical'),
     });
 
-    if (this.view.fetchModelProperty('scaleOn')) this.createScales({ parentNode: ROOT_NODE, vertical });
+    if (this.view.fetchModelProperty('scaleOn')) this.scaleClass.createScales({ parentNode: ROOT_NODE, vertical });
     return undefined;
   }
 
