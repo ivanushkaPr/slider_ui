@@ -14,23 +14,35 @@ export default class Range extends El {
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
-      if (document.elementFromPoint(event.pageX + this.draggable.offsetWidth / 2,
-        event.pageY + this.draggable.offsetHeight / 2).classList.contains('slider__runner') === false) {
-        if (this.parent.view.controller.getModelProperty('stepsOn')) {
-          const scale = (event.currentTarget) as HTMLElement;
-          range = scale.parentNode.parentNode as HTMLElement;
+
+      if (document.elementFromPoint(event.pageX,
+        event.pageY).classList.contains('slider__runner') === false) {
+        range = (event.currentTarget as HTMLElement);
+        const runners = range.querySelectorAll('.slider__runner');
+        
+        let runnerSize;
+        let click;
+        if (!this.parent.view.fetchModelProperty('vertical')) {
+          runnerSize = (runners[0] as HTMLElement).offsetWidth;
+          click = event.pageX - range.offsetLeft - range.clientLeft;
         } else {
-          range = (event.currentTarget as HTMLElement);
+          // Vertical scenario
+          runnerSize = (runners[0] as HTMLElement).offsetWidth;
+          click = event.pageY - range.offsetTop - range.clientTop;
         }
 
-        const runners = range.querySelectorAll('.slider__runner');
-        const runnerWidth = (runners[0] as HTMLElement).offsetWidth;
-        let click = event.pageX - range.offsetLeft - range.clientLeft;
 
         let prevDiff = 10000;
         let index;
         runners.forEach((runner, i) => {
-          const pos = parseInt((runner as HTMLElement).style.left, 10);
+
+          let pos;
+          if (!this.parent.view.fetchModelProperty('vertical')) {
+            pos = parseInt((runner as HTMLElement).style.left, 10);
+          } else {
+            pos = parseInt((runner as HTMLElement).style.top, 10);
+          }
+
           const diff = Math.abs(click - pos);
           if (diff < prevDiff) {
             prevDiff = diff;
@@ -39,10 +51,14 @@ export default class Range extends El {
         });
 
         const runner = runners[index] as HTMLElement;
-        if (runner.dataset.start === 'false') {
-          click -= runnerWidth;
+        click -= runnerSize / 2;
+
+
+        if(!this.parent.view.fetchModelProperty('vertical')) {
+          runner.style.left = `${click}px`;
+        } else {
+          runner.style.top = `${click}px`;
         }
-        runner.style.left = `${click}px`;
         this.draggable = runner;
         this.onMoveProgress({ parent: range, runner, collision: false });
 
@@ -63,6 +79,7 @@ export default class Range extends El {
         this.draggable = undefined;
         return true;
       }
+      this.draggable = undefined;
       return false;
     }
   }
@@ -104,7 +121,7 @@ export default class Range extends El {
     this.parent.view.onHandlerRegister({
       bookmark: 'elementMouseDown',
       element: slider as HTMLElement,
-      eventName: 'mousedown',
+      eventName: 'click',
       cb: this.onElementClickHandler,
       enviroment: this,
     });

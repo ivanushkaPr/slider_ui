@@ -11502,7 +11502,8 @@ class View {
         const NEW_SLIDER = this.createRange();
         this.renderElement(NEW_SLIDER, document.getElementById(id));
         return NEW_SLIDER;
-    }
+		}
+		
     RenderSliderRunners(obj) {
         const { runners, slider, size, vertical } = obj;
         runners.forEach((runnerPosition) => {

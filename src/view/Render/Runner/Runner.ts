@@ -95,8 +95,6 @@ export default class Runner extends El {
     return CONTROL_POINTS;
   }
 
-
-
   runnerStepHandler(point) {
     let smaller;
     let larger;
@@ -307,8 +305,6 @@ export default class Runner extends El {
     }));
   }
 
-
-
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
@@ -317,8 +313,6 @@ export default class Runner extends El {
     });
 
     const { shiftX, shiftY } = this.parent.view;
-
-
     const runnerPosition = this.runnerStepHandler(relativePointPosition);
 
 
@@ -376,7 +370,7 @@ export default class Runner extends El {
     this.parent.view.onHandlerDelete(mouseUpBookmark);
     const { bookmark: dragStartBookmark } = this.parent.view.handlers.runnerDragStart;
     this.parent.view.onHandlerDelete(dragStartBookmark);
-    this.draggable = null;
+    this.draggable = undefined;
     return true;
   }
 

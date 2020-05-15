@@ -7,7 +7,6 @@ import Progress from './Progress/Progress';
 import Scale from './Scale/Scale';
 import Range from './Range/Range';
 
-
 export default class Render {
   view: View;
 
@@ -16,7 +15,7 @@ export default class Render {
   range;
 
   rangeClass;
-  
+
   runnerClass;
 
   runnersAr = [];
@@ -132,15 +131,23 @@ export default class Render {
     }
   }
 
+  getTemporaryRunnerRectangle(parent):DOMRect {
+    const temporaryRunner = this.createRunner();
+    parent.appendChild(temporaryRunner);
+    const runnerDomRect = temporaryRunner.getBoundingClientRect();
+    parent.removeChild(temporaryRunner);
+    return runnerDomRect;
+  }
+
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-    if(!this.resizeHandler) {
+    
+    if (!this.resizeHandler) {
       const func = this.onWindowResizehandler.bind(this);
       window.addEventListener('resize', func);
       this.resizeHandler = true;
     }
 
     const { runners, vertical, id } = obj;
-    //document.body.addEventListener('resize', this.view.handler.onScaleResizeHandler);
 
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
@@ -151,7 +158,7 @@ export default class Render {
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
     const size = this.getSliderSize({
-      range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical,
+      range: NEW_SLIDER, rect: this.getTemporaryRunnerRectangle(NEW_SLIDER), vertical,
     });
 
     this.runnerClass.RenderSliderRunners({
@@ -168,9 +175,7 @@ export default class Render {
 
     if (this.view.fetchModelProperty('scaleOn')) this.scaleClass.createScales({ parentNode: ROOT_NODE, vertical });
 
-    if(this.isResizing) {
-      this.isResizing = false;
-    } 
+    if (this.isResizing) this.isResizing = false;
     return undefined;
   }
 
