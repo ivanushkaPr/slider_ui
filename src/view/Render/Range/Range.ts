@@ -51,14 +51,21 @@ export default class Range extends El {
         });
 
         const runner = runners[index] as HTMLElement;
-        click -= runnerSize / 2;
-
+         // click -= runnerSize / 2;
+        if (runner.dataset.start === 'false') {
+          console.log('end');
+          click -= runnerSize;
+        } else {
+          
+        }
 
         if(!this.parent.view.fetchModelProperty('vertical')) {
           runner.style.left = `${click}px`;
         } else {
           runner.style.top = `${click}px`;
         }
+
+        
         this.draggable = runner;
         this.onMoveProgress({ parent: range, runner, collision: false });
 

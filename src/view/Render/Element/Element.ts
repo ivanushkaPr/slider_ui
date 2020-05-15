@@ -3,20 +3,6 @@ export default class Element {
 
   draggable;
 
-
-
-  
-  setElementCss(element: HTMLElement, cssRules: rules): HTMLElement {
-    const El = element;
-    const Rules = Object.entries(cssRules);
-
-    Rules.forEach((rule) => {
-      const [propertyName, propertyValue] = rule;
-      El.style[propertyName] = propertyValue;
-    });
-    return El;
-  }
-
   positionToValue(obj: { parent: HTMLElement, runner: HTMLElement, vertical: boolean, }):
     number {
     const { parent, runner, vertical } = obj;
@@ -123,8 +109,5 @@ export default class Element {
       }
     }
   }
-}
 
-type rules = {
-  [property: string]: string | number
 }
