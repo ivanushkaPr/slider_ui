@@ -22,7 +22,7 @@ export default class Runner extends El {
       bookmark: 'runnerMouseMove',
       element: document.body as HTMLElement,
       eventName: 'mousemove',
-      cb: this.parent.view.handler.onRunnerMouseMoveHandler,
+      cb: this.onRunnerMouseMoveHandler,
       enviroment: this.parent.view.handler,
     });
 
@@ -53,13 +53,16 @@ export default class Runner extends El {
 
     let params;
     if (!vertical) {
-      params = { point: pageX, element: this.draggable, vertical };
+      params = { point: pageX, element: this.parent.view.handler.draggable, vertical };
     } else {
-      params = { point: pageY, element: this.draggable, vertical };
+      params = { point: pageY, element: this.parent.view.handler.draggable, vertical };
     }
+
     this.parent.view.handler.onMoveElementAtPoint(params);
     return true;
   }
+
+  
 
   RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
     const {
