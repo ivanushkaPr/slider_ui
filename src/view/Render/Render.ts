@@ -58,6 +58,8 @@ class Runner {
       runners, slider, vertical,
     } = obj;
     runners.forEach((runnerPosition: number, index) => {
+
+
       // const position = this.fetchModelProperty('stepsOn')
       // && this.fetchModelProperty('adjustSteps') ?
       // this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }
@@ -75,6 +77,11 @@ class Runner {
 
       const runner = this.createRunner();
       slider.appendChild(runner);
+
+     // this.parent.runnerWidth = runner.offsetWidth;
+     // this.parent.runnerHeight = runner.offsetHeight;
+
+      this.parent.runnersAr.push(runner);
       this.parent.setElementPosition({
         element: runner,
         position,
@@ -82,7 +89,8 @@ class Runner {
         parent: slider,
       });
 
-      this.parent.tooltip.renderSliderTooltip({ position, vertical, slider, runner });
+
+     // this.parent.tooltipClass.renderSliderTooltip({ position, vertical, slider, runner });
     });
   }
 
@@ -101,7 +109,7 @@ class Tooltip {
     this.parent = parent;
   }
 
-  createTooltip(position): HTMLElement {
+  createTooltip(): HTMLElement {
     const TOOLTIP_ELEMENT = document.createElement('div');
     TOOLTIP_ELEMENT.classList.add('slider__tooltip');
 
@@ -115,31 +123,37 @@ class Tooltip {
       return false;
     });
 
-    TOOLTIP_ELEMENT.innerHTML = String(position);
+ //   TOOLTIP_ELEMENT.innerHTML = String(position);
 
     return TOOLTIP_ELEMENT;
   }
 
-  renderSliderTooltip(obj: {position, vertical, slider, runner}) {
-    const { position, vertical, slider, runner } = obj;
+  renderSliderTooltip(obj: {position, vertical, slider}) {
+    const { position, vertical, slider } = obj;
 
-    const tooltip = this.parent.tooltip.createTooltip(position);
-    this.parent.setElementPosition({
-      element: tooltip,
-      position,
-      axis: vertical === false ? 'left' : 'top',
-      parent: slider,
-      negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
-    });
 
-    const tooltipPosition = this.parent.view.positionToValue({
-      parent: slider,
-      runner,
-      vertical,
-    });
+    position.forEach((pos, index)=> {
+      const tooltip = this.createTooltip();
+      this.parent.setElementPosition({
+        element: tooltip,
+        pos,
+        axis: vertical === false ? 'left' : 'top',
+        parent: slider,
+        negative: vertical === false ? this.parent.runnerWidth : this.parent.runnerHeight,
+      });
+      
 
-    tooltip.innerHTML = String(tooltipPosition);
-    slider.appendChild(tooltip);
+      const runner = this.parent.runnersAr[index];
+      const tooltipPosition = this.parent.view.positionToValue({
+        parent: slider,
+        runner,
+        vertical,
+      });
+  
+      tooltip.innerHTML = String(tooltipPosition);
+      slider.appendChild(tooltip);
+    })
+
   }
   
 }
@@ -151,18 +165,23 @@ export default class Render {
 
   range;
 
-  rangeEl;
+  rangeClass;
   
-  runner;
+  runnerClass;
 
-  tooltip;
+  runnersAr = [];
+  runnerWidth;
+
+  runnerHeight;
+
+  tooltipClass;
 
   constructor(view) {
     const that = this;
     this.view = view;
-    this.rangeEl = new Range(that);
-    this.runner = new Runner(that);
-    this.tooltip = new Tooltip(that);
+    this.rangeClass = new Range(that);
+    this.runnerClass = new Runner(that);
+    this.tooltipClass = new Tooltip(that);
   }
 
   getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
@@ -622,7 +641,7 @@ export default class Render {
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
 
-    const NEW_SLIDER = this.rangeEl.renderNewSlider({ root: ROOT_NODE, id });
+    const NEW_SLIDER = this.rangeClass.renderNewSlider({ root: ROOT_NODE, id });
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
         bookmark: 'elementMouseDown',
@@ -641,9 +660,11 @@ export default class Render {
       range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical,
     });
 
-    this.runner.RenderSliderRunners({
+    this.runnerClass.RenderSliderRunners({
       runners, slider: NEW_SLIDER, size, vertical,
     });
+
+    this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER});
 
     const RenderedRunners = this.setSliderElementsDataAttributes(ROOT_NODE);
     this.view.handler.registerEventHandlers(RenderedRunners);
