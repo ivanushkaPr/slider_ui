@@ -31,6 +31,10 @@ export default class Render {
 
   scaleClass;
 
+  resizeHandler: boolean = false;
+
+  isResizing: boolean = false;
+
   constructor(view) {
     const that = this;
     this.view = view;
@@ -81,22 +85,6 @@ export default class Render {
     this.view.breakpoints = breakpoints;
   }
 
-  createTooltip(position): HTMLElement {
-    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
-    const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
-    if (!SLIDER_IS_VERTICAL) {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
-    } else {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
-    }
-    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      return false;
-    });
-
-    TOOLTIP_ELEMENT.innerHTML = String(position);
-    return TOOLTIP_ELEMENT;
-  }
-
   createRunner(): HTMLElement {
     const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
     return RUNNER_ELEMENT;
@@ -133,7 +121,24 @@ export default class Render {
     }
   }
 
+  onWindowResizehandler() {
+    if (!this.isResizing) {
+      this.isResizing = true;
+      this.createSlider({
+        runners: this.view.fetchModelProperty('runners'),
+        vertical: this.view.fetchModelProperty('vertical'),
+        id: this.view.fetchModelProperty('id'),
+      });
+    }
+  }
+
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
+    if(!this.resizeHandler) {
+      const func = this.onWindowResizehandler.bind(this);
+      window.addEventListener('resize', func);
+      this.resizeHandler = true;
+    }
+
     const { runners, vertical, id } = obj;
     //document.body.addEventListener('resize', this.view.handler.onScaleResizeHandler);
 
@@ -162,6 +167,10 @@ export default class Render {
     });
 
     if (this.view.fetchModelProperty('scaleOn')) this.scaleClass.createScales({ parentNode: ROOT_NODE, vertical });
+
+    if(this.isResizing) {
+      this.isResizing = false;
+    } 
     return undefined;
   }
 

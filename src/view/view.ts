@@ -46,6 +46,7 @@ export default class View {
     return El;
   }
 
+  /*
   checkCoordsAvailability(obj: {percents, rangeSize}) {
     const { percents, rangeSize } = obj;
     const percentToPx = (rangeSize / 100) * percents;
@@ -71,6 +72,7 @@ export default class View {
     const point = this.breakpoints[index] / percent;
     return point;
   }
+  */
 
   positionToValue(obj: { parent: HTMLElement, runner: HTMLElement, vertical: boolean, }):
     number {

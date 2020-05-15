@@ -1,7 +1,35 @@
 export default class Element {
   parent;
-  
+
   draggable;
+
+  positionToValue(obj: { parent: HTMLElement, runner: HTMLElement, vertical: boolean, }):
+    number {
+    const { parent, runner, vertical } = obj;
+
+    const WIDTH = parent.offsetWidth - parent.clientLeft * 2 - runner.offsetWidth;
+    const HEIGHT = parent.offsetHeight - parent.clientTop * 2 - runner.offsetHeight;
+    const RANGE_BORDER_BOX = vertical === false ? WIDTH : HEIGHT;
+
+    const LEFT = parseInt(runner.style.left, 10);
+    const TOP = parseInt(runner.style.top, 10);
+    const POSITION = vertical === false
+      ? LEFT : this.positionFromEnd({ size: HEIGHT, position: TOP });
+    const SUM = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
+    let VALUE = Math.ceil((SUM / RANGE_BORDER_BOX) * POSITION);
+
+    const minValue = this.parent.view.fetchModelProperty('minValue');
+    VALUE = minValue < 0 ? VALUE += minValue : VALUE;
+    return VALUE;
+  }
+
+  positionFromEnd(obj: { size: number, position: number}) {
+    const {
+      size, position,
+    } = obj;
+    return ((size - position));
+  }
+
 
   calculateRunnerPosition(obj: {parent, position, vertical }) {
     const { parent, position, vertical } = obj;

@@ -300,7 +300,7 @@ export default class Runner extends El {
       tooltipSibling.classList.add('slider__tooltip--show');
     }
     tooltipSibling.style[axis] = `${position}px`;
-    tooltipSibling.innerHTML = String(this.parent.view.positionToValue({
+    tooltipSibling.innerHTML = String(this.positionToValue({
       parent,
       runner,
       vertical,

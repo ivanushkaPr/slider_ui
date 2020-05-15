@@ -1,7 +1,10 @@
-export default class Tooltip {
+import El from '../Element/Element';
+
+export default class Tooltip extends El {
   parent;
 
   constructor(parent) {
+    super();
     this.parent = parent;
   }
 
@@ -16,7 +19,7 @@ export default class Tooltip {
       TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
     }
     TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      return false;
+      e.preventDefault();
     });
 
  //   TOOLTIP_ELEMENT.innerHTML = String(position);
@@ -37,7 +40,7 @@ export default class Tooltip {
         negative: vertical === false ? this.parent.runnerWidth : this.parent.runnerHeight,
       });
       const runner = this.parent.runnersAr[index];
-      const tooltipPosition = this.parent.view.positionToValue({
+      const tooltipPosition = this.positionToValue({
         parent: slider,
         runner,
         vertical,
