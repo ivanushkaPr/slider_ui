@@ -62,7 +62,133 @@ export default class Runner extends El {
     return true;
   }
 
-  
+
+  runnerStepHandler(point) {
+    let smaller;
+    let larger;
+    let closestPoint;
+    if (this.parent.view.fetchModelProperty('stepsOn')) {
+      for (let breakpoint = 0; breakpoint < this.parent.view.breakpoints.length; breakpoint += 1) {
+        if (this.parent.view.breakpoints[breakpoint] > point) {
+          larger = this.parent.view.breakpoints[breakpoint];
+          smaller = this.parent.view.breakpoints[breakpoint - 1];
+          break;
+        }
+      }
+      if (larger === undefined) {
+        closestPoint = smaller;
+      } else if (smaller === undefined) {
+        closestPoint = larger;
+      } else if (larger !== undefined && smaller !== undefined) {
+        const distanceToLeft = point - smaller;
+        const distanceToRight = larger - point;
+        if (distanceToLeft < distanceToRight) {
+          closestPoint = smaller;
+        } else {
+          closestPoint = larger;
+        }
+      }
+    } else {
+      closestPoint = point;
+    }
+    return closestPoint;
+  }
+
+  onRunnersCollision(obj: {
+    targetElement: HTMLElement,
+    pair: string,
+    nextPosition: number,
+    vertical: boolean
+  }) {
+    const {
+      targetElement, pair, vertical,
+    } = obj;
+
+    let { nextPosition } = obj;
+
+    if(!vertical) {
+      nextPosition -= this.parent.view.shiftX;
+    } else {
+      nextPosition -= this.parent.view.shiftY;
+    }
+    const siblings = this.parent.view.handler.getSiblingRunners({ runner: targetElement, pair });
+
+    const answer = {
+      coords: 0,
+      collision: false,
+    };
+
+    if (!vertical) {
+      const dataStart = targetElement.dataset.start;
+      if (!dataStart) {
+        answer.coords = nextPosition;
+        answer.collision = false;
+      }
+
+      if (dataStart === 'true') {
+        const brother = siblings[1] as HTMLElement;
+        const brotherLeftSide = parseInt(brother.style.left, 10);
+        if (brotherLeftSide <= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherLeftSide;
+          answer.collision = true;
+        } else {
+          targetElement.style.zIndex = 'auto';
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+
+      if (dataStart === 'false') {
+        const brother = siblings[0] as HTMLElement;
+        const brotherLeftSide = parseInt(brother.style.left, 10);
+        if (brotherLeftSide >= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherLeftSide;
+          answer.collision = true;
+        } else {
+          targetElement.style.zIndex = 'auto';
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+    } else {
+      const dataStart = targetElement.dataset.start;
+
+      if (!dataStart) {
+        answer.coords = nextPosition;
+        answer.collision = false;
+      }
+      if (dataStart === 'true') {
+        const brother = siblings[1] as HTMLElement;
+        const brotherTopSide = parseInt(brother.style.top, 10);
+        if (brotherTopSide <= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherTopSide;
+          answer.collision = true;
+        } else {
+          targetElement.style.zIndex = 'auto';
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+
+      if (dataStart === 'false') {
+        const brother = siblings[0] as HTMLElement;
+        const brotherTopSide = parseInt(brother.style.top, 10);
+        if (brotherTopSide >= nextPosition) {
+          targetElement.style.zIndex = '9999';
+          answer.coords = brotherTopSide;
+          answer.collision = true;
+        } else {
+          targetElement.style.zIndex = 'auto';
+          answer.coords = nextPosition;
+          answer.collision = false;
+        }
+      }
+    }
+    return answer;
+  }
 
   RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
     const {

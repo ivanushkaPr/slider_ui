@@ -9,21 +9,6 @@ export default class Handler {
     this.view = view;
   }
 
-  onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
-    const { pageX, pageY } = event;
-
-    const vertical = this.view.fetchModelProperty('vertical');
-
-    let params;
-    if (!vertical) {
-      params = { point: pageX, element: this.draggable, vertical };
-    } else {
-      params = { point: pageY, element: this.draggable, vertical };
-    }
-    this.onMoveElementAtPoint(params);
-    return true;
-  }
-
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
@@ -34,10 +19,10 @@ export default class Handler {
     const { shiftX, shiftY } = this.view;
 
 
-    const runnerPosition = this.runnerStepHandler(relativePointPosition);
+    const runnerPosition = this.view.render.runnerClass.runnerStepHandler(relativePointPosition);
 
 
-    const collisionData = this.onRunnersCollision({
+    const collisionData = this.view.render.runnerClass.onRunnersCollision({
       targetElement: element,
       pair: element.dataset.pair,
       nextPosition: runnerPosition,
@@ -53,6 +38,7 @@ export default class Handler {
     });
 
     this.moveRunner({ element, vertical, position: RunnerPositionValidation});
+
     this.preventSiblingRunnerCollision({runner: element, parent, vertical, pos: RunnerPositionValidation});
     this.onMoveProgress({
       parent,
@@ -141,6 +127,7 @@ export default class Handler {
     return true;
   }
 
+  /*
   runnerStepHandler(point) {
     let smaller;
     let larger;
@@ -171,7 +158,8 @@ export default class Handler {
     }
     return closestPoint;
   }
-
+  */
+/*
   onRunnersCollision(obj: {
     targetElement: HTMLElement,
     pair: string,
@@ -268,6 +256,7 @@ export default class Handler {
     return answer;
   }
 
+  */
   getSiblingRunners(obj: {runner: HTMLElement, pair: string}): NodeList {
     const { runner, pair } = obj;
     const selector = `.slider__runner[data-pair="${pair}"]`;
