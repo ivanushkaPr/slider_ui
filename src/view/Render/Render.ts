@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+// eslint-disable-next-line import/extensions
 import View from '../view';
 
 class Range {
@@ -39,8 +40,109 @@ class Range {
     parentElement.prepend(element);
     return undefined;
   }
+
+  onElementClickHandler() {
+
+  }
 }
 
+class Runner {
+  parent;
+
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
+    const {
+      runners, slider, vertical,
+    } = obj;
+    runners.forEach((runnerPosition: number, index) => {
+      // const position = this.fetchModelProperty('stepsOn')
+      // && this.fetchModelProperty('adjustSteps') ?
+      // this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }
+      // : runnerPosition;
+      
+      const position = runnerPosition;
+     
+     /*
+      this.view.setModelProperty({
+        property: 'runners',
+        value: Math.round(position),
+        index,
+      });
+      */
+
+      const runner = this.createRunner();
+      slider.appendChild(runner);
+      this.parent.setElementPosition({
+        element: runner,
+        position,
+        axis: vertical === false ? 'left' : 'top',
+        parent: slider,
+      });
+
+      this.parent.tooltip.renderSliderTooltip({ position, vertical, slider, runner });
+    });
+  }
+
+  createRunner(): HTMLElement {
+    const RUNNER_ELEMENT = document.createElement('div');
+    RUNNER_ELEMENT.classList.add('slider__runner');
+    return RUNNER_ELEMENT;
+  }
+
+}
+
+class Tooltip {
+  parent;
+
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  createTooltip(position): HTMLElement {
+    const TOOLTIP_ELEMENT = document.createElement('div');
+    TOOLTIP_ELEMENT.classList.add('slider__tooltip');
+
+    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    if (!SLIDER_IS_VERTICAL) {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
+    } else {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
+    }
+    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
+      return false;
+    });
+
+    TOOLTIP_ELEMENT.innerHTML = String(position);
+
+    return TOOLTIP_ELEMENT;
+  }
+
+  renderSliderTooltip(obj: {position, vertical, slider, runner}) {
+    const { position, vertical, slider, runner } = obj;
+
+    const tooltip = this.parent.tooltip.createTooltip(position);
+    this.parent.setElementPosition({
+      element: tooltip,
+      position,
+      axis: vertical === false ? 'left' : 'top',
+      parent: slider,
+      negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
+    });
+
+    const tooltipPosition = this.parent.view.positionToValue({
+      parent: slider,
+      runner,
+      vertical,
+    });
+
+    tooltip.innerHTML = String(tooltipPosition);
+    slider.appendChild(tooltip);
+  }
+  
+}
 
 export default class Render {
   view: View;
@@ -49,10 +151,18 @@ export default class Render {
 
   range;
 
+  rangeEl;
+  
+  runner;
+
+  tooltip;
+
   constructor(view) {
     const that = this;
     this.view = view;
-    this.range = new Range(that);
+    this.rangeEl = new Range(that);
+    this.runner = new Runner(that);
+    this.tooltip = new Tooltip(that);
   }
 
   getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
@@ -93,51 +203,6 @@ export default class Render {
     const LAST_POINT = ELEMENT_SIZE;
     breakpoints.push(LAST_POINT);
     this.view.breakpoints = breakpoints;
-  }
-
-  RenderSliderRunners(obj: {runners, slider, size, vertical}) {
-    const {
-      runners, slider, vertical,
-    } = obj;
-    runners.forEach((runnerPosition: number, index) => {
-      // const position = this.fetchModelProperty('stepsOn')
-      // && this.fetchModelProperty('adjustSteps') ?
-      // this.checkCoordsAvailability({ percents: runnerPosition, rangeSize: size }
-      // : runnerPosition;
-      const position = runnerPosition;
-      this.view.setModelProperty({
-        property: 'runners',
-        value: Math.round(position),
-        index,
-      });
-
-      const runner = this.createRunner();
-      slider.appendChild(runner);
-      this.setElementPosition({
-        element: runner,
-        position,
-        axis: vertical === false ? 'left' : 'top',
-        parent: slider,
-      });
-
-      const tooltip = this.createTooltip(position);
-      this.setElementPosition({
-        element: tooltip,
-        position,
-        axis: vertical === false ? 'left' : 'top',
-        parent: slider,
-        negative: vertical === false ? runner.offsetWidth : runner.offsetHeight,
-      });
-
-      const tooltipPosition = this.view.positionToValue({
-        parent: slider,
-        runner,
-        vertical,
-      });
-
-      tooltip.innerHTML = String(tooltipPosition);
-      slider.appendChild(tooltip);
-    });
   }
 
   createTooltip(position): HTMLElement {
@@ -557,8 +622,7 @@ export default class Render {
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
 
-
-    const NEW_SLIDER = this.range.renderNewSlider({ root: ROOT_NODE, id });
+    const NEW_SLIDER = this.rangeEl.renderNewSlider({ root: ROOT_NODE, id });
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
         bookmark: 'elementMouseDown',
@@ -576,7 +640,8 @@ export default class Render {
     const size = this.getSliderSize({
       range: NEW_SLIDER, rect: this.view.getTemporaryRunnerRectangle(NEW_SLIDER), vertical,
     });
-    this.RenderSliderRunners({
+
+    this.runner.RenderSliderRunners({
       runners, slider: NEW_SLIDER, size, vertical,
     });
 
