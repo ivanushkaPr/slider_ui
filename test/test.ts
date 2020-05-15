@@ -1,8 +1,6 @@
 
 
 /* eslint-disable */
-
-/*
 declare global {
   namespace NodeJS {
     interface Global {
@@ -12,20 +10,15 @@ declare global {
     } 
   }
 }
-/*
+
 import * as mocha from "mocha";
 
 import * as chai from "chai";
 
 import * as sinon from 'sinon';
 
-
 const assert = chai.assert;
 
-import {Model, configuration, uConfiguration, incompleteConfiguration} from '../src/model/model';
-import Controller from './../src/controller/controller';
-
-import View from './../src/view/view';
 
 import { JSDOM } from 'jsdom';
 import { AssertionError, equal } from "assert";
@@ -39,6 +32,10 @@ global.document = window.document;
 global.window = window;
 
 
+
+
+
+/*
 
 // View tests
 

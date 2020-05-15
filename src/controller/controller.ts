@@ -5,8 +5,6 @@ import PanelChangeHandler from './PanelChangeHandler/PanelChangeHandler';
 import CreateForm from './CreateForm/CreateForm';
 /* eslint-enable */
 
-
-
 export default class Controller {
   model: Model
 
@@ -41,7 +39,7 @@ export default class Controller {
       const id = this.getModelProperty('id');
       const parentNode = document.getElementById(id);
       parentNode.querySelector('.panel').remove();
-    }  
+    }
   }
 
   update() {
@@ -67,7 +65,7 @@ export default class Controller {
   }
 
   setRunnerPosition(obj: {position: number, index: string}) {
-    const {position, index } = obj;
+    const { position, index } = obj;
     const root = document.getElementById(this.getModelProperty('id'));
     const input = root.querySelector(`#runners-${index}`) as HTMLInputElement;
     const range = root.querySelector('.slider__range') as HTMLElement;

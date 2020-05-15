@@ -1,20 +1,11 @@
-import View from '../view.ts';
+/* eslint-disable max-classes-per-file */
+import View from '../view';
 
-export default class Render {
-  view: View;
+class Range {
+  parent;
 
-  root;
-
-  range;
-
-  constructor(view) {
-    this.view = view;
-  }
-
-
-  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
-    parentElement.prepend(element);
-    return undefined;
+  constructor(parent) {
+    this.parent = parent;
   }
 
   renderNewSlider(obj: {root: HTMLElement, id: string}):HTMLElement {
@@ -25,9 +16,17 @@ export default class Render {
     return NEW_SLIDER;
   }
 
+  removeSlider(root: HTMLElement):void {
+    const OLD_SLIDER = root.querySelector('.slider__range');
+    if (OLD_SLIDER) {
+      OLD_SLIDER.remove();
+    }
+  }
+
   createRange(): HTMLElement {
-    const IS_VERTICAL = this.view.fetchModelProperty('vertical');
-    const RANGE_ELEMENT = this.createElement('div', 'slider__range');
+    const IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    const RANGE_ELEMENT = document.createElement('div');
+    RANGE_ELEMENT.classList.add('slider__range');
     if (IS_VERTICAL) {
       RANGE_ELEMENT.classList.add('slider__range--vertical');
     } else {
@@ -36,12 +35,24 @@ export default class Render {
     return RANGE_ELEMENT;
   }
 
+  renderElement(element: HTMLElement, parentElement: HTMLElement): void {
+    parentElement.prepend(element);
+    return undefined;
+  }
+}
 
-  removeSlider(root: HTMLElement):void {
-    const OLD_SLIDER = root.querySelector('.slider__range');
-    if (OLD_SLIDER) {
-      OLD_SLIDER.remove();
-    }
+
+export default class Render {
+  view: View;
+
+  root;
+
+  range;
+
+  constructor(view) {
+    const that = this;
+    this.view = view;
+    this.range = new Range(that);
   }
 
   getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
@@ -138,8 +149,9 @@ export default class Render {
       TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
     }
     TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      e.preventDefault();
+      return false;
     });
+
     TOOLTIP_ELEMENT.innerHTML = String(position);
     return TOOLTIP_ELEMENT;
   }
@@ -535,16 +547,18 @@ export default class Render {
     }
   }
 
+  
+
   createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
     const { runners, vertical, id } = obj;
-    document.body.addEventListener('resize', this.view.handler.onScaleResizeHandler);
+    //document.body.addEventListener('resize', this.view.handler.onScaleResizeHandler);
 
 
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
 
 
-    const NEW_SLIDER = this.renderNewSlider({ root: ROOT_NODE, id });
+    const NEW_SLIDER = this.range.renderNewSlider({ root: ROOT_NODE, id });
     if (this.view.controller.getModelProperty('stepsOn') === false) {
       this.view.onHandlerRegister({
         bookmark: 'elementMouseDown',
