@@ -188,125 +188,83 @@ class Runner {
   }
 }
 
-export default class Render {
-  view: View;
 
-  root;
+class Progress {
+  parent;
 
-  range;
-
-  rangeClass;
-  
-  runnerClass;
-
-  runnersAr = [];
-
-  runnerWidth;
-
-  runnerHeight;
-
-  tooltipClass;
-
-  constructor(view) {
-    const that = this;
-    this.view = view;
-    this.rangeClass = new Range(that);
-    this.runnerClass = new Runner(that);
-    this.tooltipClass = new Tooltip(that);
+  constructor(parent) {
+    this.parent = parent;
   }
 
-  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
-    const { range, rect, vertical } = obj;
-    const size = vertical === false ? range.offsetWidth
-    - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
-    return size;
+  calculateProgressSize(obj: { progressStartPosition: number, progressEndPosition: number}):
+  number {
+    const { progressStartPosition, progressEndPosition } = obj;
+    return progressEndPosition - progressStartPosition;
   }
 
-  getRangeSize(sliderProperties: {range, vertical:boolean }) {
-    const { range, vertical } = sliderProperties;
+  getProgressSize(obj: { vertical: string, parent: HTMLElement,
+    firstRunner: Element, secondRunner?: Element
+   }) {
+   const {
+     vertical, parent, firstRunner, secondRunner,
+   } = obj;
+   type styles = {
+     position: number;
+     size: number,
+   };
 
-    let elementSize;
-    if (!vertical) {
-      const borderWidth = range.clientLeft;
-      const rangeWidth = range.getBoundingClientRect().width;
-      elementSize = Math.ceil(rangeWidth - borderWidth);
-    } else {
-      const borderWidth = range.clientTop * 2;
-      const rangeHeight = range.getBoundingClientRect().height;
-      elementSize = Math.ceil(rangeHeight - borderWidth);
-    }
+   const progressGeometry: styles = {
+     position: undefined,
+     size: undefined,
+   };
 
-    return elementSize;
+   const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
+   if (!vertical) {
+     if (secondRunner === undefined) {
+       progressGeometry.position = parent.getBoundingClientRect().left
+         - parent.offsetLeft + window.pageXOffset;
+       const PROGRESS_START_POSITION = parent.getBoundingClientRect().left;
+       const PROGESS_END_POSITION = firstRunner.getBoundingClientRect().left;
+       progressGeometry.size = this.calculateProgressSize({
+         progressStartPosition: PROGRESS_START_POSITION,
+         progressEndPosition: PROGESS_END_POSITION,
+       });
+     } else {
+       progressGeometry.position = firstRunner.getBoundingClientRect().right
+             - parentOffsetLeft + window.pageXOffset;
+       const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
+       const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left
+        + parent.clientLeft * 2;
+       progressGeometry.size = this.calculateProgressSize({
+         progressStartPosition: PROGRESS_START_POSITION,
+         progressEndPosition: PROGRESS_END_POSITION,
+       });
+     }
+   } else if (vertical) {
+     if (secondRunner === undefined) {
+       progressGeometry.position = parent.getBoundingClientRect().height
+       - (parent.getBoundingClientRect().height
+       - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
+       const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
+       const PROGRESS_END_POSITION = parent.getBoundingClientRect().bottom;
+       progressGeometry.size = this.calculateProgressSize({
+         progressStartPosition: PROGRESS_START_POSITION,
+         progressEndPosition: PROGRESS_END_POSITION,
+       });
+     } else {
+       progressGeometry.position = firstRunner.getBoundingClientRect().bottom - parent.offsetTop
+       - parent.clientTop + window.pageYOffset;
+       const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
+       const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top
+        + parent.clientTop * 2;
+       progressGeometry.size = this.calculateProgressSize({
+         progressStartPosition: PROGRESS_START_POSITION,
+         progressEndPosition: PROGRESS_END_POSITION,
+       });
+     }
+   }
+   return progressGeometry;
   }
-
-  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
-    const { range, vertical } = sliderProperties;
-    const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
-    const steps = this.view.fetchModelProperty('steps');
-    const sizeOfStep = ELEMENT_SIZE / steps;
-    const breakpoints: number[] = [];
-    const FIRST_POINT = 0;
-    breakpoints.push(FIRST_POINT);
-    for (let multiplier = 1; multiplier < steps; multiplier += 1) {
-      breakpoints.push(Math.ceil(multiplier * sizeOfStep));
-    }
-    const LAST_POINT = ELEMENT_SIZE;
-    breakpoints.push(LAST_POINT);
-    this.view.breakpoints = breakpoints;
-  }
-
-  createTooltip(position): HTMLElement {
-    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
-    const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
-    if (!SLIDER_IS_VERTICAL) {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
-    } else {
-      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
-    }
-    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
-      return false;
-    });
-
-    TOOLTIP_ELEMENT.innerHTML = String(position);
-    return TOOLTIP_ELEMENT;
-  }
-
-  createRunner(): HTMLElement {
-    const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
-    return RUNNER_ELEMENT;
-  }
-
-  setElementPosition(obj:{
-    element: HTMLElement;
-    position: number;
-    axis: string;
-    parent: HTMLElement,
-    negative?: number, }):void {
-    const {
-      element, position, axis, parent,
-    } = obj;
-
-    let { negative } = obj;
-
-    if (typeof negative !== 'number') {
-      negative = 0;
-    }
-
-    if (axis === 'left') {
-      const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
-      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
-      const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
-      const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
-      element.style.left = `${STYLE_LEFT}px`;
-    } else {
-      const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
-      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
-      const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
-      const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
-      element.style.top = `${STYLE_TOP}px`;
-    }
-  }
-
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
     if (!vertical) {
@@ -443,8 +401,9 @@ export default class Render {
   }
 
   createProgress(): HTMLElement {
-    const PROGRESS_ELEMENT = this.createElement('div', 'slider__progress');
-    const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
+    const PROGRESS_ELEMENT = document.createElement('div');
+    PROGRESS_ELEMENT.classList.add('slider__progress');
+    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
     if (SLIDER_IS_VERTICAL) {
       PROGRESS_ELEMENT.classList.add('slider__progress--vertical');
     } else {
@@ -454,74 +413,128 @@ export default class Render {
     return PROGRESS_ELEMENT;
   }
 
-  getProgressSize(obj: { vertical: string, parent: HTMLElement,
-     firstRunner: Element, secondRunner?: Element
-    }) {
-    const {
-      vertical, parent, firstRunner, secondRunner,
-    } = obj;
-    type styles = {
-      position: number;
-      size: number,
-    };
+}
 
-    const progressGeometry: styles = {
-      position: undefined,
-      size: undefined,
-    };
+export default class Render {
+  view: View;
 
-    const parentOffsetLeft = parent.offsetLeft + parent.clientLeft;
-    if (!vertical) {
-      if (secondRunner === undefined) {
-        progressGeometry.position = parent.getBoundingClientRect().left
-          - parent.offsetLeft + window.pageXOffset;
-        const PROGRESS_START_POSITION = parent.getBoundingClientRect().left;
-        const PROGESS_END_POSITION = firstRunner.getBoundingClientRect().left;
-        progressGeometry.size = this.calculateProgressSize({
-          progressStartPosition: PROGRESS_START_POSITION,
-          progressEndPosition: PROGESS_END_POSITION,
-        });
-      } else {
-        progressGeometry.position = firstRunner.getBoundingClientRect().right
-              - parentOffsetLeft + window.pageXOffset;
-        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left
-         + parent.clientLeft * 2;
-        progressGeometry.size = this.calculateProgressSize({
-          progressStartPosition: PROGRESS_START_POSITION,
-          progressEndPosition: PROGRESS_END_POSITION,
-        });
-      }
-    } else if (vertical) {
-      if (secondRunner === undefined) {
-        progressGeometry.position = parent.getBoundingClientRect().height
-        - (parent.getBoundingClientRect().height
-        - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
-        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
-        const PROGRESS_END_POSITION = parent.getBoundingClientRect().bottom;
-        progressGeometry.size = this.calculateProgressSize({
-          progressStartPosition: PROGRESS_START_POSITION,
-          progressEndPosition: PROGRESS_END_POSITION,
-        });
-      } else {
-        progressGeometry.position = firstRunner.getBoundingClientRect().bottom - parent.offsetTop
-        - parent.clientTop + window.pageYOffset;
-        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
-        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top
-         + parent.clientTop * 2;
-        progressGeometry.size = this.calculateProgressSize({
-          progressStartPosition: PROGRESS_START_POSITION,
-          progressEndPosition: PROGRESS_END_POSITION,
-        });
-      }
-    }
-    return progressGeometry;
+  root;
+
+  range;
+
+  rangeClass;
+  
+  runnerClass;
+
+  runnersAr = [];
+
+  runnerWidth;
+
+  runnerHeight;
+
+  tooltipClass;
+
+  progressClass;
+
+  constructor(view) {
+    const that = this;
+    this.view = view;
+    this.rangeClass = new Range(that);
+    this.runnerClass = new Runner(that);
+    this.tooltipClass = new Tooltip(that);
+    this.progressClass = new Progress(that);
   }
 
-  calculateProgressSize(obj: { progressStartPosition: number, progressEndPosition: number}):
-  number {
-    const { progressStartPosition, progressEndPosition } = obj;
-    return progressEndPosition - progressStartPosition;
+  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
+    const { range, rect, vertical } = obj;
+    const size = vertical === false ? range.offsetWidth
+    - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
+    return size;
+  }
+
+  getRangeSize(sliderProperties: {range, vertical:boolean }) {
+    const { range, vertical } = sliderProperties;
+
+    let elementSize;
+    if (!vertical) {
+      const borderWidth = range.clientLeft;
+      const rangeWidth = range.getBoundingClientRect().width;
+      elementSize = Math.ceil(rangeWidth - borderWidth);
+    } else {
+      const borderWidth = range.clientTop * 2;
+      const rangeHeight = range.getBoundingClientRect().height;
+      elementSize = Math.ceil(rangeHeight - borderWidth);
+    }
+
+    return elementSize;
+  }
+
+  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
+    const { range, vertical } = sliderProperties;
+    const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
+    const steps = this.view.fetchModelProperty('steps');
+    const sizeOfStep = ELEMENT_SIZE / steps;
+    const breakpoints: number[] = [];
+    const FIRST_POINT = 0;
+    breakpoints.push(FIRST_POINT);
+    for (let multiplier = 1; multiplier < steps; multiplier += 1) {
+      breakpoints.push(Math.ceil(multiplier * sizeOfStep));
+    }
+    const LAST_POINT = ELEMENT_SIZE;
+    breakpoints.push(LAST_POINT);
+    this.view.breakpoints = breakpoints;
+  }
+
+  createTooltip(position): HTMLElement {
+    const TOOLTIP_ELEMENT = this.createElement('div', 'slider__tooltip');
+    const SLIDER_IS_VERTICAL = this.view.fetchModelProperty('vertical');
+    if (!SLIDER_IS_VERTICAL) {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
+    } else {
+      TOOLTIP_ELEMENT.classList.add('slider__tooltip--vertical');
+    }
+    TOOLTIP_ELEMENT.addEventListener('dragstart', (e) => {
+      return false;
+    });
+
+    TOOLTIP_ELEMENT.innerHTML = String(position);
+    return TOOLTIP_ELEMENT;
+  }
+
+  createRunner(): HTMLElement {
+    const RUNNER_ELEMENT = this.createElement('div', 'slider__runner');
+    return RUNNER_ELEMENT;
+  }
+
+  setElementPosition(obj:{
+    element: HTMLElement;
+    position: number;
+    axis: string;
+    parent: HTMLElement,
+    negative?: number, }):void {
+    const {
+      element, position, axis, parent,
+    } = obj;
+
+    let { negative } = obj;
+
+    if (typeof negative !== 'number') {
+      negative = 0;
+    }
+
+    if (axis === 'left') {
+      const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
+      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
+      const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
+      const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
+      element.style.left = `${STYLE_LEFT}px`;
+    } else {
+      const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
+      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
+      const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
+      const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
+      element.style.top = `${STYLE_TOP}px`;
+    }
   }
 
   // Scales
@@ -642,8 +655,6 @@ export default class Render {
       });
     }
 
-    
-
     this.calculateBreakpoints({ range: NEW_SLIDER, vertical });
 
     const size = this.getSliderSize({
@@ -661,7 +672,7 @@ export default class Render {
 
     this.view.handler.registerEventHandlers(RenderedRunners);
 
-    this.renderProgress({
+    this.progressClass.renderProgress({
       runners: ROOT_NODE.getElementsByClassName('slider__runner'),
       parent: NEW_SLIDER,
       vertical: this.view.fetchModelProperty('vertical'),
