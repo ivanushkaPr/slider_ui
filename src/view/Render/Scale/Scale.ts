@@ -1,14 +1,15 @@
 import El from '../Element/Element';
+import Render from '../Render';
 
 export default class Scale extends El {
-  parent;
+  parent: Render;
 
-  constructor(parent) {
+  constructor(parent: Render) {
     super();
     this.parent = parent;
   }
 
-  onElementClickHandler = (event: MouseEvent) => {
+  onElementClickHandler = (event: MouseEvent):boolean => {
     
     let range;
     if (!this.draggable) {
@@ -82,7 +83,7 @@ export default class Scale extends El {
     }
   }
 
-  createScales(obj: {parentNode: HTMLElement, vertical: boolean}) {
+  createScales(obj: {parentNode: HTMLElement, vertical: boolean}):void {
     const { parentNode, vertical } = obj;
     const breakpoints = [...this.parent.view.breakpoints];
     const slider = parentNode.querySelector('.slider__range');
@@ -123,7 +124,7 @@ export default class Scale extends El {
     });
   }
 
-  createScale(obj: {mods}) {
+  createScale(obj: {mods}):HTMLDivElement {
     const { mods } = obj;
 
     const div = document.createElement('div');
@@ -131,14 +132,14 @@ export default class Scale extends El {
     return div;
   }
 
-  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}) {
+  setScalePosition(obj: {scale:HTMLDivElement, vertical: boolean, breakpoint: number}):void {
     const { scale, vertical, breakpoint } = obj;
     scale.style.position = 'absolute';
     const leftOrTop = vertical === false ? 'left' : 'top';
     scale.style[leftOrTop] = `${breakpoint}px`;
   }
 
-  createMediumScale(obj: {start, end, parent, vertical, index, array}) {
+  createMediumScale(obj: {start, end, parent, vertical, index, array}):void {
     const {
       start, end, parent, vertical, index, array,
     } = obj;
@@ -159,7 +160,7 @@ export default class Scale extends El {
     }
   }
 
-  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}) {
+  createSmallScales(obj: {start:number, end: number, parent, vertical, index, array}):void {
     const {
       start, end, parent, vertical, index,
     } = obj;
@@ -174,15 +175,5 @@ export default class Scale extends El {
         parent.appendChild(smallScale);
       }
     }
-  }
-
-  onScaleResizeHandler() {
-    /*
-    const id = this.view.fetchModelProperty('id');
-    const parentNode = document.getElementById(id);
-    parentNode.querySelector('slider__ruler').remove();
-    this.view.render.createScales({ parentNode, vertical: this.view.fetchModelProperty('vertical') });
-    return true;
-  */
   }
 }

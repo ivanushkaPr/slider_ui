@@ -1,5 +1,7 @@
+import Render from '../Render';
+
 export default class Element {
-  parent;
+  parent: Render;
 
   draggable;
 
@@ -23,7 +25,7 @@ export default class Element {
     return VALUE;
   }
 
-  positionFromEnd(obj: { size: number, position: number}) {
+  positionFromEnd(obj: { size: number, position: number}):number {
     const {
       size, position,
     } = obj;
@@ -31,7 +33,7 @@ export default class Element {
   }
 
 
-  calculateRunnerPosition(obj: {parent, position, vertical }) {
+  calculateRunnerPosition(obj: {parent, position, vertical }):number {
     const { parent, position, vertical } = obj;
     let absolutePosition;
     if (!vertical) {
@@ -45,43 +47,77 @@ export default class Element {
     }
     return absolutePosition;
   }
+
+  xxxOnmoveProgress() {
+    
+  }
+
+  getSiblingProgress(obj: {parent: HTMLElement, pair: string, vertical}) {
+    const { parent, pair, vertical } = obj;
+    const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${pair}"]`);
+    let coords = { progressStart: undefined, progressEnd: undefined };
+    if (!vertical) {
+      coords = {
+        progressStart: siblings[0].getBoundingClientRect().right,
+        progressEnd: siblings[1].getBoundingClientRect().left,
+      };
+    } else {
+      coords = {
+        progressStart: siblings[1].getBoundingClientRect().top,
+        progressEnd: siblings[0].getBoundingClientRect().bottom,
+      };
+    }
+    return coords;
+  }
+
+  getProgressSize(obj: {progressStart, progressEnd, vertical: boolean, parent?}) {
+    const {progressStart, progressEnd, vertical, parent } = obj;
+    let size;
+    if (!vertical) {
+      size = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
+    } else {
+      size = Math.ceil(progressStart - progressEnd) > 0 ? Math.ceil(progressStart - progressEnd) : 0;
+    }
+    return size;
+  }
+
+  getProgressPosition(obj: {progressStart, parent, vertical}) {
+    const { progressStart, parent, vertical} = obj;
+    let position;
+    if (!vertical) {
+      position = progressStart - parent.offsetLeft - parent.clientLeft + window.pageXOffset;
+    } else {
+      position = progressStart - parent.offsetTop - parent.clientTop + window.pageYOffset;
+    }
+    return position;
+  }
   
-  onMoveProgress = (obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean, msg?: string}) => {
+  onMoveProgress = (obj: {parent: HTMLElement, runner: HTMLElement, collision?: boolean, msg?: string}):void => {
     const { parent, runner: element, collision, msg } = obj;
     const { start, startAndEnd } = element.dataset;
     const siblingProgressNumber = element.dataset.pair;
     const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
+    const vertical = this.parent.view.fetchModelProperty('vertical');
     if (collision) {
       progress.style.display = 'none';
     }
     if (!collision) {
       progress.style.display = 'block';
     }
-    if (!this.parent.view.fetchModelProperty('vertical')) {
-
+    if (!vertical) {
       if (startAndEnd) {
         const width = element.getBoundingClientRect().left - parent.getBoundingClientRect().left;
         progress.style.width = `${width}px`;
       } else if (start === 'true') {
-        const siblingRunnerNumber = element.dataset.pair;
-        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[0].getBoundingClientRect().right;
-        const progressEnd = siblings[1].getBoundingClientRect().left;
-        const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
-        const progressLeft = progressStart - parent.offsetLeft - parent.clientLeft;
-        progress.style.width = `${width}px`;
-        progress.style.left = `${progressLeft + window.pageXOffset}px`;
+        const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
+        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical })}px`;
+        progress.style.left = `${this.getProgressPosition({ progressStart, parent, vertical })}px`;
       } else {
-        const siblingRunnerNumber = element.dataset.pair;
-        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[0].getBoundingClientRect().right;
-        const progressEnd = siblings[1].getBoundingClientRect().left;
-        const width = (progressEnd - progressStart) > 0 ? progressEnd - progressStart : 0;
-        progress.style.width = `${width}px`;
+        const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
+        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical })}px`;
       }
 
-    } else if (this.parent.view.fetchModelProperty('vertical')) {
-
+    } else if (vertical) {
       if (startAndEnd) {
         const top = element.getBoundingClientRect().bottom
         - parent.offsetTop - parent.clientTop + window.pageYOffset;
@@ -90,22 +126,14 @@ export default class Element {
         progress.style.top = `${top}px`;
         progress.style.height = `${height}px`;
       } else if (start === 'true') {
-        const siblingRunnerNumber = element.dataset.pair;
-        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[1].getBoundingClientRect().top;
-        const progressEnd = siblings[0].getBoundingClientRect().bottom;
-        const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
-          ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        progress.style.height = `${height - parent.clientTop}px`;
-        progress.style.top = `${siblings[0].getBoundingClientRect().bottom - parent.offsetTop - parent.clientTop + window.pageYOffset}px`;
+        const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
+        const height = this.getProgressSize({ progressStart, progressEnd, vertical });
+        progress.style.height = `${height}px`;
+        progress.style.top = `${this.getProgressPosition({ progressStart: progressEnd, parent, vertical })}px`;
       } else {
-        const siblingRunnerNumber = element.dataset.pair;
-        const siblings = parent.querySelectorAll(`.slider__runner[data-pair="${siblingRunnerNumber}"]`);
-        const progressStart = siblings[1].getBoundingClientRect().top;
-        const progressEnd = siblings[0].getBoundingClientRect().bottom;
-        const height = Math.ceil(progressStart - progressEnd + parent.clientTop) > 0
-          ? Math.ceil(progressStart - progressEnd + parent.clientTop) : 0;
-        progress.style.height = `${height - parent.clientTop}px`;
+        const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
+        const height = this.getProgressSize({ progressStart, progressEnd, vertical });
+        progress.style.height = `${height}px`;
       }
     }
   }

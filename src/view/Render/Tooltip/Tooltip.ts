@@ -1,9 +1,10 @@
 import El from '../Element/Element';
+import Render from '../Render';
 
 export default class Tooltip extends El {
-  parent;
+  parent: Render;
 
-  constructor(parent) {
+  constructor(parent: Render) {
     super();
     this.parent = parent;
   }
@@ -27,14 +28,14 @@ export default class Tooltip extends El {
     return TOOLTIP_ELEMENT;
   }
 
-  renderSliderTooltip(obj: {position, vertical, slider, root}) {
+  renderSliderTooltip(obj: {position, vertical, slider, root}):void {
     const { position, vertical, slider, root } = obj;
 
     position.forEach((pos, index)=> {
       const tooltip = this.createTooltip();
       this.parent.setElementPosition({
         element: tooltip,
-        pos,
+        position: pos,
         axis: vertical === false ? 'left' : 'top',
         parent: slider,
         negative: vertical === false ? this.parent.runnerWidth : this.parent.runnerHeight,
@@ -53,7 +54,7 @@ export default class Tooltip extends El {
     this.setTooltipDataAttributes(root);
   }
 
-  setTooltipDataAttributes(root) {
+  setTooltipDataAttributes(root):void {
     const collection = root.querySelectorAll('.slider__tooltip');
 
     collection.forEach((target, index) => {

@@ -1,7 +1,9 @@
-export default class Progress {
-  parent;
+import Render from '../Render';
 
-  constructor(parent) {
+export default class Progress {
+  parent: Render;
+
+  constructor(parent: Render) {
     this.parent = parent;
   }
 
@@ -115,7 +117,7 @@ export default class Progress {
     parent: HTMLElement,
     runners: HTMLCollection,
     pair: number
-  }) {
+  }):void {
     const {
       vertical, parent, runners, pair,
     } = obj;
@@ -150,7 +152,7 @@ export default class Progress {
     runners: HTMLCollection,
     index:number,
     pair: number,
-  }) {
+  }):void {
     const {
       vertical,
       parent,
@@ -194,13 +196,13 @@ export default class Progress {
     }
   }
 
-  setSize(obj: {element: HTMLElement; property: string; value: string}): void {
+  setSize(obj: {element: HTMLElement; property: string; value: string}):void {
     const { element, property, value } = obj;
     element.style[property] = `${Math.round(parseFloat(value))}px`;
     return undefined;
   }
 
-  setPosition(obj: { element: HTMLElement; position: number; axis: string;}):
+  setPosition(obj: { element: HTMLElement; position: number; axis: string}):
   HTMLElement {
     const {
       element, position, axis,

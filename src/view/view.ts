@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import Render from './Render/Render.ts';
+import Controller from '../controller/controller';
 
 export default class View {
   handlers: handlers = {
@@ -8,21 +9,21 @@ export default class View {
 
   render: Render;
 
-  controller;
+  controller: Controller;
   
-  breakpoints;
+  breakpoints: number[];
   // collision;
   
-  // shiftX;
+  shiftX;
 
-  // shiftY;
+  shiftY;
 
   constructor() {
     const view = this;
     this.render = new Render(view);
   }
 
-  fetchModelProperty(property: string) {
+  fetchModelProperty(property: string): any {
     const propertyValue = this.controller.getModelProperty(property);
     if (propertyValue !== undefined || propertyValue !== null) {
       return propertyValue;
@@ -53,7 +54,7 @@ export default class View {
     return true;
   }
 
-  onHandlerDelete(bookmark: string) {
+  onHandlerDelete(bookmark: string):void {
     if (bookmark in this.handlers) {
       const { element, eventName, bindedFunc } = this.handlers[bookmark];
       element.removeEventListener(eventName, bindedFunc);

@@ -42,7 +42,7 @@ export default class Controller {
     }
   }
 
-  update() {
+  update(): void {
     if (this.getModelProperty('panel')) {
       this.render.configPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
     }
@@ -64,6 +64,7 @@ export default class Controller {
     return tProp;
   }
 
+  
   setRunnerPosition(obj: {position: number, index: string}) {
     const { position, index } = obj;
     const root = document.getElementById(this.getModelProperty('id'));
@@ -81,7 +82,7 @@ export default class Controller {
     }
   }
 
-  getFullConfiguration() {
+  getFullConfiguration():configuration {
     const CONFIGURATION_COPY = { ...this.model.configuration };
     return CONFIGURATION_COPY;
   }

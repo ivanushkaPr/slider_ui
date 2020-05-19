@@ -1,14 +1,14 @@
-import Controller from '../controller.ts';
+import Controller from '../controller';
 
 export default class PanelChangeHandler {
   controller: Controller
 
-  constructor(controller) {
+  constructor(controller: Controller) {
     this.controller = controller;
   }
 
-  changeFormHandler(e) {
-    const targetNode = e.target;
+  changeFormHandler(e: Event):void {
+    const targetNode = e.target as HTMLInputElement;
     if (targetNode.nodeName === 'INPUT' && targetNode.classList.contains('panel__input')) {
       const INPUT_TYPE = targetNode.getAttribute('type');
       if (targetNode.classList.contains('panel__input--positions')) {
@@ -30,18 +30,18 @@ export default class PanelChangeHandler {
     }
   }
 
-  changeRunnersProperty(obj: {input}):void {
+  changeRunnersProperty(obj: {input:HTMLInputElement}):void {
     const { input: INPUT } = obj;
     const VALUE = +INPUT.value;
-    const INDEX = +(INPUT.id.slice(-1) - 1);
+    const id = INPUT.id.slice(-1);
+    const INDEX = +(id) - 1;
     const VALUE_IS_VALID = this.validateRunnersProperty({ index: INDEX, value: VALUE });
     if (VALUE_IS_VALID) {
-
       this.controller.setModelProperty({ property: 'runners', value: VALUE, index: INDEX });
     }
   }
 
-  validateRunnersProperty(obj: {index, value}) {
+  validateRunnersProperty(obj: {index: number, value: number}):boolean {
     const { index, value } = obj;
     const runners = this.controller.getModelProperty('runners');
     const prevRunnerposition = runners[index - 1];
@@ -55,16 +55,16 @@ export default class PanelChangeHandler {
     return true;
   }
 
-  changeCheckboxProperty(obj: {input}) {
+  changeCheckboxProperty(obj: {input:HTMLInputElement}):void {
     const { input } = obj;
-    const { checked } = (input as HTMLInputElement);
+    const { checked } = input;
     const INPUT_NAME = input.getAttribute('name');
     this.controller.setModelProperty({ property: INPUT_NAME, value: checked });
   }
 
-  changeNumberProperty(obj: {input}) {
+  changeNumberProperty(obj: {input:HTMLInputElement}): void {
     const { input } = obj;
-
+    const VALUE = Number(input.value);
     if (input.id === 'minValue') {
       if (this.controller.getModelProperty('maxValue') > input.value) {
         this.controller.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
@@ -74,7 +74,7 @@ export default class PanelChangeHandler {
         this.controller.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
       }
     } else if (input.id === 'steps') {
-      if (input.value <= 20) {
+      if (VALUE <= 20) {
         this.controller.setModelProperty({ property: input.getAttribute('name'), value: Number(input.value) });
       }
     } else {
@@ -82,14 +82,14 @@ export default class PanelChangeHandler {
     }
   }
 
-  changeUnitsProperty(obj: {input}) {
+  changeUnitsProperty(obj: {input: HTMLInputElement}):void {
     const { input } = obj;
     const INPUT_NAME = input.getAttribute('name');
     const INPUT_VALUE = (input as HTMLInputElement).value;
     this.controller.setModelProperty({ property: INPUT_NAME, value: String(INPUT_VALUE) });
   }
 
-  changeIDProperty(obj: {input}) {
+  changeIDProperty(obj: {input:HTMLInputElement}):void {
     const { input } = obj;
     const INPUT_VALUE = (input as HTMLInputElement).value;
     const INPUT_NAME = input.getAttribute('name');
@@ -104,7 +104,7 @@ export default class PanelChangeHandler {
     }
   }
 
-  changePanelVisibility(obj: {input}) {
+  changePanelVisibility(obj: {input:HTMLInputElement}):void {
     const { input } = obj;
     const { checked } = (input as HTMLInputElement);
     const CURRENT_ID = this.controller.getModelProperty('id');

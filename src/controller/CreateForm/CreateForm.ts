@@ -6,7 +6,7 @@ export default class CreateForm {
 
   controller: Controller
 
-  constructor(PanelEventHandler, controller) {
+  constructor(PanelEventHandler: PanelChangeHandler, controller: Controller) {
     this.handler = PanelEventHandler;
     this.controller = controller;
   }
@@ -26,7 +26,7 @@ export default class CreateForm {
     }
   }
 
-  createForm() {
+  createForm(): HTMLFormElement {
     const form = document.createElement('form');
     form.setAttribute('name', 'panel');
     form.classList.add('panel');
@@ -34,7 +34,7 @@ export default class CreateForm {
     return form;
   }
 
-  createInputTemplate(ruleName) {
+  createInputTemplate(ruleName):HTMLLabelElement {
     const LABEL = document.createElement('label');
     LABEL.classList.add('panel__label');
 
@@ -48,7 +48,7 @@ export default class CreateForm {
   }
 
   fillForm(obj: {form:HTMLFormElement,
-    settings: [string, string | number | boolean | number[]][]}) {
+    settings: [string, string | number | boolean | number[]][]}):HTMLFormElement {
     const { form, settings } = obj;
     settings.forEach((current) => {
       const RULE_NAME = current[0];
@@ -90,7 +90,7 @@ export default class CreateForm {
   }
 
   setAttributesForNumberInput(attributesTemplate: {id: string, name: string, type: string,
-    value: string}) {
+    value: string}):HTMLInputElement {
     const attributes = { ...attributesTemplate };
     attributes.type = 'number';
     const CUSTOM_INPUT = this.createCustomInput(attributes);
@@ -98,7 +98,7 @@ export default class CreateForm {
   }
 
   setAttributesForCheckboxInput(attributesTemplate: {id: string, name: string, type: string,
-    value: string}, isChecked: boolean) {
+    value: string}, isChecked: boolean): HTMLInputElement {
     const attributes = { ...attributesTemplate };
     attributes.type = 'checkbox';
     const CUSTOM_INPUT = this.createCustomInput(attributes);
@@ -109,7 +109,7 @@ export default class CreateForm {
   }
 
   setAttributesForTextInput(attributesTemplate: {id: string, name: string, type: string,
-    value: string}) {
+    value: string}):HTMLInputElement {
     const attributes = { ...attributesTemplate };
     attributes.type = 'text';
     const CUSTOM_INPUT = this.createCustomInput(attributes);
@@ -117,7 +117,7 @@ export default class CreateForm {
   }
 
   setAttributesForRunnersInput(attributesTemplate: {id: string, name: string, type: string,
-    value: string}, id:string, position: number) {
+    value: string}, id:string, position: number):HTMLInputElement {
     const attributes = { ...attributesTemplate };
     attributes.id = id;
     attributes.type = 'number';
@@ -129,13 +129,13 @@ export default class CreateForm {
     return CUSTOM_INPUT;
   }
 
-  createFakeCheckbox() {
+  createFakeCheckbox():HTMLDivElement {
     const div = document.createElement('div');
     div.classList.add('panel__fakebox');
     return div;
   }
 
-  createCustomInput(attributes: {id: string, type: string, name: string, value: string}) {
+  createCustomInput(attributes: {id: string, type: string, name: string, value: string}):HTMLInputElement {
     const INPUT = document.createElement('input');
     INPUT.classList.add('panel__input');
     Object.keys(attributes).forEach((key) => {

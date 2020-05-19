@@ -29,9 +29,9 @@ class Slider {
     this.model = new this.ModelConstructor(configuration);
     this.view = new this.ViewConstructor();
     this.controller = new this.ControllerConstructor(this.model, this.view);
-  };
+  }
 
-  changeState(obj: {
+  private changeState(obj: {
     property: string; value: string | number | boolean; index?: number}) {
     this.controller.setModelProperty(obj);
     this.controller.removePanel();
@@ -58,7 +58,7 @@ class Slider {
     const { position } = obj;
     let { index } = obj;
     index -= 1;
-    this.changeState({ property: 'runners', value: position, index});
+    this.changeState({ property: 'runners', value: position, index });
   }
 
   vertical(isVertical: boolean) {
@@ -80,7 +80,6 @@ class Slider {
   id(id: string) {
     this.changeState({ property: 'id', value: id });
   }
-
 }
 
 
@@ -98,6 +97,7 @@ let controller = new Controller(model, view);
 /* eslint-disable */
 (function( $ ) {
   $.fn.slider = function(options) {
+    console.log(this);
     return new Slider(options);
   };
 })($);
@@ -118,7 +118,7 @@ const secondConfig = {
 let sliderApi;
 
 $(document).ready(function() {
-  const slider = $().slider(uConfiguration);
+  const slider = $('div').slider(uConfiguration);
 
   const slider2 = $().slider(secondConfig);
 })

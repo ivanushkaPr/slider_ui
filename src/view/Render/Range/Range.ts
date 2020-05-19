@@ -1,11 +1,12 @@
 import El from '../Element/Element';
+import Render from '../Render';
 
 export default class Range extends El {
-  parent;
+  parent: Render;
 
   draggable;
 
-  constructor(parent) {
+  constructor(parent: Render) {
     super();
     this.parent = parent;
   }
@@ -64,7 +65,6 @@ export default class Range extends El {
         } else {
           runner.style.top = `${click}px`;
         }
-
         
         this.draggable = runner;
         this.onMoveProgress({ parent: range, runner, collision: false });
@@ -107,7 +107,7 @@ export default class Range extends El {
     }
   }
 
-  createRange(): HTMLElement {
+  createRange():HTMLElement {
     const IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
     const RANGE_ELEMENT = document.createElement('div');
     RANGE_ELEMENT.classList.add('slider__range');

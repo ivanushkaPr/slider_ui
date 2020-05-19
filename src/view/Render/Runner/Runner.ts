@@ -1,11 +1,11 @@
 import El from '../Element/Element';
-
+import Render from '../Render.ts';
 export default class Runner extends El {
-  parent;
+  parent: Render;
 
   draggable;
 
-  constructor(parent) {
+  constructor(parent:Render) {
     super();
     this.parent = parent;
   }
@@ -97,7 +97,7 @@ export default class Runner extends El {
 
 
 
-  runnerStepHandler(point) {
+  runnerStepHandler(point):number {
     let smaller;
     let larger;
     let closestPoint;
@@ -140,7 +140,7 @@ export default class Runner extends El {
 
     let { nextPosition } = obj;
 
-    if(!vertical) {
+    if (!vertical) {
       nextPosition -= this.parent.view.shiftX;
     } else {
       nextPosition -= this.parent.view.shiftY;
@@ -252,7 +252,7 @@ export default class Runner extends El {
     return point;
   }
 
-  moveRunner(obj: {element, vertical, position}) {
+  moveRunner(obj: {element, vertical, position}):void {
     const { element, vertical, position } = obj;
     if (!vertical) {
       element.style.left = `${position}px`;
@@ -261,10 +261,9 @@ export default class Runner extends El {
     }
   }
 
-  preventSiblingRunnerCollision(obj: {runner, parent, vertical, pos,}) {
+  preventSiblingRunnerCollision(obj: {runner, parent, vertical, pos }):boolean {
     const { runner, parent, vertical, pos } = obj;
-    console.log(pos);
-    const {pair, number, start } = runner.dataset;
+    const { pair, number, start } = runner.dataset;
     if (!vertical) {
       if (start === 'true') {
         const selector = `.slider__runner[data-number="${Number(number) - 1}"]`;
@@ -291,7 +290,7 @@ export default class Runner extends El {
     return true;
   }
 
-  moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}) {
+  moveTooltipSibling(obj: {parent, runner, position, axis:string, vertical}):void {
     const {
       parent, runner, position, axis, vertical,
     } = obj;
@@ -309,7 +308,7 @@ export default class Runner extends El {
 
 
 
-  onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}) => {
+  onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}):void => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
     const { firstPoint, secondPoint, relativePointPosition } = this.getSliderControlPoints({
@@ -367,7 +366,7 @@ export default class Runner extends El {
     });
   }
 
-  onRunnerMouseUpHandler = () => {
+  onRunnerMouseUpHandler = ():boolean => {
     if (this.parent.view.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
 
     const { bookmark: mouseMoveBookmark } = this.parent.view.handlers.runnerMouseMove;
@@ -380,15 +379,15 @@ export default class Runner extends El {
     return true;
   }
 
-  onTooltipHide = (runner) => {
+  onTooltipHide = (runner): void => {
     const parent = runner.offsetParent;
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
     tooltipSibling.classList.remove('slider__tooltip--show');
   }
 
-  onDragStartHandler = (e) => e.preventDefault();
+  onDragStartHandler = (e):boolean => e.preventDefault();
 
-  RenderSliderRunners(obj: {runners, slider, size, vertical, root}) {
+  RenderSliderRunners(obj: {runners, slider, size, vertical, root}):void {
     const {
       runners, slider, vertical, root,
     } = obj;
@@ -408,13 +407,13 @@ export default class Runner extends El {
     this.registerEventHandlers(runnersDOM);
   }
 
-  createRunner(): HTMLElement {
+  createRunner():HTMLElement {
     const RUNNER_ELEMENT = document.createElement('div');
     RUNNER_ELEMENT.classList.add('slider__runner');
     return RUNNER_ELEMENT;
   }
 
-  setRunnersDataAttributes(root) {
+  setRunnersDataAttributes(root):HTMLCollection {
     const elements = root.querySelectorAll('.slider__runner');
     const collection = elements;
     let pair = 1;
@@ -441,14 +440,14 @@ export default class Runner extends El {
     return elements;
   }
 
-  registerEventHandlers(runners) {
+  registerEventHandlers(runners):void {
     runners.forEach((runner) => {
       this.parent.view.onHandlerRegister({
         bookmark: 'runnerMouseDown',
         element: runner as HTMLElement,
         eventName: 'mousedown',
         cb: this.onRunnerMouseDownHandler,
-        enviroment: this.parent.view.handler,
+        enviroment: this.parent,
       });
     });
   }

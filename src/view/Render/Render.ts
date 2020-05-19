@@ -34,7 +34,7 @@ export default class Render {
 
   isResizing: boolean = false;
 
-  constructor(view) {
+  constructor(view: View) {
     const that = this;
     this.view = view;
     this.rangeClass = new Range(that);
@@ -44,14 +44,14 @@ export default class Render {
     this.scaleClass = new Scale(that);
   }
 
-  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}) {
+  getSliderSize(obj: {range: HTMLElement, rect: DOMRect, vertical: boolean}):number {
     const { range, rect, vertical } = obj;
     const size = vertical === false ? range.offsetWidth
     - range.clientLeft * 2 - rect.width : range.offsetHeight - range.clientTop * 2 - rect.height;
     return size;
   }
 
-  getRangeSize(sliderProperties: {range, vertical:boolean }) {
+  getRangeSize(sliderProperties: {range, vertical:boolean }):number {
     const { range, vertical } = sliderProperties;
 
     let elementSize;
@@ -64,11 +64,10 @@ export default class Render {
       const rangeHeight = range.getBoundingClientRect().height;
       elementSize = Math.ceil(rangeHeight - borderWidth);
     }
-
     return elementSize;
   }
 
-  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}) {
+  calculateBreakpoints(sliderProperties: {range:HTMLElement, vertical: boolean}):void {
     const { range, vertical } = sliderProperties;
     const ELEMENT_SIZE = this.getRangeSize({ range, vertical });
     const steps = this.view.fetchModelProperty('steps');
@@ -120,7 +119,7 @@ export default class Render {
     }
   }
 
-  onWindowResizehandler() {
+  onWindowResizehandler():void {
     if (!this.isResizing) {
       this.isResizing = true;
       this.createSlider({
@@ -139,8 +138,7 @@ export default class Render {
     return runnerDomRect;
   }
 
-  createSlider(obj: { runners: number[], vertical: boolean, id: string }) {
-    
+  createSlider(obj: { runners: number[], vertical: boolean, id: string }):void {
     if (!this.resizeHandler) {
       const func = this.onWindowResizehandler.bind(this);
       window.addEventListener('resize', func);
