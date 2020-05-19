@@ -319,7 +319,7 @@ export default class Runner extends El {
 
 
     const runnerPosition = this.runnerStepHandler(relativePointPosition);
-
+    console.log(runnerPosition, relativePointPosition);
 
     const collisionData = this.onRunnersCollision({
       targetElement: element,
@@ -352,7 +352,7 @@ export default class Runner extends El {
 
     this.parent.view.setModelProperty({
       property: 'runners',
-      value: Math.round(this.calculateRunnerPosition({
+      value: Math.round(this.relativeRunnerPositionToPercents({
         parent,
         position: RunnerPositionValidation,
         vertical,

@@ -63,7 +63,7 @@ export default class Scale extends El {
 
         this.parent.view.setModelProperty({
           property: 'runners',
-          value: this.calculateRunnerPosition({
+          value: this.relativeRunnerPositionToPercents({
             parent: this.parent.range,
             position: click,
             vertical: this.parent.view.fetchModelProperty('vertical'),
