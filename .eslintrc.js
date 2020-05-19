@@ -22,7 +22,7 @@ module.exports = {
     "class-methods-use-this": 0,
     "import/no-unresolved": "off",
     "import/extensions": [
-      "error",
+      "off",
       "ignorePackages",
       {
         "ts": "always",

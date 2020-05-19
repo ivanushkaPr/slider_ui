@@ -1,4 +1,6 @@
 import El from '../Element/Element';
+
+// eslint-disable-next-line no-unused-vars
 import Render from '../Render';
 
 export default class Scale extends El {
@@ -10,13 +12,11 @@ export default class Scale extends El {
   }
 
   onElementClickHandler = (event: MouseEvent):boolean => {
-    
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
       if (document.elementFromPoint(event.pageX,
         event.pageY).classList.contains('slider__scale')) {
-
         const scale = (event.target) as HTMLElement;
         range = scale.parentNode.parentNode as HTMLElement;
 
@@ -81,6 +81,7 @@ export default class Scale extends El {
       this.draggable = undefined;
       return false;
     }
+    return false;
   }
 
   createScales(obj: {parentNode: HTMLElement, vertical: boolean}):void {

@@ -1,5 +1,4 @@
-/* eslint-disable max-classes-per-file */
-// eslint-disable-next-line import/extensions
+// eslint-disable-next-line no-unused-vars
 import View from '../view';
 import Tooltip from './Tooltip/Tooltip';
 import Runner from './Runner/Runner';
@@ -35,8 +34,7 @@ export default class Render {
   isResizing: boolean = false;
 
   breakpoints: number[];
-  // collision;
-  
+
   shiftX;
 
   shiftY;
@@ -170,7 +168,9 @@ export default class Render {
       runners, slider: NEW_SLIDER, size, vertical, root: ROOT_NODE,
     });
 
-    this.tooltipClass.renderSliderTooltip({ position: runners, vertical, slider: NEW_SLIDER, root: ROOT_NODE });
+    this.tooltipClass.renderSliderTooltip({
+      position: runners, vertical, slider: NEW_SLIDER, root: ROOT_NODE,
+    });
 
     this.progressClass.renderProgress({
       runners: ROOT_NODE.getElementsByClassName('slider__runner'),

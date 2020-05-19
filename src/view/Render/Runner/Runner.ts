@@ -1,5 +1,8 @@
 import El from '../Element/Element';
-import Render from '../Render.ts';
+
+// eslint-disable-next-line no-unused-vars
+import Render from '../Render';
+
 export default class Runner extends El {
   parent: Render;
 
@@ -94,8 +97,6 @@ export default class Runner extends El {
     }
     return CONTROL_POINTS;
   }
-
-
 
   runnerStepHandler(point):number {
     let smaller;
@@ -262,20 +263,24 @@ export default class Runner extends El {
   }
 
   preventSiblingRunnerCollision(obj: {runner, parent, vertical, pos }):boolean {
-    const { runner, parent, vertical, pos } = obj;
-    const { pair, number, start } = runner.dataset;
+    const {
+      runner, vertical, pos,
+    } = obj;
+    const { number, start } = runner.dataset;
     if (!vertical) {
       if (start === 'true') {
         const selector = `.slider__runner[data-number="${Number(number) - 1}"]`;
         const prevRunner = this.parent.range.querySelector(selector);
-        if (prevRunner && pos <= prevRunner.offsetLeft + prevRunner.offsetWidth - prevRunner.clientLeft * 2) {
+        if (prevRunner && pos <= prevRunner.offsetLeft
+          + prevRunner.offsetWidth - prevRunner.clientLeft * 2) {
           runner.style.left = `${prevRunner.offsetLeft + 10}px`;
           return false;
         }
       } else {
         const selector = `.slider__runner[data-number="${Number(number) + 1}"]`;
         const nextRunner = this.parent.range.querySelector(selector);
-        if (nextRunner && pos >= nextRunner.offsetLeft - nextRunner.offsetWidth - nextRunner.clientLeft * 2) {
+        if (nextRunner && pos >= nextRunner.offsetLeft
+          - nextRunner.offsetWidth - nextRunner.clientLeft * 2) {
           runner.style.left = `${nextRunner.offsetLeft - 10}px`;
           return false;
         }
@@ -284,14 +289,16 @@ export default class Runner extends El {
       if (start === 'true') {
         const selector = `.slider__runner[data-number="${Number(number) - 1}"]`;
         const prevRunner = this.parent.range.querySelector(selector);
-        if (prevRunner && pos <= prevRunner.offsetTop + prevRunner.offsetHeight - prevRunner.clientLeft * 2) {
+        if (prevRunner && pos <= prevRunner.offsetTop
+          + prevRunner.offsetHeight - prevRunner.clientLeft * 2) {
           runner.style.top = `${prevRunner.offsetTop + 10}px`;
           return false;
         }
       } else {
         const selector = `.slider__runner[data-number="${Number(number) + 1}"]`;
         const nextRunner = this.parent.range.querySelector(selector);
-        if (nextRunner && pos >= nextRunner.offsetTop - nextRunner.offsetHeight - nextRunner.clientLeft * 2) {
+        if (nextRunner && pos >= nextRunner.offsetTop
+          - nextRunner.offsetHeight - nextRunner.clientLeft * 2) {
           runner.style.top = `${nextRunner.offsetTop - 10}px`;
           return false;
         }
@@ -316,8 +323,6 @@ export default class Runner extends El {
     }));
   }
 
-
-
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}):void => {
     const { point, element, vertical } = obj;
     const parent = element.parentNode as HTMLElement;
@@ -325,7 +330,6 @@ export default class Runner extends El {
       vertical, parent, point, element,
     });
 
-    const { shiftX, shiftY } = this.parent;
     const runnerPosition = this.runnerStepHandler(relativePointPosition);
     const collisionData = this.onRunnersCollision({
       targetElement: element,
@@ -342,9 +346,11 @@ export default class Runner extends El {
       position: collisionData.coords,
     });
 
-    this.moveRunner({ element, vertical, position: RunnerPositionValidation});
+    this.moveRunner({ element, vertical, position: RunnerPositionValidation });
 
-    this.preventSiblingRunnerCollision({runner: element, parent, vertical, pos: RunnerPositionValidation });
+    this.preventSiblingRunnerCollision({
+      runner: element, parent, vertical, pos: RunnerPositionValidation,
+    });
 
     this.onMoveProgress({
       parent,

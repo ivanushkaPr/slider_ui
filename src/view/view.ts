@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import Render from './Render/Render.ts';
+import Render from './Render/Render';
+// eslint-disable-next-line no-unused-vars
 import Controller from '../controller/controller';
 
 export default class View {
