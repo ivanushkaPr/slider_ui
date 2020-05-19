@@ -36,6 +36,7 @@ export default class Progress {
          - parent.offsetLeft + window.pageXOffset;
        const PROGRESS_START_POSITION = parent.getBoundingClientRect().left;
        const PROGESS_END_POSITION = firstRunner.getBoundingClientRect().left;
+
        progressGeometry.size = this.calculateProgressSize({
          progressStartPosition: PROGRESS_START_POSITION,
          progressEndPosition: PROGESS_END_POSITION,
@@ -46,6 +47,7 @@ export default class Progress {
        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().right;
        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().left
         + parent.clientLeft * 2;
+
        progressGeometry.size = this.calculateProgressSize({
          progressStartPosition: PROGRESS_START_POSITION,
          progressEndPosition: PROGRESS_END_POSITION,
@@ -54,10 +56,11 @@ export default class Progress {
    } else if (vertical) {
      if (secondRunner === undefined) {
        progressGeometry.position = parent.getBoundingClientRect().height
-       - (parent.getBoundingClientRect().height
+       - (parent.getBoundingClientRect().height + window.pageYOffset
        - firstRunner.getBoundingClientRect().bottom + parent.offsetTop + parent.clientTop);
        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
        const PROGRESS_END_POSITION = parent.getBoundingClientRect().bottom;
+
        progressGeometry.size = this.calculateProgressSize({
          progressStartPosition: PROGRESS_START_POSITION,
          progressEndPosition: PROGRESS_END_POSITION,
@@ -68,6 +71,7 @@ export default class Progress {
        const PROGRESS_START_POSITION = firstRunner.getBoundingClientRect().bottom;
        const PROGRESS_END_POSITION = secondRunner.getBoundingClientRect().top
         + parent.clientTop * 2;
+
        progressGeometry.size = this.calculateProgressSize({
          progressStartPosition: PROGRESS_START_POSITION,
          progressEndPosition: PROGRESS_END_POSITION,
@@ -85,8 +89,7 @@ export default class Progress {
         this.renderSingleProgressBar({
           vertical, parent, runners, pair: count,
         });
-      }
-      else if (runners.length % 2 === 0 && runner % 2 === 0) {
+      } else if (runners.length % 2 === 0 && runner % 2 === 0) {
         this.renderMultipleProgressBars({
           vertical, parent, runners, index: runner, pair: count,
         });

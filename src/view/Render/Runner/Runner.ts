@@ -280,11 +280,21 @@ export default class Runner extends El {
           return false;
         }
       }
-    } else {
-      if(start === 'true') {
-
+    } else if (vertical) {
+      if (start === 'true') {
+        const selector = `.slider__runner[data-number="${Number(number) - 1}"]`;
+        const prevRunner = this.parent.range.querySelector(selector);
+        if (prevRunner && pos <= prevRunner.offsetTop + prevRunner.offsetHeight - prevRunner.clientLeft * 2) {
+          runner.style.top = `${prevRunner.offsetTop + 10}px`;
+          return false;
+        }
       } else {
-
+        const selector = `.slider__runner[data-number="${Number(number) + 1}"]`;
+        const nextRunner = this.parent.range.querySelector(selector);
+        if (nextRunner && pos >= nextRunner.offsetTop - nextRunner.offsetHeight - nextRunner.clientLeft * 2) {
+          runner.style.top = `${nextRunner.offsetTop - 10}px`;
+          return false;
+        }
       }
     }
     return true;
@@ -316,11 +326,7 @@ export default class Runner extends El {
     });
 
     const { shiftX, shiftY } = this.parent;
-
-
     const runnerPosition = this.runnerStepHandler(relativePointPosition);
-    console.log(runnerPosition, relativePointPosition);
-
     const collisionData = this.onRunnersCollision({
       targetElement: element,
       pair: element.dataset.pair,
