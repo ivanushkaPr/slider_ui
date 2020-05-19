@@ -34,6 +34,13 @@ export default class Render {
 
   isResizing: boolean = false;
 
+  breakpoints: number[];
+  // collision;
+  
+  shiftX;
+
+  shiftY;
+
   constructor(view: View) {
     const that = this;
     this.view = view;
@@ -80,7 +87,7 @@ export default class Render {
     }
     const LAST_POINT = ELEMENT_SIZE;
     breakpoints.push(LAST_POINT);
-    this.view.breakpoints = breakpoints;
+    this.breakpoints = breakpoints;
   }
 
   createRunner(): HTMLElement {

@@ -10,13 +10,6 @@ export default class View {
   render: Render;
 
   controller: Controller;
-  
-  breakpoints: number[];
-  // collision;
-  
-  shiftX;
-
-  shiftY;
 
   constructor() {
     const view = this;

@@ -85,7 +85,7 @@ export default class Scale extends El {
 
   createScales(obj: {parentNode: HTMLElement, vertical: boolean}):void {
     const { parentNode, vertical } = obj;
-    const breakpoints = [...this.parent.view.breakpoints];
+    const breakpoints = [...this.parent.breakpoints];
     const slider = parentNode.querySelector('.slider__range');
     const ruler = document.createElement('div');
     const classNames = vertical === false ? 'slider__ruler slider__ruler--margin-top' : 'slider__ruler slider__ruler--margin-left';
@@ -147,7 +147,7 @@ export default class Scale extends El {
 
     const mods = vertical === false ? 'slider__scale--horizontal slider__scale--horizontal-md'
       : 'slider__scale--vertical slider__scale--vertical-md';
-    if (index < this.parent.view.breakpoints.length - 1) {
+    if (index < this.parent.breakpoints.length - 1) {
       const smallScale = this.createScale({ mods });
       this.setScalePosition({ scale: smallScale, vertical, breakpoint: step });
       parent.appendChild(smallScale);
@@ -169,7 +169,7 @@ export default class Scale extends El {
 
     const step = (end - start) / 4;
     for (let i = 0; i <= 3; i += 1) {
-      if (index < this.parent.view.breakpoints.length - 1) {
+      if (index < this.parent.breakpoints.length - 1) {
         const smallScale = this.createScale({ mods });
         this.setScalePosition({ scale: smallScale, vertical, breakpoint: step * i + start });
         parent.appendChild(smallScale);

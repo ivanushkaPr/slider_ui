@@ -90,7 +90,6 @@ export default class Element {
       positionInPercents = positionRelativeTolider / onePercentOfSliderSize;
     }
     // max position is [99.99999999999%];
-    console.log( positionInPercents, 'asbs');
     return positionInPercents;
   }
 

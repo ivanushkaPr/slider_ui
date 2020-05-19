@@ -79,35 +79,20 @@ export default class Progress {
 
   renderProgress(obj: {runners: HTMLCollection; parent: HTMLElement; vertical: boolean}): void {
     const { runners, parent, vertical } = obj;
-    if (!vertical) {
-      let count = 1;
-      for (let runner = 0; runner < runners.length; runner += 1) {
-        if (runners.length === 1) {
-          this.renderSingleProgressBar({
-            vertical, parent, runners, pair: count,
-          });
-        }
-        if (runners.length % 2 === 0 && runner % 2 === 0) {
-          this.renderMultipleProgressBars({
-            vertical, parent, runners, index: runner, pair: count,
-          });
-          count += 1;
-        }
+    let count = 1;
+    for (let runner = 0; runner < runners.length; runner += 1) {
+      if (runners.length === 1) {
+        this.renderSingleProgressBar({
+          vertical, parent, runners, pair: count,
+        });
       }
-    } else {
-      let count = 1;
-      for (let runner = 0; runner < runners.length; runner += 1) {
-        if (runners.length === 1) {
-          this.renderSingleProgressBar({
-            vertical, parent, runners, pair: count,
-          });
-        }
-        if (runners.length % 2 === 0 && runner % 2 === 0) {
-          this.renderMultipleProgressBars({
-            vertical, parent, runners, index: runner, pair: count,
-          });
-          count += 1;
-        }
+      else if (runners.length % 2 === 0 && runner % 2 === 0) {
+        this.renderMultipleProgressBars({
+          vertical, parent, runners, index: runner, pair: count,
+        });
+        count += 1;
+      } else if (runners.length % 2 !== 0) {
+        throw new Error('Ammount of runners must be odd!');
       }
     }
   }

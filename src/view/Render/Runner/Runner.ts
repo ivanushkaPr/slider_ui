@@ -18,8 +18,8 @@ export default class Runner extends El {
     targetElement.style.zIndex = '1000';
     this.draggable = targetElement;
 
-    this.parent.view.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
-    this.parent.view.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
+    this.parent.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
+    this.parent.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
     this.parent.view.onHandlerRegister({
       bookmark: 'runnerMouseMove',
       element: document.body as HTMLElement,
@@ -102,10 +102,10 @@ export default class Runner extends El {
     let larger;
     let closestPoint;
     if (this.parent.view.fetchModelProperty('stepsOn')) {
-      for (let breakpoint = 0; breakpoint < this.parent.view.breakpoints.length; breakpoint += 1) {
-        if (this.parent.view.breakpoints[breakpoint] > point) {
-          larger = this.parent.view.breakpoints[breakpoint];
-          smaller = this.parent.view.breakpoints[breakpoint - 1];
+      for (let breakpoint = 0; breakpoint < this.parent.breakpoints.length; breakpoint += 1) {
+        if (this.parent.breakpoints[breakpoint] > point) {
+          larger = this.parent.breakpoints[breakpoint];
+          smaller = this.parent.breakpoints[breakpoint - 1];
           break;
         }
       }
@@ -141,9 +141,9 @@ export default class Runner extends El {
     let { nextPosition } = obj;
 
     if (!vertical) {
-      nextPosition -= this.parent.view.shiftX;
+      nextPosition -= this.parent.shiftX;
     } else {
-      nextPosition -= this.parent.view.shiftY;
+      nextPosition -= this.parent.shiftY;
     }
     const siblings = this.getSiblingRunners({ runner: targetElement, pair });
 
@@ -315,7 +315,7 @@ export default class Runner extends El {
       vertical, parent, point, element,
     });
 
-    const { shiftX, shiftY } = this.parent.view;
+    const { shiftX, shiftY } = this.parent;
 
 
     const runnerPosition = this.runnerStepHandler(relativePointPosition);
