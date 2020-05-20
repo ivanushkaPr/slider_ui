@@ -103,15 +103,15 @@ let controller = new Controller(model, view);
 })($);
 
 const secondConfig = {
-  minValue: -100,
-  maxValue: 1000,
+  minValue: 0,
+  maxValue: 200000,
   currentValue: 0,
   steps: 10,
   runners: [0, 100],
   stepsOn: false,
   vertical: true,
   scaleOn: true,
-  stepSize: 100,
+  stepSize: 20000,
   units: 'px',
   id: '#slider2',
   panel: true,

@@ -96,7 +96,7 @@ export const uConfiguration = {
   runners: [0, 100],
   stepsOn: false,
   adjustSteps: true,
-  vertical: true,
+  vertical: false,
   scaleOn: true,
   panel: true,
   tooltips: true,

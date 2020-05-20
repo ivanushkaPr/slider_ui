@@ -12,7 +12,7 @@ export default class Scale extends El {
   }
 
   onElementClickHandler = (event: MouseEvent):boolean => {
-    /*
+    
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
@@ -82,7 +82,7 @@ export default class Scale extends El {
       this.draggable = undefined;
       return false;
     }
-    */
+    
     return false;
   }
 

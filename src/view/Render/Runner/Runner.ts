@@ -141,7 +141,7 @@ export default class Runner extends El {
 
     let { nextPosition } = obj;
 
-    if (this.parent.view.fetchModelProperty('stepOn') === false) {
+    if (this.parent.view.fetchModelProperty('stepsOn') === false) {
       if (!vertical) {
         nextPosition -= this.parent.shiftX;
       } else {
@@ -246,10 +246,13 @@ export default class Runner extends El {
     } = obj;
     let point;
     if (beforeFirstPoint) {
+      console.log('before point')
       point = firstPointPosition;
     } else if (afterSecondPoint) {
+      console.log('after point')
       point = secondPointPosition;
     } else {
+      console.log('between points')
       point = position;
     }
     return point;
@@ -329,43 +332,44 @@ export default class Runner extends El {
 
 
   stepHandler(position, parent, element, vertical):number {
-    const mousePosition = position;
-    const range = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
-    const steps = this.parent.view.fetchModelProperty('stepSize');
-    const size = this.getRangePaddingBox({ parent, vertical: this.parent.view.fetchModelProperty('vertical') });
-    const step = size / range;
-    console.log(range, 'range', size)
-    const stepSize = step * steps;
-    console.log(stepSize)
-    let nextPosition;
-    if (steps !== 0) {
-      if (!vertical) {
-        if (mousePosition > parseInt(element.style.left, 10)) {
-          if (mousePosition > parseInt(element.style.left, 10) + stepSize / 2 ) {
-            nextPosition = parseInt(element.style.left, 10) + stepSize;
-            return nextPosition;
+    if(this.parent.view.fetchModelProperty('stepsOn')) {
+      const mousePosition = position;
+      const range = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
+      const steps = this.parent.view.fetchModelProperty('stepSize');
+      const size = this.getRangePaddingBox({ parent, vertical: this.parent.view.fetchModelProperty('vertical') });
+      const step = size / range;
+
+      const stepSize = step * steps;
+      let nextPosition;
+      if (steps !== 0) {
+        if (!vertical) {
+          if (mousePosition > parseInt(element.style.left, 10)) {
+            if (mousePosition > parseInt(element.style.left, 10) + stepSize / 2 ) {
+              nextPosition = parseInt(element.style.left, 10) + stepSize;
+              return nextPosition;
+            }
+          } else if (mousePosition < parseInt(element.style.left, 10)) {
+            if (mousePosition < parseInt(element.style.left, 10) - stepSize / 2) {
+              nextPosition = parseInt(element.style.left, 10) - stepSize;
+              return nextPosition;
+            }
           }
-        } else if (mousePosition < parseInt(element.style.left, 10)) {
-          if (mousePosition < parseInt(element.style.left, 10) - stepSize / 2) {
-            nextPosition = parseInt(element.style.left, 10) - stepSize;
-            return nextPosition;
+        } else if (vertical) {
+          if (mousePosition > parseInt(element.style.top, 10)) {
+            if (mousePosition > parseInt(element.style.top, 10) + stepSize / 2) {
+              nextPosition = parseInt(element.style.top, 10) + stepSize;
+              return nextPosition;
+            }
+          } else if (mousePosition <= parseInt(element.style.top, 10)) {
+            if (mousePosition < parseInt(element.style.top, 10) - stepSize / 2) {
+              nextPosition = parseInt(element.style.top, 10) - stepSize;
+              return nextPosition;
+            }
           }
         }
-      } else if (vertical) {
-        if (mousePosition > parseInt(element.style.top, 10)) {
-          if (mousePosition > parseInt(element.style.top, 10) + stepSize / 2) {
-            nextPosition = parseInt(element.style.top, 10) + stepSize;
-            return nextPosition;
-          }
-        } else if (mousePosition <= parseInt(element.style.top, 10)) {
-          if (mousePosition < parseInt(element.style.top, 10) - stepSize / 2) {
-            nextPosition = parseInt(element.style.top, 10) - stepSize;
-            return nextPosition;
-          }
-        }
-      } else {
-        return position;
       }
+    } else {
+      return position;
     }
   }
 
@@ -393,6 +397,8 @@ export default class Runner extends El {
       afterSecondPoint: secondPoint < collisionData.coords,
       position: collisionData.coords,
     });
+
+    console.log(RunnerPositionValidation, 'validatted');
 
    // const next = this.stepHandler(relativePointPosition, parent, element);
     this.moveRunner({ element, vertical, position: RunnerPositionValidation});

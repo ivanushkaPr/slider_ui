@@ -176,5 +176,4 @@ export default class Element {
       }
     }
   }
-
 }

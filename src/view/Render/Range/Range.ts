@@ -12,7 +12,7 @@ export default class Range extends El {
   }
 
   onElementClickHandler = (event: MouseEvent):boolean => {
-    /*
+    
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
@@ -90,7 +90,7 @@ export default class Range extends El {
       this.draggable = undefined;
       return false;
     }
-    */
+  
    return false;
   }
 
