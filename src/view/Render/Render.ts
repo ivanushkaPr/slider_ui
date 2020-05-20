@@ -98,7 +98,7 @@ export default class Render {
     position: number;
     axis: string;
     parent: HTMLElement,
-    negative?: number, }):void {
+    negative?: number, msg? }):void {
     const {
       element, position, axis, parent,
     } = obj;
@@ -111,16 +111,16 @@ export default class Render {
 
     if (axis === 'left') {
       const ELEMENT_WIDTH = element.offsetWidth - element.clientLeft * 2;
-      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - ELEMENT_WIDTH - negative;
+      const PARENT_WITDTH = parent.offsetWidth - parent.clientLeft * 2 - negative;
       const ONE_HORIZONTAL_PERCENT = PARENT_WITDTH / 100;
       const STYLE_LEFT = ONE_HORIZONTAL_PERCENT * position;
-      element.style.left = `${STYLE_LEFT}px`;
+      element.style.left = `${STYLE_LEFT - ELEMENT_WIDTH / 2}px`;
     } else {
       const ELEMENT_HEIGHT = element.offsetHeight - element.clientTop * 2;
-      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - ELEMENT_HEIGHT - negative;
+      const PARENT_HEIGHT = parent.offsetHeight - parent.clientTop * 2 - negative;
       const ONE_VERTICAL_PERCENT = PARENT_HEIGHT / 100;
       const STYLE_TOP = ONE_VERTICAL_PERCENT * position;
-      element.style.top = `${STYLE_TOP}px`;
+      element.style.top = `${STYLE_TOP - ELEMENT_HEIGHT / 2}px`;
     }
   }
 
@@ -149,9 +149,8 @@ export default class Render {
       window.addEventListener('resize', func);
       this.resizeHandler = true;
     }
-
+   
     const { runners, vertical, id } = obj;
-
     const ROOT_NODE = document.getElementById(id);
     this.root = ROOT_NODE;
 

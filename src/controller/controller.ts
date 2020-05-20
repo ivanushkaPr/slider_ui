@@ -64,21 +64,23 @@ export default class Controller {
     return tProp;
   }
 
-  
   setRunnerPosition(obj: {position: number, index: string}) {
     const { position, index } = obj;
     const root = document.getElementById(this.getModelProperty('id'));
     const input = root.querySelector(`#runners-${index}`) as HTMLInputElement;
     const range = root.querySelector('.slider__range') as HTMLElement;
-    const runner = range.querySelector('.slider__runner') as HTMLElement;
+  //  const runner = range.querySelector('.slider__runner') as HTMLElement;
     const BORDER_WIDTH = !this.getModelProperty('vertical') ? range.clientLeft : range.clientTop;
 
     const size = !this.getModelProperty('vertical') ? range.offsetWidth : range.offsetHeight;
-    const sizeBorderBox = size - BORDER_WIDTH * 2 - runner.offsetWidth;
+    const sizeBorderBox = size - BORDER_WIDTH * 2;
 
-    const abs = position / (sizeBorderBox / 100);
+    const abs = (position + 5) / (sizeBorderBox / 100);
     if (typeof position === 'number') {
-      input.value = String(abs.toFixed(1));
+      // eslint-disable-next-line no-self-compare
+      if (abs === abs) {
+        input.value = String(abs.toFixed(1));
+      }
     }
   }
 

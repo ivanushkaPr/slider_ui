@@ -19,7 +19,7 @@ export default class Element {
 
   getRangeSize(obj : {parent, runner, vertical}) {
     const { parent, runner, vertical } = obj;
-    return this.getRangePaddingBox({ parent, vertical }) - this.getRunnerSize({ runner, vertical });
+    return this.getRangePaddingBox({ parent, vertical });
   }
 
   getRangePaddingBox(obj: {parent, vertical}) {
@@ -37,9 +37,9 @@ export default class Element {
     const { runner, vertical } = obj;
     let position;
     if (!vertical) {
-      position = parseInt(runner.style.left, 10);
+      position = parseInt(runner.style.left, 10) + runner.offsetWidth / 2;
     } else {
-      position = parseInt(runner.style.top, 10);
+      position = parseInt(runner.style.top, 10) + runner.offsetHeight / 2;
     }
     return position;
   }
@@ -62,6 +62,7 @@ export default class Element {
     const { parent, runner, vertical } = obj;
     const RANGE_BORDER_BOX = this.getRangeSize({ parent, runner, vertical });
     const POSITION = this.getRunnerPosition({ runner, vertical });
+
     let VALUE = this.pxToValue({boxSize: RANGE_BORDER_BOX, position: POSITION});
     VALUE = this.minValueIsNegativeNumber(VALUE);
     return VALUE;
@@ -76,18 +77,20 @@ export default class Element {
 
 
   relativeRunnerPositionToPercents(obj: {parent, position, vertical }):number {
-    const { parent, position: positionRelativeTolider, vertical } = obj;
+    const { parent, position: positionRelativeToSlider, vertical } = obj;
     let sliderSize;
     let onePercentOfSliderSize;
-    let positionInPercents;
+    let positionInPercents
     if (!vertical) {
-      sliderSize = parent.offsetWidth - parent.clientLeft * 2 - this.draggable.offsetWidth;
+      sliderSize = parent.offsetWidth - parent.clientLeft * 2;
       onePercentOfSliderSize = sliderSize / 100;
-      positionInPercents = positionRelativeTolider / onePercentOfSliderSize;
+      // Заменить 5 на ширину элемента.
+      positionInPercents = (positionRelativeToSlider + 5) / onePercentOfSliderSize;
     } else {
       sliderSize = parent.offsetHeight - parent.clientTop * 2 - this.draggable.offsetHeight;
-      onePercentOfSliderSize = sliderSize / 100;
-      positionInPercents = positionRelativeTolider / onePercentOfSliderSize;
+      // Заменить 5 на высоту элемента.
+      onePercentOfSliderSize = (sliderSize + 5) / 100;
+      positionInPercents = positionRelativeToSlider / onePercentOfSliderSize;
     }
     // max position is [99.99999999999%];
     return positionInPercents;
@@ -150,13 +153,14 @@ export default class Element {
         progress.style.width = `${element.getBoundingClientRect().left - parent.getBoundingClientRect().left}px`;
       } else if (start === 'true') {
         const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
-        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical })}px`;
+        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical }) + 1}px`;
         progress.style.left = `${this.getProgressPosition({ progressStart, parent, vertical })}px`;
       } else {
         const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
-        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical })}px`;
+        progress.style.width = `${this.getProgressSize({ progressStart, progressEnd, vertical }) + 1}px`;
       }
     } else if (vertical) {
+      // Добавить толщину границы родителя к высоте полосы прогресса.
       if (startAndEnd) {
         progress.style.top = `${element.getBoundingClientRect().bottom
           - parent.offsetTop - parent.clientTop + window.pageYOffset}px`;
@@ -164,12 +168,11 @@ export default class Element {
           - parent.clientTop - element.getBoundingClientRect().bottom - window.pageYOffset}px`;
       } else if (start === 'true') {
         const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
-        progress.style.height = `${this.getProgressSize({ progressStart, progressEnd, vertical })}px`;
+        progress.style.height = `${this.getProgressSize({ progressStart, progressEnd, vertical }) + 1}px`;
         progress.style.top = `${this.getProgressPosition({ progressStart: progressEnd, parent, vertical })}px`;
       } else {
         const { progressStart, progressEnd } = this.getSiblingProgress({ parent, pair: element.dataset.pair, vertical });
-        const height = this.getProgressSize({ progressStart, progressEnd, vertical });
-        progress.style.height = `${height}px`;
+        progress.style.height = `${this.getProgressSize({ progressStart, progressEnd, vertical }) + 1}px`;
       }
     }
   }

@@ -12,6 +12,7 @@ export class Model {
     scaleOn: true,
     panel: false,
     tooltips: true,
+    stepSize: 0,
   }
 
   controller;
@@ -84,20 +85,22 @@ export type configuration = {
   id: string | undefined
   panel?: boolean,
   tooltips?: boolean,
+  stepSize?: number
 };
 
 export const uConfiguration = {
-  minValue: 0,
-  maxValue: 100,
+  minValue: -1000,
+  maxValue: 1000,
   steps: 10,
   id: '#slider',
-  runners: [20, 40, 60, 80],
+  runners: [0, 100],
   stepsOn: false,
   adjustSteps: true,
   vertical: true,
   scaleOn: true,
   panel: true,
   tooltips: true,
+  stepSize: 100,
 };
 
 export const incompleteConfiguration = {

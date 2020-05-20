@@ -79,19 +79,19 @@ export default class Runner extends El {
     }
 
     const CONTROL_POINTS: controlPoints = {
-      firstPoint: 0,
+      firstPoint: 0 - element.offsetWidth / 2,
       secondPoint: undefined,
       relativePointPosition: undefined,
     };
 
     if (!vertical) {
       CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().width
-      - parent.clientLeft * 2 - element.offsetWidth;
+      - parent.clientLeft * 2 - element.offsetWidth / 2;
       CONTROL_POINTS.relativePointPosition = point
       - parent.getBoundingClientRect().left - window.pageXOffset;
     } else {
       CONTROL_POINTS.secondPoint = parent.getBoundingClientRect().height
-      - parent.clientTop * 2 - element.offsetHeight;
+      - parent.clientTop * 2 - element.offsetHeight / 2;
       CONTROL_POINTS.relativePointPosition = point
       - parent.getBoundingClientRect().top - window.pageYOffset;
     }
@@ -141,10 +141,12 @@ export default class Runner extends El {
 
     let { nextPosition } = obj;
 
-    if (!vertical) {
-      nextPosition -= this.parent.shiftX;
-    } else {
-      nextPosition -= this.parent.shiftY;
+    if (this.parent.view.fetchModelProperty('stepOn') === false) {
+      if (!vertical) {
+        nextPosition -= this.parent.shiftX;
+      } else {
+        nextPosition -= this.parent.shiftY;
+      }
     }
     const siblings = this.getSiblingRunners({ runner: targetElement, pair });
 
@@ -315,12 +317,56 @@ export default class Runner extends El {
     if (this.parent.view.fetchModelProperty('tooltips') === true) {
       tooltipSibling.classList.add('slider__tooltip--show');
     }
-    tooltipSibling.style[axis] = `${position}px`;
+
+    const pos = position - tooltipSibling.offsetWidth / 2 + runner.offsetWidth / 2;
+    tooltipSibling.style[axis] = `${pos}px`;
     tooltipSibling.innerHTML = String(this.positionToValue({
       parent,
       runner,
       vertical,
     }));
+  }
+
+
+  stepHandler(position, parent, element, vertical):number {
+    const mousePosition = position;
+    const range = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
+    const steps = this.parent.view.fetchModelProperty('stepSize');
+    const size = this.getRangePaddingBox({ parent, vertical: this.parent.view.fetchModelProperty('vertical') });
+    const step = size / range;
+    console.log(range, 'range', size)
+    const stepSize = step * steps;
+    console.log(stepSize)
+    let nextPosition;
+    if (steps !== 0) {
+      if (!vertical) {
+        if (mousePosition > parseInt(element.style.left, 10)) {
+          if (mousePosition > parseInt(element.style.left, 10) + stepSize / 2 ) {
+            nextPosition = parseInt(element.style.left, 10) + stepSize;
+            return nextPosition;
+          }
+        } else if (mousePosition < parseInt(element.style.left, 10)) {
+          if (mousePosition < parseInt(element.style.left, 10) - stepSize / 2) {
+            nextPosition = parseInt(element.style.left, 10) - stepSize;
+            return nextPosition;
+          }
+        }
+      } else if (vertical) {
+        if (mousePosition > parseInt(element.style.top, 10)) {
+          if (mousePosition > parseInt(element.style.top, 10) + stepSize / 2) {
+            nextPosition = parseInt(element.style.top, 10) + stepSize;
+            return nextPosition;
+          }
+        } else if (mousePosition <= parseInt(element.style.top, 10)) {
+          if (mousePosition < parseInt(element.style.top, 10) - stepSize / 2) {
+            nextPosition = parseInt(element.style.top, 10) - stepSize;
+            return nextPosition;
+          }
+        }
+      } else {
+        return position;
+      }
+    }
   }
 
   onMoveElementAtPoint = (obj: {point: number; element: HTMLElement; vertical: boolean}):void => {
@@ -330,7 +376,9 @@ export default class Runner extends El {
       vertical, parent, point, element,
     });
 
-    const runnerPosition = this.runnerStepHandler(relativePointPosition);
+    // const runnerPosition = this.runnerStepHandler(relativePointPosition);
+    const runnerPosition = this.stepHandler(relativePointPosition, parent, element, vertical);
+
     const collisionData = this.onRunnersCollision({
       targetElement: element,
       pair: element.dataset.pair,
@@ -346,7 +394,8 @@ export default class Runner extends El {
       position: collisionData.coords,
     });
 
-    this.moveRunner({ element, vertical, position: RunnerPositionValidation });
+   // const next = this.stepHandler(relativePointPosition, parent, element);
+    this.moveRunner({ element, vertical, position: RunnerPositionValidation});
 
     this.preventSiblingRunnerCollision({
       runner: element, parent, vertical, pos: RunnerPositionValidation,
@@ -362,13 +411,15 @@ export default class Runner extends El {
       parent, runner: element, position: RunnerPositionValidation, axis: !vertical ? 'left' : 'top', vertical,
     });
 
+    const positionToPercents = this.relativeRunnerPositionToPercents({
+      parent,
+      position: RunnerPositionValidation,
+      vertical,
+    });
+
     this.parent.view.setModelProperty({
       property: 'runners',
-      value: Math.round(this.relativeRunnerPositionToPercents({
-        parent,
-        position: RunnerPositionValidation,
-        vertical,
-      })),
+      value: positionToPercents,
       index: this.draggable.dataset.number - 1,
     });
 
@@ -413,6 +464,7 @@ export default class Runner extends El {
         position,
         axis: vertical === false ? 'left' : 'top',
         parent: slider,
+        msg: 'runner',
       });
     });
     const runnersDOM = this.setRunnersDataAttributes(root);

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "mocha -r ts-node/register test/test.ts",
     "build": "webpack",
     "ts-node": "ts-node",
     "start": "webpack-dev-server --open"
