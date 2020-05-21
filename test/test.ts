@@ -31,6 +31,17 @@ let { window } = new JSDOM('<!doctype html><html><body><div id="#slider"></div><
 global.document = window.document;
 global.window = window;
 
+import rangeTest from '../Src/View/Elements/Range/Range.test'
+console.log(document.body);
+
+describe('slider', () => {
+  beforeEach(() => { 
+    document.body.innerHTML = '<div id="#slider"></div>';
+  })
+  rangeTest();
+})
+
+
 
 
 

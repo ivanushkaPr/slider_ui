@@ -1,6 +1,6 @@
 import El from '../Element/Element';
-
 import View from '../../view';
+
 
 export default class Range extends El {
   parent: View;
@@ -13,7 +13,6 @@ export default class Range extends El {
   }
 
   onElementClickHandler = (event: MouseEvent):boolean => {
-    
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
@@ -22,7 +21,7 @@ export default class Range extends El {
         event.pageY).classList.contains('slider__runner') === false) {
         range = (event.currentTarget as HTMLElement);
         const runners = range.querySelectorAll('.slider__runner');
-        
+
         let runnerSize;
         let click;
         if (!this.parent.fetchModelProperty('vertical')) {
@@ -91,7 +90,6 @@ export default class Range extends El {
       this.draggable = undefined;
       return false;
     }
-  
    return false;
   }
 
@@ -99,7 +97,7 @@ export default class Range extends El {
     const { root, id } = obj;
     this.removeSlider(root);
     const NEW_SLIDER = this.createRange();
-    if (this.parent.controller.getModelProperty('stepsOn') === false) this.registerEventHandlers(NEW_SLIDER);
+    if (this.parent.fetchModelProperty('stepsOn') === false) this.registerEventHandlers(NEW_SLIDER);
     this.renderElement(NEW_SLIDER, document.getElementById(id));
     return NEW_SLIDER;
   }
