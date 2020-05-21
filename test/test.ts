@@ -32,13 +32,15 @@ global.document = window.document;
 global.window = window;
 
 import rangeTest from '../Src/View/Elements/Range/Range.test'
-console.log(document.body);
+import tooltipTest from '../Src/View/Elements/Tooltip/Tooltip.test'
 
 describe('slider', () => {
   beforeEach(() => { 
     document.body.innerHTML = '<div id="#slider"></div>';
   })
   rangeTest();
+
+  tooltipTest();
 })
 
 

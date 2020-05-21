@@ -57,7 +57,6 @@ export default class Tooltip extends El {
 
   setTooltipDataAttributes(root):void {
     const collection = root.querySelectorAll('.slider__tooltip');
-
     collection.forEach((target, index) => {
       const HTMLtooltip = target as HTMLElement;
       HTMLtooltip.dataset.runnerSibling = String(index);

@@ -10,8 +10,6 @@ import * as chai from "chai";
 
 import * as sinon from 'sinon';
 
-
-
 const assert = chai.assert;
 
 function rangeClassTest() {
