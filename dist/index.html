@@ -3,7 +3,7 @@
 <body>
   <style>
     body {
-      
+      margin: 50px;
     }
 
     .slider__root {
@@ -11,7 +11,8 @@
       align-items: center;
       flex-direction: column; 
       border-radius: 10px;
-      margin: 50px;
+
+      width: 500px;
     }
 
     .slider__range {
@@ -111,7 +112,7 @@
 
     .slider__range--vertical {
       width: 10px;
-      height: 300px;
+      height: 500px;
     }
 
     .slider__runner {
@@ -126,6 +127,9 @@
     }
 
     .slider__tooltip {
+      -moz-user-select: none;
+      -khtml-user-select: none;
+      user-select: none;  
       display: none;
       position: absolute;
       width: 30px;

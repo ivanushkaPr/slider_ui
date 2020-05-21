@@ -1,9 +1,10 @@
-import Render from '../Render';
+
+import View from '../../view';
 
 export default class Progress {
-  parent: Render;
+  parent: View;
 
-  constructor(parent: Render) {
+  constructor(parent: View) {
     this.parent = parent;
   }
 
@@ -203,7 +204,7 @@ export default class Progress {
   createProgress(): HTMLElement {
     const PROGRESS_ELEMENT = document.createElement('div');
     PROGRESS_ELEMENT.classList.add('slider__progress');
-    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    const SLIDER_IS_VERTICAL = this.parent.fetchModelProperty('vertical');
     if (SLIDER_IS_VERTICAL) {
       PROGRESS_ELEMENT.classList.add('slider__progress--vertical');
     } else {

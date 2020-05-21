@@ -1,10 +1,11 @@
 import El from '../Element/Element';
-import Render from '../Render';
+
+import View from '../../view';
 
 export default class Tooltip extends El {
-  parent: Render;
+  parent: View;
 
-  constructor(parent: Render) {
+  constructor(parent: View) {
     super();
     this.parent = parent;
   }
@@ -13,7 +14,7 @@ export default class Tooltip extends El {
     const TOOLTIP_ELEMENT = document.createElement('div');
     TOOLTIP_ELEMENT.classList.add('slider__tooltip');
 
-    const SLIDER_IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    const SLIDER_IS_VERTICAL = this.parent.fetchModelProperty('vertical');
     if (!SLIDER_IS_VERTICAL) {
       TOOLTIP_ELEMENT.classList.add('slider__tooltip--horizontal');
     } else {

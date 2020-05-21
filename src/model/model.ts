@@ -95,7 +95,6 @@ export const uConfiguration = {
   id: '#slider',
   runners: [0, 100],
   stepsOn: false,
-  adjustSteps: true,
   vertical: false,
   scaleOn: true,
   panel: true,

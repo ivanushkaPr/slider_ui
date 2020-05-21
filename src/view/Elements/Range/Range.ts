@@ -1,12 +1,13 @@
 import El from '../Element/Element';
-import Render from '../Render';
+
+import View from '../../view';
 
 export default class Range extends El {
-  parent: Render;
+  parent: View;
 
   draggable;
 
-  constructor(parent: Render) {
+  constructor(parent: View) {
     super();
     this.parent = parent;
   }
@@ -24,7 +25,7 @@ export default class Range extends El {
         
         let runnerSize;
         let click;
-        if (!this.parent.view.fetchModelProperty('vertical')) {
+        if (!this.parent.fetchModelProperty('vertical')) {
           runnerSize = (runners[0] as HTMLElement).offsetWidth;
           click = event.pageX - range.offsetLeft - range.clientLeft;
         } else {
@@ -39,7 +40,7 @@ export default class Range extends El {
         runners.forEach((runner, i) => {
 
           let pos;
-          if (!this.parent.view.fetchModelProperty('vertical')) {
+          if (!this.parent.fetchModelProperty('vertical')) {
             pos = parseInt((runner as HTMLElement).style.left, 10);
           } else {
             pos = parseInt((runner as HTMLElement).style.top, 10);
@@ -61,7 +62,7 @@ export default class Range extends El {
           
         }
 
-        if(!this.parent.view.fetchModelProperty('vertical')) {
+        if(!this.parent.fetchModelProperty('vertical')) {
           runner.style.left = `${click}px`;
         } else {
           runner.style.top = `${click}px`;
@@ -70,17 +71,17 @@ export default class Range extends El {
         this.draggable = runner;
         this.onMoveProgress({ parent: range, runner, collision: false });
 
-        this.parent.view.setModelProperty({
+        this.parent.setModelProperty({
           property: 'runners',
           value: this.relativeRunnerPositionToPercents({
             parent: this.parent.range,
             position: click,
-            vertical: this.parent.view.fetchModelProperty('vertical'),
+            vertical: this.parent.fetchModelProperty('vertical'),
           }),
           index: this.draggable.dataset.number - 1,
         });
 
-        this.parent.view.updateRunnerPosition({
+        this.parent.updateRunnerPosition({
           position: click,
           index: this.draggable.dataset.number,
         });
@@ -98,7 +99,7 @@ export default class Range extends El {
     const { root, id } = obj;
     this.removeSlider(root);
     const NEW_SLIDER = this.createRange();
-    if (this.parent.view.controller.getModelProperty('stepsOn') === false) this.registerEventHandlers(NEW_SLIDER);
+    if (this.parent.controller.getModelProperty('stepsOn') === false) this.registerEventHandlers(NEW_SLIDER);
     this.renderElement(NEW_SLIDER, document.getElementById(id));
     return NEW_SLIDER;
   }
@@ -111,7 +112,7 @@ export default class Range extends El {
   }
 
   createRange():HTMLElement {
-    const IS_VERTICAL = this.parent.view.fetchModelProperty('vertical');
+    const IS_VERTICAL = this.parent.fetchModelProperty('vertical');
     const RANGE_ELEMENT = document.createElement('div');
     RANGE_ELEMENT.classList.add('slider__range');
     if (IS_VERTICAL) {
@@ -128,7 +129,7 @@ export default class Range extends El {
   }
 
   registerEventHandlers(slider) {
-    this.parent.view.onHandlerRegister({
+    this.parent.onHandlerRegister({
       bookmark: 'elementMouseDown',
       element: slider as HTMLElement,
       eventName: 'click',

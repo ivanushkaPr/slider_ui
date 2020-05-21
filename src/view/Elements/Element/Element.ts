@@ -1,7 +1,8 @@
-import Render from '../Render';
+
+import View from '../../view';
 
 export default class Element {
-  parent: Render;
+  parent: View;
 
   draggable;
 
@@ -46,12 +47,12 @@ export default class Element {
 
   pxToValue(obj: {boxSize, position}) {
     const { boxSize, position } = obj;
-    const sum = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
+    const sum = Math.abs(this.parent.fetchModelProperty('minValue')) + Math.abs(this.parent.fetchModelProperty('maxValue'));
     return Math.ceil((sum / boxSize) * position);
   }
 
   minValueIsNegativeNumber(value) {
-    const minValue = this.parent.view.fetchModelProperty('minValue');
+    const minValue = this.parent.fetchModelProperty('minValue');
     const VALUE = minValue < 0 ? value + minValue : value;
     return VALUE;
   }
@@ -141,7 +142,7 @@ export default class Element {
     const { start, startAndEnd } = element.dataset;
     const siblingProgressNumber = element.dataset.pair;
     const progress = parent.querySelector(`.slider__progress[data-pair="${siblingProgressNumber}"]`) as HTMLElement;
-    const vertical = this.parent.view.fetchModelProperty('vertical');
+    const vertical = this.parent.fetchModelProperty('vertical');
     if (collision) {
       progress.style.display = 'none';
     }

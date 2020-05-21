@@ -24,7 +24,7 @@ export default class Controller {
 
     this.render = new CreateForm(this.handler, this);
 
-    this.view.render.createSlider({
+    this.view.createSlider({
       runners: this.getModelProperty('runners'),
       vertical: this.getModelProperty('vertical'),
       id: this.getModelProperty('id'),
@@ -46,7 +46,7 @@ export default class Controller {
     if (this.getModelProperty('panel')) {
       this.render.configPanel({ show: this.getModelProperty('panel'), id: this.getModelProperty('id') });
     }
-    this.view.render.createSlider({
+    this.view.createSlider({
       runners: this.model.configuration.runners,
       vertical: this.model.configuration.vertical,
       id: this.model.configuration.id,

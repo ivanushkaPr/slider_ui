@@ -1,18 +1,16 @@
 import El from '../Element/Element';
+import View from '../../view';
 
-// eslint-disable-next-line no-unused-vars
-import Render from '../Render';
 
 export default class Scale extends El {
-  parent: Render;
+  parent: View;
 
-  constructor(parent: Render) {
+  constructor(parent: View) {
     super();
     this.parent = parent;
   }
 
   onElementClickHandler = (event: MouseEvent):boolean => {
-    
     let range;
     if (!this.draggable) {
       this.draggable = this.parent.range.querySelector('.slider__runner');
@@ -24,7 +22,7 @@ export default class Scale extends El {
         const runners = range.querySelectorAll('.slider__runner');
         let runnerSize;
         let click;
-        if (!this.parent.view.fetchModelProperty('vertical')) {
+        if (!this.parent.fetchModelProperty('vertical')) {
           runnerSize = (runners[0] as HTMLElement).offsetWidth;
           click = event.pageX - range.offsetLeft - range.clientLeft;
         } else {
@@ -37,7 +35,7 @@ export default class Scale extends El {
         let index;
         runners.forEach((runner, i) => {
           let pos;
-          if (!this.parent.view.fetchModelProperty('vertical')) {
+          if (!this.parent.fetchModelProperty('vertical')) {
             pos = parseInt((runner as HTMLElement).style.left, 10);
           } else {
             pos = parseInt((runner as HTMLElement).style.top, 10);
@@ -54,7 +52,7 @@ export default class Scale extends El {
         const runner = runners[index] as HTMLElement;
         click -= runnerSize / 2;
 
-        if (!this.parent.view.fetchModelProperty('vertical')) {
+        if (!this.parent.fetchModelProperty('vertical')) {
           runner.style.left = `${click}px`;
         } else {
           runner.style.top = `${click}px`;
@@ -62,17 +60,17 @@ export default class Scale extends El {
         this.draggable = runner;
         this.onMoveProgress({ parent: range, runner, collision: false });
 
-        this.parent.view.setModelProperty({
+        this.parent.setModelProperty({
           property: 'runners',
           value: this.relativeRunnerPositionToPercents({
             parent: this.parent.range,
             position: click,
-            vertical: this.parent.view.fetchModelProperty('vertical'),
+            vertical: this.parent.fetchModelProperty('vertical'),
           }),
           index: this.draggable.dataset.number - 1,
         });
 
-        this.parent.view.updateRunnerPosition({
+        this.parent.updateRunnerPosition({
           position: click,
           index: this.draggable.dataset.number,
         });
@@ -82,7 +80,6 @@ export default class Scale extends El {
       this.draggable = undefined;
       return false;
     }
-    
     return false;
   }
 
@@ -103,17 +100,17 @@ export default class Scale extends El {
       if (index === 0) {
         const classes = vertical === false ? 'scale__value scale__value--start-horizontal' : 'scale__value scale__value--start-vertical';
         const textNode = this.parent.createElement('p', classes);
-        const value = document.createTextNode(this.parent.view.fetchModelProperty('minValue'));
+        const value = document.createTextNode(this.parent.fetchModelProperty('minValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);
       } else if (index === array.length - 1) {
         const classes = vertical === false ? 'scale__value scale__value--end-horizontal' : 'scale__value scale__value--end-vertical';
         const textNode = this.parent.createElement('p', classes);
-        const value = document.createTextNode(this.parent.view.fetchModelProperty('maxValue'));
+        const value = document.createTextNode(this.parent.fetchModelProperty('maxValue'));
         textNode.appendChild(value);
         ruler.appendChild(textNode);
       }
-      this.parent.view.onHandlerRegister({
+      this.parent.onHandlerRegister({
         bookmark: 'elementMouseDown',
         element: scale as HTMLElement,
         eventName: 'mousedown',

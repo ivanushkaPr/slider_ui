@@ -1,14 +1,14 @@
 import El from '../Element/Element';
+import View from '../../view';
 
 // eslint-disable-next-line no-unused-vars
-import Render from '../Render';
 
 export default class Runner extends El {
-  parent: Render;
+  parent: View;
 
   draggable;
 
-  constructor(parent:Render) {
+  constructor(parent: View) {
     super();
     this.parent = parent;
   }
@@ -23,7 +23,7 @@ export default class Runner extends El {
 
     this.parent.shiftX = event.clientX - targetElement.getBoundingClientRect().left;
     this.parent.shiftY = event.clientY - targetElement.getBoundingClientRect().top;
-    this.parent.view.onHandlerRegister({
+    this.parent.onHandlerRegister({
       bookmark: 'runnerMouseMove',
       element: document.body as HTMLElement,
       eventName: 'mousemove',
@@ -31,7 +31,7 @@ export default class Runner extends El {
       enviroment: this,
     });
 
-    this.parent.view.onHandlerRegister({
+    this.parent.onHandlerRegister({
       bookmark: 'runnerMouseUp',
       element: document.body as HTMLElement,
       eventName: 'mouseup',
@@ -40,7 +40,7 @@ export default class Runner extends El {
     });
 
 
-    this.parent.view.onHandlerRegister({
+    this.parent.onHandlerRegister({
       bookmark: 'runnerDragStart',
       element: event.target as HTMLElement,
       eventName: 'dragstart',
@@ -54,7 +54,7 @@ export default class Runner extends El {
   onRunnerMouseMoveHandler = (event: MouseEvent): boolean => {
     const { pageX, pageY } = event;
 
-    const vertical = this.parent.view.fetchModelProperty('vertical');
+    const vertical = this.parent.fetchModelProperty('vertical');
 
     let params;
     if (!vertical) {
@@ -102,7 +102,7 @@ export default class Runner extends El {
     let smaller;
     let larger;
     let closestPoint;
-    if (this.parent.view.fetchModelProperty('stepsOn')) {
+    if (this.parent.fetchModelProperty('stepsOn')) {
       for (let breakpoint = 0; breakpoint < this.parent.breakpoints.length; breakpoint += 1) {
         if (this.parent.breakpoints[breakpoint] > point) {
           larger = this.parent.breakpoints[breakpoint];
@@ -141,7 +141,7 @@ export default class Runner extends El {
 
     let { nextPosition } = obj;
 
-    if (this.parent.view.fetchModelProperty('stepsOn') === false) {
+    if (this.parent.fetchModelProperty('stepsOn') === false) {
       if (!vertical) {
         nextPosition -= this.parent.shiftX;
       } else {
@@ -317,7 +317,7 @@ export default class Runner extends El {
       parent, runner, position, axis, vertical,
     } = obj;
     const tooltipSibling = parent.querySelector(`.slider__tooltip[data-runner-sibling="${runner.dataset.tooltipSibling}"]`) as HTMLElement;
-    if (this.parent.view.fetchModelProperty('tooltips') === true) {
+    if (this.parent.fetchModelProperty('tooltips') === true) {
       tooltipSibling.classList.add('slider__tooltip--show');
     }
 
@@ -332,11 +332,11 @@ export default class Runner extends El {
 
 
   stepHandler(position, parent, element, vertical):number {
-    if(this.parent.view.fetchModelProperty('stepsOn')) {
+    if(this.parent.fetchModelProperty('stepsOn')) {
       const mousePosition = position;
-      const range = Math.abs(this.parent.view.fetchModelProperty('minValue')) + Math.abs(this.parent.view.fetchModelProperty('maxValue'));
-      const steps = this.parent.view.fetchModelProperty('stepSize');
-      const size = this.getRangePaddingBox({ parent, vertical: this.parent.view.fetchModelProperty('vertical') });
+      const range = Math.abs(this.parent.fetchModelProperty('minValue')) + Math.abs(this.parent.fetchModelProperty('maxValue'));
+      const steps = this.parent.fetchModelProperty('stepSize');
+      const size = this.getRangePaddingBox({ parent, vertical: this.parent.fetchModelProperty('vertical') });
       const step = size / range;
 
       const stepSize = step * steps;
@@ -398,8 +398,6 @@ export default class Runner extends El {
       position: collisionData.coords,
     });
 
-    console.log(RunnerPositionValidation, 'validatted');
-
    // const next = this.stepHandler(relativePointPosition, parent, element);
     this.moveRunner({ element, vertical, position: RunnerPositionValidation});
 
@@ -423,27 +421,27 @@ export default class Runner extends El {
       vertical,
     });
 
-    this.parent.view.setModelProperty({
+    this.parent.setModelProperty({
       property: 'runners',
       value: positionToPercents,
       index: this.draggable.dataset.number - 1,
     });
 
-    this.parent.view.updateRunnerPosition({
+    this.parent.updateRunnerPosition({
       position: RunnerPositionValidation,
       index: this.draggable.dataset.number,
     });
   }
 
   onRunnerMouseUpHandler = ():boolean => {
-    if (this.parent.view.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
+    if (this.parent.fetchModelProperty('tooltips') === true) this.onTooltipHide(this.draggable);
 
-    const { bookmark: mouseMoveBookmark } = this.parent.view.handlers.runnerMouseMove;
-    this.parent.view.onHandlerDelete(mouseMoveBookmark);
-    const { bookmark: mouseUpBookmark } = this.parent.view.handlers.runnerMouseUp;
-    this.parent.view.onHandlerDelete(mouseUpBookmark);
-    const { bookmark: dragStartBookmark } = this.parent.view.handlers.runnerDragStart;
-    this.parent.view.onHandlerDelete(dragStartBookmark);
+    const { bookmark: mouseMoveBookmark } = this.parent.handlers.runnerMouseMove;
+    this.parent.onHandlerDelete(mouseMoveBookmark);
+    const { bookmark: mouseUpBookmark } = this.parent.handlers.runnerMouseUp;
+    this.parent.onHandlerDelete(mouseUpBookmark);
+    const { bookmark: dragStartBookmark } = this.parent.handlers.runnerDragStart;
+    this.parent.onHandlerDelete(dragStartBookmark);
     this.draggable = null;
     return true;
   }
@@ -512,7 +510,7 @@ export default class Runner extends El {
 
   registerEventHandlers(runners):void {
     runners.forEach((runner) => {
-      this.parent.view.onHandlerRegister({
+      this.parent.onHandlerRegister({
         bookmark: 'runnerMouseDown',
         element: runner as HTMLElement,
         eventName: 'mousedown',
